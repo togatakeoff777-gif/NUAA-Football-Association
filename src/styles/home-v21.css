@@ -1,14 +1,27 @@
 /* V2.1 homepage: information first, fewer equal-weight cards */
 .hero {
-  min-height: 620px;
-  height: min(690px, 76svh);
+  min-height: 450px;
+  height: clamp(450px, 48svh, 470px);
 }
-.hero-content { padding-top: calc(var(--header-height) + 18px); }
-.hero h1 { margin-top: 24px; font-size: clamp(62px, 7.2vw, 100px); }
-.hero-motto { margin-top: 23px; }
-.hero-summary { margin-top: 13px; }
-.hero-actions { margin-top: 24px; }
-.hero-radar { right: -105px; width: min(39vw, 510px); }
+.hero-content { padding-top: calc(var(--header-height) + 2px); }
+.hero h1 { margin-top: 18px; font-size: clamp(52px, 5.9vw, 82px); }
+.hero-motto { margin-top: 15px; }
+.hero-summary { margin-top: 9px; }
+.hero-actions { margin-top: 16px; }
+.hero-radar {
+  right: -125px;
+  width: min(31vw, 400px);
+  border-color: rgba(121, 194, 255, .18);
+}
+.hero-radar::before,
+.hero-radar::after,
+.hero-radar span { border-color: rgba(121, 194, 255, .14); }
+.hero-radar span:nth-child(2) {
+  background:
+    linear-gradient(90deg, transparent calc(50% - .5px), rgba(121, 194, 255, .14) 50%, transparent calc(50% + .5px)),
+    linear-gradient(0deg, transparent calc(50% - .5px), rgba(121, 194, 255, .14) 50%, transparent calc(50% + .5px));
+}
+.hero-radar i { background: linear-gradient(90deg, rgba(139, 208, 255, .68), transparent); }
 .hero-route { bottom: 16%; }
 
 .home-section-bar {
@@ -38,8 +51,10 @@
 .home-section-bar-compact h2 { font-size: clamp(27px, 2.8vw, 38px); }
 .home-demo-note { margin-top: 17px; color: var(--muted); font-size: 10px; line-height: 1.7; }
 
-.home-match-center { position: relative; padding: 62px 0 76px; background: var(--paper); }
+.home-match-center { position: relative; padding: 52px 0 76px; background: var(--paper); }
 .home-match-center::before { content: ""; position: absolute; inset: 0 0 auto; height: 7px; background: linear-gradient(90deg, var(--nuaa-blue), var(--sky-blue), transparent 76%); }
+.home-match-center .home-section-bar { margin-bottom: 26px; }
+.home-match-center .home-section-bar h2 { font-size: clamp(26px, 2.8vw, 38px); }
 .match-center-grid { display: grid; grid-template-columns: 1.28fr .72fr; gap: 18px; }
 .next-match-panel {
   position: relative;
@@ -184,15 +199,16 @@
 }
 
 @media (max-width: 760px) {
-  .hero { min-height: 0; height: auto; padding: 105px 0 54px; align-items: flex-start; }
+  .hero { min-height: 0; height: auto; padding: 96px 0 44px; align-items: flex-start; }
   .hero-content { padding-top: 0; }
-  .hero h1 { margin-top: 22px; font-size: clamp(52px, 16vw, 68px); line-height: .9; }
-  .hero-motto { gap: 10px; margin-top: 20px; }
+  .hero h1 { margin-top: 18px; font-size: clamp(50px, 15.2vw, 64px); line-height: .9; }
+  .hero-motto { gap: 10px; margin-top: 16px; }
   .hero-motto p { font-size: 18px; }
-  .hero-summary { max-width: 100%; margin-top: 13px; font-size: 12px; }
-  .hero-actions { max-width: none; margin-top: 20px; }
-  .hero-radar { top: 59%; right: -235px; width: 430px; }
-  .home-match-center, .home-notice-links, .home-current-competitions, .home-news-media, .home-association-summary { padding: 58px 0; }
+  .hero-summary { max-width: 100%; margin-top: 10px; font-size: 12px; }
+  .hero-actions { max-width: none; margin-top: 16px; }
+  .hero-radar { top: 59%; right: -205px; width: 340px; }
+  .home-match-center { padding: 48px 0 58px; }
+  .home-notice-links, .home-current-competitions, .home-news-media, .home-association-summary { padding: 58px 0; }
   .home-section-bar { align-items: flex-start; flex-direction: column; gap: 14px; margin-bottom: 24px; }
   .home-section-bar .status-badge { align-self: flex-start; }
   .match-center-grid, .match-center-side { grid-template-columns: 1fr; }

@@ -41,6 +41,8 @@ export const coreCompetitions = [
       dataStatus: "demo",
       badge: "演示状态",
     },
+    stageLabel: "年度筹备",
+    detailHref: "/competitions/current#freshman-cup",
   },
   {
     ...sharedMetadata,
@@ -64,6 +66,8 @@ export const coreCompetitions = [
       dataStatus: "demo",
       badge: "演示状态",
     },
+    stageLabel: "报名准备",
+    detailHref: "/competitions/current#tianmuhu-futsal-league",
   },
   {
     ...sharedMetadata,
@@ -88,6 +92,8 @@ export const coreCompetitions = [
       dataStatus: "demo",
       badge: "演示状态",
     },
+    stageLabel: "赛程演示阶段",
+    detailHref: "/competitions/current#mens-intercollege-cup",
   },
   {
     ...sharedMetadata,
@@ -112,6 +118,8 @@ export const coreCompetitions = [
       dataStatus: "demo",
       badge: "演示状态",
     },
+    stageLabel: "赛季归档演示",
+    detailHref: "/competitions/current#womens-intercollege-cup",
   },
 ] as const satisfies readonly Competition[];
 
@@ -151,6 +159,9 @@ export const demoMatchCentre = {
     awayScore: 1,
     status: "completed",
     statusLabel: "已结束",
+    stageLabel: "联赛阶段 · 演示",
+    roundLabel: "演示轮次",
+    detailHref: "/competitions/schedule#demo-recent-result",
     dataStatus: "demo",
     badge: "演示赛果",
   },
@@ -166,6 +177,9 @@ export const demoMatchCentre = {
     awayTeam: "演示球队 D",
     status: "upcoming",
     statusLabel: "下一场",
+    stageLabel: "院际杯阶段 · 演示",
+    roundLabel: "演示轮次",
+    detailHref: "/competitions/schedule#demo-next-match",
     dataStatus: "demo",
     badge: "演示赛程",
   },

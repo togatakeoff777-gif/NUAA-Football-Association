@@ -237,6 +237,7 @@ export const refereeAffairsEntries = [
     title: "加入裁判队伍",
     description:
       "面向希望成为裁判员的新生，以及已有证书、希望加入天目湖裁判团队的人员。",
+    href: "/referees/recruitment",
   },
   {
     id: "open-matches",

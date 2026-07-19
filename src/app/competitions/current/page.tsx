@@ -9,6 +9,7 @@ export const metadata: Metadata = {
 };
 
 const items = annualCompetitions.map((competition) => ({
+  id: competition.slug,
   title: competition.name,
   description: competition.organizerNote,
   meta: `${competition.semesterLabel} · ${competition.eventType}`,

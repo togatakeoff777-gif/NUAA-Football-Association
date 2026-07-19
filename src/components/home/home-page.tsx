@@ -1,27 +1,19 @@
-import { AnnualCompetitions } from "@/components/home/annual-competitions";
-import { AssociationOverview } from "@/components/home/association-overview";
-import { FeaturedVideos } from "@/components/home/featured-videos";
+import { AssociationSummary } from "@/components/home/association-summary";
+import { CurrentCompetitions } from "@/components/home/current-competitions";
 import { Hero } from "@/components/home/hero";
-import { MatchOverview } from "@/components/home/match-overview";
-import { NewsNoticesSection } from "@/components/home/news-notices-section";
-import { ParticipationGuide } from "@/components/home/participation-guide";
-import { PlatformMatrix } from "@/components/home/platform-matrix";
-import { RankingsSection } from "@/components/home/rankings-section";
-import { TeamsShowcase } from "@/components/home/teams-showcase";
+import { MatchCenter } from "@/components/home/match-center";
+import { NewsMediaSection } from "@/components/home/news-media-section";
+import { NoticeQuickLinks } from "@/components/home/notice-quick-links";
 
 export function HomePage() {
   return (
     <main id="main-content">
       <Hero />
-      <MatchOverview />
-      <AnnualCompetitions />
-      <RankingsSection />
-      <NewsNoticesSection />
-      <TeamsShowcase />
-      <AssociationOverview />
-      <FeaturedVideos />
-      <PlatformMatrix />
-      <ParticipationGuide />
+      <MatchCenter />
+      <NoticeQuickLinks />
+      <CurrentCompetitions />
+      <NewsMediaSection />
+      <AssociationSummary />
     </main>
   );
 }

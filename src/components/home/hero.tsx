@@ -50,12 +50,6 @@ export function Hero() {
         </div>
       </div>
 
-      <div className="page-shell hero-services" aria-label="网站提供的主要信息">
-        <span>01 / 天目湖赛事</span>
-        <span>02 / 新闻与公告</span>
-        <span>03 / 裁判与规则</span>
-        <span>04 / 参赛与报名</span>
-      </div>
     </section>
   );
 }

@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 
 export type SectionIndexItem = {
+  id?: string;
   title: string;
   description: string;
   meta?: string;
@@ -47,13 +48,14 @@ function IndexCard({ item }: { item: SectionIndexItem }) {
   );
 
   if (!item.href) {
-    return <article className="index-card">{content}</article>;
+    return <article className="index-card" id={item.id}>{content}</article>;
   }
 
   if (item.external) {
     return (
       <a
         className="index-card index-card-link"
+        id={item.id}
         href={item.href}
         target={item.openInNewTab ? "_blank" : undefined}
         rel={item.openInNewTab ? "noopener noreferrer" : undefined}
@@ -65,7 +67,7 @@ function IndexCard({ item }: { item: SectionIndexItem }) {
   }
 
   return (
-    <Link className="index-card index-card-link" href={item.href}>
+    <Link className="index-card index-card-link" href={item.href} id={item.id}>
       {content}
     </Link>
   );

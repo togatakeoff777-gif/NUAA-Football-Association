@@ -35,6 +35,8 @@ export type Competition = ContentOwnership & {
   tags: readonly string[];
   recordStatus: "confirmed";
   displayStatus: CompetitionDisplayStatus;
+  stageLabel: string;
+  detailHref: string;
 };
 
 export type DemoMatch = ContentOwnership & {
@@ -49,6 +51,9 @@ export type DemoMatch = ContentOwnership & {
   awayScore?: number;
   status: "completed" | "upcoming";
   statusLabel: string;
+  stageLabel: string;
+  roundLabel: string;
+  detailHref: string;
   dataStatus: "demo";
   badge: string;
 };
@@ -98,8 +103,30 @@ export type NoticeItem = ContentOwnership & {
   title: string;
   summary: string;
   href: string;
+  publicationStatus: "置顶" | "最新";
   dataStatus: "demo";
   badge: string;
+};
+
+export type RecruitmentStatus = "not-open" | "open" | "closed";
+
+export type RecruitmentStep = {
+  id: string;
+  title: string;
+  description: string;
+};
+
+export type RefereeRecruitmentConfig = {
+  groupName: string;
+  academicYear: string;
+  validUntil: string;
+  status: RecruitmentStatus;
+  statusLabel: string;
+  qrImage?: string;
+  qrAlt: string;
+  fallbackContact: string;
+  notice: string;
+  steps: readonly RecruitmentStep[];
 };
 
 export type TeamShowcaseItem = ContentOwnership & {

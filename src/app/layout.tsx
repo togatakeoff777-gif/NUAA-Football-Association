@@ -3,6 +3,8 @@ import "./globals.css";
 import "@/styles/layout.css";
 import "@/styles/home.css";
 import "@/styles/detail-pages.css";
+import "@/styles/page-templates.css";
+import "@/styles/home-v21.css";
 
 export const metadata: Metadata = {
   title: {

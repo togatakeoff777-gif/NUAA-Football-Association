@@ -9,9 +9,13 @@ import {
   wechatPlatform,
 } from "@/data/platforms";
 
-export function SiteFooter() {
+type SiteFooterProps = {
+  homeCompact?: boolean;
+};
+
+export function SiteFooter({ homeCompact = false }: SiteFooterProps) {
   return (
-    <footer className="site-footer">
+    <footer className={`site-footer${homeCompact ? " site-footer-home" : ""}`}>
       <div className="page-shell">
         <div className="footer-main">
           <div>
@@ -60,7 +64,7 @@ export function SiteFooter() {
 
         <div className="footer-bottom">
           <p>© 2026 {associationIdentity.shortName} · {associationIdentity.establishedLabel}</p>
-          <p>V2.1 静态原型 · 演示内容均不代表真实历史记录</p>
+          <p>{homeCompact ? "V2.2 首页体验原型" : "V2.1 静态原型"} · 演示内容均不代表真实历史记录</p>
         </div>
       </div>
     </footer>

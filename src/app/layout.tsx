@@ -5,6 +5,7 @@ import "@/styles/home.css";
 import "@/styles/detail-pages.css";
 import "@/styles/page-templates.css";
 import "@/styles/home-v21.css";
+import "@/styles/home-v22.css";
 
 export const metadata: Metadata = {
   title: {
@@ -35,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN">
+    <html data-scroll-behavior="smooth" lang="zh-CN">
       <body>{children}</body>
     </html>
   );

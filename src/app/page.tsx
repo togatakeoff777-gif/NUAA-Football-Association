@@ -1,13 +1,15 @@
 import { HomePage } from "@/components/home/home-page";
-import { SiteFooter } from "@/components/layout/site-footer";
+import { HomeScrollController } from "@/components/home/home-scroll-controller";
 import { SiteHeader } from "@/components/layout/site-header";
 
 export default function Home() {
   return (
     <>
-      <SiteHeader overlay />
-      <HomePage />
-      <SiteFooter />
+      <SiteHeader fixed overlay />
+      <div className="home-scroll-shell">
+        <HomePage />
+      </div>
+      <HomeScrollController />
     </>
   );
 }

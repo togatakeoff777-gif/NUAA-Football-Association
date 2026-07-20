@@ -27,14 +27,14 @@ export function MatchCenter() {
   const recentResult: DemoMatch | null = demoMatchCentre.recentResult;
 
   return (
-    <section className="home-match-center" aria-labelledby="home-match-center-title">
+    <section className="home-match-center home-screen" data-home-screen="matches" id="home-match" aria-labelledby="home-match-center-title">
       <div className="page-shell">
-        <div className="home-section-bar">
+        <div className="home-section-bar" data-home-reveal data-home-delay="0">
           <div><p>MATCH CONTROL / 比赛信息中心</p><h2 id="home-match-center-title">下一场，从这里开始</h2></div>
           <StatusBadge>演示数据 · 非真实赛程</StatusBadge>
         </div>
         <div className="match-center-grid">
-          <div className="next-match-panel">
+          <div className="next-match-panel" data-home-reveal data-home-delay="1">
             {nextMatch ? (
               <>
                 <div className="match-panel-topline">
@@ -52,7 +52,7 @@ export function MatchCenter() {
             ) : <EmptyState title="当前暂无已公布赛程" description="请关注赛事公告。" href="/news" actionLabel="查看公告" />}
           </div>
 
-          <div className="match-center-side">
+          <div className="match-center-side" data-home-reveal data-home-delay="2">
             <article className="recent-result-panel">
               <div className="side-panel-heading"><div><span>RECENT RESULT</span><h3>最近赛果</h3></div><Link href="/competitions/schedule">全部赛果 →</Link></div>
               {recentResult ? <><p>{recentResult.competitionName} · {recentResult.roundLabel}</p><Matchup compact match={recentResult} /></> : <EmptyState compact title="暂无赛果" description="经核验后发布。" />}
@@ -70,7 +70,7 @@ export function MatchCenter() {
             </article>
           </div>
         </div>
-        <p className="home-demo-note">日期、球队、场地、比分及赛事状态均为界面演示数据，正式信息以协会公告为准。</p>
+        <p className="home-demo-note" data-home-reveal data-home-delay="3">日期、球队、场地、比分及赛事状态均为界面演示数据，正式信息以协会公告为准。</p>
       </div>
     </section>
   );

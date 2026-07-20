@@ -9,7 +9,6 @@ const screenLabels = [
   "年度赛事",
   "新闻动态",
   "关于协会",
-  "网站信息",
 ] as const;
 
 const desktopQuery = "(min-width: 1024px)";
@@ -40,6 +39,7 @@ export function HomeScrollController() {
 
     if (animationFrameRef.current !== null) cancelAnimationFrame(animationFrameRef.current);
     container.classList.remove("is-programmatic-scrolling");
+    container.classList.remove("is-footer-flow");
     activeIndexRef.current = safeIndex;
     setActiveIndex(safeIndex);
 
@@ -111,6 +111,12 @@ export function HomeScrollController() {
 
     const desktopMedia = window.matchMedia(desktopQuery);
     let accumulatedDelta = 0;
+    const lastSection = sections.at(-1);
+
+    const syncFooterFlow = () => {
+      if (!lastSection) return;
+      container.classList.toggle("is-footer-flow", container.scrollTop > lastSection.offsetTop + 2);
+    };
 
     const canSectionScrollInternally = (section: HTMLElement, direction: 1 | -1) => {
       if (section.scrollHeight <= container.clientHeight + 2) return false;
@@ -128,7 +134,18 @@ export function HomeScrollController() {
       const current = sections[activeIndexRef.current];
       if (!current || canSectionScrollInternally(current, direction)) return;
 
-      if ((direction < 0 && activeIndexRef.current === 0) || (direction > 0 && activeIndexRef.current === sections.length - 1)) {
+      if (container.classList.contains("is-footer-flow")) {
+        accumulatedDelta = 0;
+        return;
+      }
+
+      if (direction > 0 && activeIndexRef.current === sections.length - 1) {
+        container.classList.add("is-footer-flow");
+        accumulatedDelta = 0;
+        return;
+      }
+
+      if (direction < 0 && activeIndexRef.current === 0) {
         accumulatedDelta = 0;
         return;
       }
@@ -151,6 +168,7 @@ export function HomeScrollController() {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!desktopMedia.matches || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+      if (container.classList.contains("is-footer-flow")) return;
       const target = event.target as HTMLElement | null;
       if (target?.isContentEditable || target?.matches("input, textarea, select, button, a")) return;
 
@@ -166,13 +184,16 @@ export function HomeScrollController() {
     };
 
     container.addEventListener("wheel", handleWheel, { passive: false });
+    container.addEventListener("scroll", syncFooterFlow, { passive: true });
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
       observer.disconnect();
       if (animationFrameRef.current !== null) cancelAnimationFrame(animationFrameRef.current);
       container.classList.remove("is-programmatic-scrolling");
+      container.classList.remove("is-footer-flow");
       container.removeEventListener("wheel", handleWheel);
+      container.removeEventListener("scroll", syncFooterFlow);
       window.removeEventListener("keydown", handleKeyDown);
       container.classList.remove("home-motion-ready");
     };

@@ -22,14 +22,9 @@ export function HomePage() {
       >
         <AssociationSummary />
       </section>
-      <section
-        className="home-screen home-footer-screen"
-        data-home-screen="footer"
-        id="home-footer"
-        aria-label="网站信息"
-      >
+      <div className="home-footer-flow" id="home-footer">
         <SiteFooter homeCompact />
-      </section>
+      </div>
     </main>
   );
 }

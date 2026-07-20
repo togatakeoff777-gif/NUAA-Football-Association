@@ -5,14 +5,16 @@ import { associationIdentity } from "@/data/association";
 export function Hero() {
   return (
     <section className="hero home-screen home-screen-hero" data-home-screen="hero" id="top" aria-labelledby="hero-title">
-      <Image
-        className="hero-image"
-        src="/images/hero-football.jpg"
-        alt="足球鞋踩在足球上，象征天目湖校园足球蓄势出发"
-        fill
-        preload
-        sizes="100vw"
-      />
+      <div className="hero-image-frame">
+        <Image
+          className="hero-image"
+          src="/images/hero-football.jpg"
+          alt="足球鞋踩在足球上，象征天目湖校园足球蓄势出发"
+          fill
+          preload
+          sizes="(min-width: 768px) 85vw, 100vw"
+        />
+      </div>
       <div className="hero-overlay" aria-hidden="true" />
       <div className="hero-engineering-grid" aria-hidden="true" />
       <div className="hero-radar" aria-hidden="true">

@@ -17,7 +17,7 @@ export function SiteFooter({ homeCompact = false }: SiteFooterProps) {
   return (
     <footer className={`site-footer${homeCompact ? " site-footer-home" : ""}`}>
       <div className="page-shell">
-        <div className="footer-main" data-home-reveal data-home-delay="0">
+        <div className="footer-main">
           <div>
             <div className="footer-brand">
               <BrandMark />
@@ -58,11 +58,11 @@ export function SiteFooter({ homeCompact = false }: SiteFooterProps) {
           </div>
         </div>
 
-        <div className="footer-declarations" aria-label="网站范围声明" data-home-reveal data-home-delay="1">
+        <div className="footer-declarations" aria-label="网站范围声明">
           {footerScopeStatements.map((statement) => <p key={statement}>{statement}</p>)}
         </div>
 
-        <div className="footer-bottom" data-home-reveal data-home-delay="2">
+        <div className="footer-bottom">
           <p>© 2026 {associationIdentity.shortName} · {associationIdentity.establishedLabel}</p>
           <p>{homeCompact ? "V2.2 首页体验原型" : "V2.1 静态原型"} · 演示内容均不代表真实历史记录</p>
         </div>

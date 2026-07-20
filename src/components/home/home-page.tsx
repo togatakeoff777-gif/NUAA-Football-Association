@@ -15,12 +15,19 @@ export function HomePage() {
       <CurrentCompetitions />
       <NewsMediaSection />
       <section
-        className="home-screen home-about-footer-screen"
+        className="home-screen home-about-screen"
         data-home-screen="about"
         id="home-about"
         aria-labelledby="home-association-title"
       >
         <AssociationSummary />
+      </section>
+      <section
+        className="home-screen home-footer-screen"
+        data-home-screen="footer"
+        id="home-footer"
+        aria-label="网站信息"
+      >
         <SiteFooter homeCompact />
       </section>
     </main>

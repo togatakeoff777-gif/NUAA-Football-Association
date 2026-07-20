@@ -9,6 +9,7 @@ const screenLabels = [
   "年度赛事",
   "新闻动态",
   "关于协会",
+  "网站信息",
 ] as const;
 
 const desktopQuery = "(min-width: 1024px)";

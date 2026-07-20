@@ -273,107 +273,116 @@
   min-width: 150px;
 }
 
-/* Association and footer share the sixth chapter. */
-.home-about-footer-screen {
-  min-height: calc(100vh - var(--header-height));
-  min-height: calc(100svh - var(--header-height));
-  min-height: calc(100dvh - var(--header-height));
+/* Association and website information occupy separate closing chapters. */
+.home-about-screen {
+  background: linear-gradient(100deg, #f1f7ff, white);
+}
+
+.home-about-screen .home-association-summary {
+  width: 100%;
+  padding: clamp(54px, 7vh, 78px) 0;
+}
+
+.home-about-screen .association-summary-grid {
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+  gap: clamp(44px, 6vw, 76px);
+}
+
+.home-about-screen .association-summary-copy > span {
+  margin-top: 18px;
+  line-height: 1.85;
+}
+
+.home-about-screen .association-summary-copy .button {
+  margin-top: 25px;
+}
+
+.home-about-screen .association-summary-stats > div {
+  padding: 23px 17px;
+}
+
+.home-about-screen .association-summary-stats dt {
+  font-size: 34px;
+}
+
+.home-about-screen .association-summary-id {
+  bottom: -38px;
+}
+
+.home-footer-screen {
   align-items: stretch;
-  flex-direction: column;
   background: var(--space-blue);
 }
 
-.home-about-footer-screen .home-association-summary {
-  flex: 0 0 auto;
-  padding: clamp(30px, 4.5vh, 50px) 0;
-}
-
-.home-about-footer-screen .association-summary-grid {
-  gap: clamp(35px, 5vw, 64px);
-}
-
-.home-about-footer-screen .association-summary-copy > span {
-  margin-top: 12px;
-  line-height: 1.7;
-}
-
-.home-about-footer-screen .association-summary-copy .button {
-  margin-top: 17px;
-}
-
-.home-about-footer-screen .association-summary-stats > div {
-  padding: 16px 13px;
-}
-
-.home-about-footer-screen .association-summary-stats dt {
-  font-size: 30px;
-}
-
-.home-about-footer-screen .association-summary-id {
-  bottom: -27px;
-}
-
 .site-footer-home {
-  flex: 1 0 auto;
+  min-height: 100%;
+  width: 100%;
+  flex: 1 0 100%;
   display: flex;
-  align-items: center;
-  padding-top: clamp(28px, 4vh, 46px);
+  align-items: stretch;
+  padding-top: 0;
 }
 
 .site-footer-home > .page-shell {
   width: min(1240px, calc(100% - 64px));
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  flex-direction: column;
+  padding-top: clamp(34px, 5vh, 58px);
 }
 
 .site-footer-home .footer-main {
-  grid-template-columns: 1.05fr .7fr 1fr;
-  gap: clamp(34px, 5vw, 62px);
-  padding-bottom: clamp(24px, 3.5vh, 40px);
+  grid-template-columns: 1.05fr .62fr 1.05fr;
+  gap: clamp(42px, 6vw, 76px);
+  padding-bottom: clamp(34px, 5vh, 54px);
 }
 
 .site-footer-home .footer-intro {
-  margin-top: 14px;
-  font-size: 11px;
-  line-height: 1.7;
+  margin-top: 20px;
+  font-size: 12px;
+  line-height: 1.85;
 }
 
 .site-footer-home .footer-column {
-  gap: 7px;
+  gap: 10px;
 }
 
 .site-footer-home .footer-column a,
 .site-footer-home .footer-column span {
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .site-footer-home .footer-wechat img {
-  width: 54px;
-  height: 54px;
+  width: 60px;
+  height: 60px;
 }
 
 .site-footer-home .footer-emblem {
-  margin-top: 5px;
-  padding: 6px 9px;
+  margin-top: 8px;
+  padding: 8px 11px;
 }
 
 .site-footer-home .footer-emblem img {
-  width: 35px;
-  height: 35px;
+  width: 40px;
+  height: 40px;
 }
 
 .site-footer-home .footer-declarations {
   grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-  padding: 16px 0;
+  gap: clamp(20px, 3vw, 34px);
+  padding: clamp(20px, 3vh, 28px) 0;
 }
 
 .site-footer-home .footer-declarations p {
-  font-size: 9px;
-  line-height: 1.55;
+  font-size: 10.5px;
+  line-height: 1.72;
 }
 
 .site-footer-home .footer-bottom {
-  min-height: 48px;
-  font-size: 9px;
+  min-height: 58px;
+  font-size: 10.5px;
+  line-height: 1.65;
 }
 
 /* Desktop chapter navigation */
@@ -477,9 +486,12 @@
   }
 
   .home-current-competitions .current-competition-layout,
-  .home-match-center .match-center-grid,
-  .home-about-footer-screen .association-summary-grid {
+  .home-match-center .match-center-grid {
     grid-template-columns: 1.08fr .92fr;
+  }
+
+  .home-about-screen .association-summary-grid {
+    grid-template-columns: 1.04fr .96fr;
   }
 
   .home-match-center .match-center-grid {
@@ -587,24 +599,78 @@
     line-height: 1.6;
   }
 
-  .home-about-footer-screen .home-association-summary {
-    padding: 23px 0;
+  .home-about-screen .home-association-summary {
+    padding: 36px 0;
   }
 
-  .site-footer-home {
-    padding-top: 22px;
+  .home-about-screen .association-summary-copy > span {
+    margin-top: 13px;
+  }
+
+  .home-about-screen .association-summary-copy .button {
+    margin-top: 18px;
+  }
+
+  .home-about-screen .association-summary-stats > div {
+    padding: 17px 13px;
+  }
+
+  .home-about-screen .association-summary-id {
+    bottom: -28px;
+  }
+
+  .site-footer-home > .page-shell {
+    padding-top: 24px;
   }
 
   .site-footer-home .footer-main {
-    padding-bottom: 18px;
+    gap: 42px;
+    padding-bottom: 23px;
+  }
+
+  .site-footer-home .footer-intro {
+    margin-top: 13px;
+    font-size: 11px;
+    line-height: 1.7;
+  }
+
+  .site-footer-home .footer-column {
+    gap: 7px;
+  }
+
+  .site-footer-home .footer-column a,
+  .site-footer-home .footer-column span {
+    font-size: 11px;
+  }
+
+  .site-footer-home .footer-wechat img {
+    width: 52px;
+    height: 52px;
+  }
+
+  .site-footer-home .footer-emblem {
+    margin-top: 4px;
+    padding: 6px 9px;
+  }
+
+  .site-footer-home .footer-emblem img {
+    width: 34px;
+    height: 34px;
   }
 
   .site-footer-home .footer-declarations {
-    padding: 11px 0;
+    gap: 20px;
+    padding: 14px 0;
+  }
+
+  .site-footer-home .footer-declarations p {
+    font-size: 10px;
+    line-height: 1.65;
   }
 
   .site-footer-home .footer-bottom {
-    min-height: 40px;
+    min-height: 46px;
+    font-size: 10px;
   }
 }
 
@@ -671,12 +737,12 @@
     gap: 10px;
   }
 
-  .home-about-footer-screen .association-summary-grid {
+  .home-about-screen .association-summary-grid {
     grid-template-columns: 1fr;
     gap: 28px;
   }
 
-  .home-about-footer-screen .association-summary-id {
+  .home-about-screen .association-summary-id {
     position: static;
   }
 
@@ -758,18 +824,25 @@
     width: 100%;
   }
 
-  .home-about-footer-screen {
+  .home-about-screen,
+  .home-footer-screen {
     min-height: 0;
     display: block;
   }
 
-  .home-about-footer-screen .home-association-summary {
+  .home-about-screen .home-association-summary {
     padding: 56px 0;
   }
 
   .site-footer-home {
+    min-height: 0;
     display: block;
     padding-top: 54px;
+  }
+
+  .site-footer-home > .page-shell {
+    display: block;
+    padding-top: 0;
   }
 
   .site-footer-home .footer-main {

@@ -115,11 +115,11 @@ export const coreCompetitions = [
     displayStatus: {
       key: "completed",
       label: competitionStatusLabels.completed,
-      dataStatus: "demo",
-      badge: "演示状态",
+      dataStatus: "confirmed",
+      badge: "来源已确认",
     },
-    stageLabel: "赛季归档演示",
-    detailHref: "/competitions/current#womens-intercollege-cup",
+    stageLabel: "2026赛季已归档",
+    detailHref: "/competitions/2026-womens-intercollege-cup",
   },
 ] as const satisfies readonly Competition[];
 

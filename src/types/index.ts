@@ -97,6 +97,13 @@ export type NewsItem = ContentOwnership & {
   source?: string;
 };
 
+export type ArchiveGalleryImage = {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+};
+
 export type NoticeItem = ContentOwnership & {
   id: string;
   category: NoticeCategory;

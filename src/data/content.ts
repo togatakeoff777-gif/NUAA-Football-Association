@@ -4,6 +4,7 @@ import {
 } from "@/data/association";
 import { BILIBILI_PROFILE_URL } from "@/data/platforms";
 import { officialMensCupNews } from "@/data/mens-intercollege-cup-2026";
+import { officialWomensCupNews } from "@/data/womens-intercollege-cup-2026";
 import type { NewsCategory, NewsItem, NoticeCategory, NoticeItem } from "@/types";
 
 const sharedMetadata = {
@@ -74,7 +75,7 @@ export const demoNews = [
   },
 ] as const satisfies readonly NewsItem[];
 
-export const publishedNews = [...officialMensCupNews].sort((left, right) =>
+export const publishedNews = [...officialMensCupNews, ...officialWomensCupNews].sort((left, right) =>
   right.dateLabel.localeCompare(left.dateLabel),
 );
 

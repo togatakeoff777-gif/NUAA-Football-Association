@@ -1,0 +1,48 @@
+{
+  "competition": {
+    "canonicalTitle": "2026年南京航空航天大学女子足球院际杯（天目湖校区）",
+    "shortTitle": "2026女子足球院际杯",
+    "archiveStatus": "已结束",
+    "year": 2026,
+    "venue": "南京航空航天大学天目湖校区",
+    "exactCompetitionDates": null,
+    "sourceArticlePublishedAt": "2026-06-22 16:53",
+    "sourceArticlePublisher": "NUAA湖畔印象",
+    "sourceArticleTitle": "跃动牧星·活力青年｜绿茵逐梦，铿锵绽放——2026天目湖校区女足联赛圆满收官"
+  },
+  "podium": [
+    {
+      "rank": 1,
+      "team": "人文-自动化-外国语联队",
+      "note": "报道确认冠军队以2:0赢得比赛"
+    },
+    {
+      "rank": 2,
+      "team": "经济与管理学院"
+    },
+    {
+      "rank": 3,
+      "team": "牧星学院"
+    }
+  ],
+  "awards": [
+    {
+      "award": "赛事MVP（金球奖）",
+      "recipient": "赵晨希"
+    },
+    {
+      "award": "赛事最佳射手（金靴奖）",
+      "recipient": "祝飞雨、季彦廷"
+    },
+    {
+      "award": "赛事最佳门将（金手套奖）",
+      "recipient": "许京俏"
+    }
+  ],
+  "knownLimitations": [
+    "未提供完整赛程、逐场比分、积分榜、球队完整名单或逐场裁判安排。",
+    "不得根据照片、报道措辞或男足数据推测缺失字段。",
+    "不得虚构参赛队数量、精确赛期、其他奖项或个人数据。",
+    "没有处罚决定或单场战报资料，本轮不创建虚构的纪律与比赛报告内容。"
+  ]
+}

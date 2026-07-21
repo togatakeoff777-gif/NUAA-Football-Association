@@ -1,11 +1,11 @@
-.cup-archive-page { min-width: 0; overflow-x: clip; background: #f8fafd; }
-.cup-archive-hero { position: relative; min-height: clamp(650px, calc(100svh - var(--header-height)), 880px); overflow: hidden; background: var(--space-blue); color: white; }
+.cup-archive-page { --archive-nav-height: 52px; min-width: 0; padding-top: var(--header-height); overflow-x: clip; background: #f8fafd; }
+.cup-archive-hero { position: relative; min-height: clamp(560px, calc(82svh - var(--header-height)), 720px); overflow: hidden; background: var(--space-blue); color: white; }
 .cup-archive-hero-image { object-fit: cover; object-position: 50% 58%; }
 .cup-archive-hero-overlay { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(5,17,43,.98) 0%, rgba(7,25,58,.91) 43%, rgba(6,19,44,.52) 72%, rgba(4,12,30,.34) 100%), linear-gradient(0deg, rgba(5,15,37,.88), transparent 58%); }
-.cup-archive-hero-inner { position: relative; z-index: 1; min-height: inherit; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, .55fr); align-items: end; gap: clamp(50px, 7vw, 100px); padding-block: clamp(92px, 13vh, 136px) clamp(64px, 9vh, 92px); }
+.cup-archive-hero-inner { position: relative; z-index: 1; min-height: inherit; display: grid; grid-template-columns: minmax(0, 1.18fr) minmax(280px, .52fr); align-items: center; gap: clamp(40px, 6vw, 84px); padding-block: clamp(56px, 8vh, 82px); }
 .cup-archive-hero-copy > p:first-child, .cup-section-heading > div > p, .cup-overview-primary > p, .cup-overview-secondary section > p, .cup-final-scorecard > p:first-child, .cup-final-timeline header p, .cup-shootout header p, .cup-scorers-panel header p, .cup-discipline-panel section > p, .cup-red-card-panel > div:first-child p, .cup-awards-panel > div:first-child p, .cup-official-overview p, .cup-final-officials > div > p, .cup-document-callout p { color: #69b9ff; font-size: 9px; font-weight: 850; letter-spacing: .16em; }
 .cup-official-status { width: fit-content; display: inline-flex; margin-top: 19px; padding: 7px 10px; border: 1px solid rgba(129,205,255,.46); background: rgba(43,116,198,.24); color: #b8e3ff; font-size: 10px; font-weight: 800; letter-spacing: .08em; }
-.cup-archive-hero-copy h1 { max-width: 920px; margin-top: 20px; font-size: clamp(48px, 5.2vw, 78px); font-weight: 850; line-height: 1.03; letter-spacing: -.065em; text-wrap: balance; }
+.cup-archive-hero-copy h1 { max-width: 790px; margin-top: 18px; font-size: clamp(40px, 4.35vw, 66px); font-weight: 850; line-height: 1.08; letter-spacing: -.055em; text-wrap: balance; }
 .cup-archive-hero-copy > p:not(:first-child) { max-width: 760px; margin-top: 22px; color: rgba(255,255,255,.72); font-size: 14px; line-height: 1.85; }
 .cup-archive-hero-copy > div { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 29px; }
 .cup-archive-hero-copy a { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 28px; padding: 0 18px; border: 1px solid rgba(255,255,255,.4); color: white; font-size: 11px; font-weight: 780; }
@@ -14,16 +14,17 @@
 .cup-archive-hero-summary > div { display: grid; grid-template-columns: 82px 1fr; gap: 16px; padding: 15px 18px; border-bottom: 1px solid rgba(255,255,255,.12); }
 .cup-archive-hero-summary dt { color: rgba(255,255,255,.5); font-size: 9px; }
 .cup-archive-hero-summary dd { margin: 0; font-size: 12px; font-weight: 760; }
-.cup-archive-nav { position: sticky; z-index: 60; top: var(--header-height); border-bottom: 1px solid var(--line); background: rgba(255,255,255,.96); backdrop-filter: blur(12px); }
+.cup-archive-nav { position: sticky; z-index: 45; top: var(--header-height); min-height: var(--archive-nav-height); border-bottom: 1px solid var(--line); background: rgba(255,255,255,.96); backdrop-filter: blur(12px); }
 .cup-archive-nav .page-shell { display: flex; overflow-x: auto; scrollbar-width: none; }
 .cup-archive-nav .page-shell::-webkit-scrollbar { display: none; }
 .cup-archive-nav a { flex: 0 0 auto; min-height: 52px; display: grid; place-items: center; padding: 0 16px; border-left: 1px solid var(--line); color: #526178; font-size: 10px; font-weight: 760; white-space: nowrap; }
 .cup-archive-nav a:last-child { border-right: 1px solid var(--line); }
-.cup-archive-nav a:hover, .cup-archive-nav a:focus-visible { background: var(--glacier); color: var(--nuaa-blue); }
+.cup-archive-nav a:hover, .cup-archive-nav a:focus-visible, .cup-archive-nav a[aria-current="location"] { background: var(--glacier); color: var(--nuaa-blue); }
+.cup-archive-nav a[aria-current="location"] { box-shadow: inset 0 -2px var(--aviation-blue); }
 
-.cup-archive-section { scroll-margin-top: calc(var(--header-height) + 52px); padding: clamp(74px, 8vw, 104px) 0; background: white; }
+.cup-archive-section { scroll-margin-top: calc(var(--header-height) + var(--archive-nav-height) + 14px); padding: clamp(58px, 6vw, 82px) 0; background: white; }
 .cup-archive-section-tint { background: #f1f6fc; }
-.cup-section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 56px; margin-bottom: 34px; }
+.cup-section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 42px; margin-bottom: 28px; }
 .cup-section-heading h2 { margin-top: 8px; font-size: clamp(32px, 3.5vw, 46px); line-height: 1.12; letter-spacing: -.05em; }
 .cup-section-heading > span { max-width: 470px; color: var(--muted); font-size: 12px; line-height: 1.75; }
 .cup-source-note, .cup-data-note { color: var(--muted); font-size: 10px; line-height: 1.75; }
@@ -50,14 +51,14 @@
 .cup-results-table, .cup-standing-table, .cup-stat-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 .cup-results-table caption { padding: 14px 17px; background: var(--space-blue); color: white; font-size: 11px; font-weight: 760; text-align: left; }
 .cup-results-table th, .cup-standing-table th, .cup-stat-table th { height: 42px; padding: 0 13px; background: #edf4fc; color: #5b6b80; font-size: 9px; text-align: left; white-space: nowrap; }
-.cup-results-table td { height: 68px; padding: 10px 13px; border-top: 1px solid var(--line); color: #5a687d; font-size: 10px; }
-.cup-results-table td:nth-child(4), .cup-results-table td:nth-child(6) { min-width: 155px; color: var(--ink); }.cup-results-table td:nth-child(5) { min-width: 128px; color: var(--nuaa-blue); }.cup-results-table td:last-child { min-width: 180px; }
+.cup-results-table td { height: 64px; padding: 10px 13px; border-top: 1px solid var(--line); color: #5a687d; font-size: 11px; }
+.cup-results-table td:nth-child(4), .cup-results-table td:nth-child(6) { color: var(--ink); }.cup-results-table td:nth-child(5) { color: var(--nuaa-blue); white-space: nowrap; }
 .cup-results-mobile, .cup-standing-mobile, .cup-stat-mobile { display: none; }
 
 .cup-standing-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
 .cup-standing-group { min-width: 0; border-top: 3px solid var(--nuaa-blue); background: #f9fbfe; }
 .cup-standing-group > header { display: grid; grid-template-columns: 50px auto 1fr; align-items: center; gap: 12px; padding: 18px; }.cup-standing-group > header > span { color: var(--aviation-blue); font-size: 8px; font-weight: 850; }.cup-standing-group > header > strong { font-size: 31px; }.cup-standing-group > header > p { color: var(--muted); font-size: 10px; text-align: right; }
-.cup-standing-table { min-width: 620px; }.cup-standing-table td { height: 54px; padding: 9px 11px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; }.cup-standing-table td:nth-child(2) { min-width: 170px; color: var(--ink); }.cup-standing-table td:last-child { color: var(--nuaa-blue); font-size: 14px; }
+.cup-standing-table { min-width: 0; }.cup-standing-table td { height: 54px; padding: 9px 9px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; }.cup-standing-table td:nth-child(2) { min-width: 150px; color: var(--ink); }.cup-standing-table td:last-child { color: var(--nuaa-blue); font-size: 14px; }
 .cup-standing-group .cup-data-note { padding: 16px 18px; border: 1px solid var(--line); border-top: 0; background: #fff9ed; color: #79532a; }
 
 .cup-final-section { background: #07152f; color: white; }
@@ -94,14 +95,40 @@
 .cup-final-officials { display: grid; grid-template-columns: 220px 1fr; margin-top: 28px; border-block: 1px solid var(--line); }.cup-final-officials > div { padding: 24px; background: var(--space-blue); color: white; }.cup-final-officials h3 { margin-top: 6px; font-size: 22px; }.cup-final-officials dl { display: grid; grid-template-columns: repeat(4, 1fr); margin: 0; }.cup-final-officials dl > div { padding: 15px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }.cup-final-officials dt { color: var(--muted); font-size: 8px; }.cup-final-officials dd { margin: 5px 0 0; font-size: 10px; font-weight: 720; }
 
 .cup-story-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 3px solid var(--space-blue); }
-.cup-story-list > a { min-width: 0; display: grid; grid-template-columns: 190px 1fr; min-height: 210px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: white; }.cup-story-list > a:nth-child(even) { border-right: 0; }.cup-story-list > a.is-featured { grid-column: 1 / -1; grid-template-columns: 1.05fr .95fr; min-height: 390px; border-right: 0; }.cup-story-list > a > div { position: relative; min-height: 210px; overflow: hidden; }.cup-story-list > a.is-featured > div { min-height: 390px; }.cup-story-list img, .cup-gallery img, .detail-story-figure img { object-fit: cover; }.cup-story-list article { display: flex; align-items: flex-start; flex-direction: column; padding: 22px; }.cup-story-list article > span { color: var(--aviation-blue); font-size: 8px; font-weight: 800; }.cup-story-list h3 { margin-top: 9px; font-size: 18px; line-height: 1.45; }.cup-story-list .is-featured h3 { font-size: 29px; }.cup-story-list article > p { margin-top: 11px; color: var(--muted); font-size: 10px; line-height: 1.7; }.cup-story-list article > b { margin-top: auto; padding-top: 17px; color: var(--aviation-blue); font-size: 10px; }
-.cup-gallery { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 220px; gap: 8px; margin-top: 34px; }.cup-gallery figure { position: relative; overflow: hidden; }.cup-gallery figure.is-wide { grid-column: span 2; grid-row: span 2; }
+.cup-story-list > a { min-width: 0; display: grid; grid-template-columns: minmax(170px, .72fr) minmax(0, 1.28fr); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: white; }.cup-story-list > a:nth-child(even) { border-right: 0; }.cup-story-list > a.is-featured { grid-column: 1 / -1; grid-template-columns: 1.05fr .95fr; border-right: 0; }.cup-story-list > a > div { position: relative; min-height: 220px; overflow: hidden; }.cup-story-list > a.is-featured > div { min-height: 340px; }.cup-story-list img, .cup-womens-story-card img, .detail-story-figure img { object-fit: cover; }.cup-story-list article { display: flex; align-items: flex-start; flex-direction: column; padding: 22px; }.cup-story-list article > span { color: var(--aviation-blue); font-size: 8px; font-weight: 800; }.cup-story-list h3 { margin-top: 9px; font-size: 18px; line-height: 1.45; }.cup-story-list .is-featured h3 { font-size: 29px; }.cup-story-list article > p { margin-top: 11px; color: var(--muted); font-size: 10px; line-height: 1.7; }.cup-story-list article > b { margin-top: auto; padding-top: 17px; color: var(--aviation-blue); font-size: 10px; }
+.cup-gallery-balanced { columns: 3 300px; column-gap: 10px; margin-top: 30px; }
+.cup-gallery-balanced figure { width: 100%; margin: 0 0 10px; overflow: hidden; break-inside: avoid; background: #dce7f2; }
+.cup-gallery-balanced img { display: block; width: 100%; height: auto; }
 .cup-document-callout { display: flex; align-items: center; justify-content: space-between; gap: 30px; margin-top: 34px; padding: 27px 30px; border-left: 5px solid #5fb5f5; background: var(--space-blue); color: white; }.cup-document-callout h3 { margin-top: 6px; font-size: 24px; }.cup-document-callout > div > span { display: block; margin-top: 7px; color: rgba(255,255,255,.62); font-size: 10px; }.cup-document-callout > a { min-height: 46px; display: inline-flex; align-items: center; gap: 23px; padding: 0 17px; background: white; color: var(--nuaa-blue); font-size: 11px; font-weight: 780; white-space: nowrap; }
 .cup-archive-return { padding: 24px 0; border-top: 1px solid var(--line); background: #eef4fb; }.cup-archive-return .page-shell { display: flex; justify-content: space-between; gap: 24px; color: var(--muted); font-size: 10px; }.cup-archive-return a { color: var(--aviation-blue); font-weight: 760; }
 
 .detail-story-figure { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: var(--glacier); }
 .detail-story-list { display: grid; gap: 9px; padding: 20px 20px 20px 40px; border: 1px solid var(--line); background: #f7faff; color: #44536a; font-size: 13px; line-height: 1.75; }
 .detail-article-aside li > a:not(:has(strong)) { color: var(--aviation-blue); font-size: 10px; font-weight: 760; }
+.detail-archive-gallery { columns: 2 260px; margin-block: 22px 30px; }
+
+.cup-archive-hero-womens .cup-archive-hero-image { object-position: center 48%; }
+.cup-archive-hero-womens .cup-archive-hero-overlay { background: linear-gradient(90deg, rgba(5,17,43,.98) 0%, rgba(7,25,58,.92) 47%, rgba(6,19,44,.46) 75%, rgba(4,12,30,.26) 100%), linear-gradient(0deg, rgba(5,15,37,.78), transparent 58%); }
+.cup-archive-hero-womens .cup-archive-hero-copy h1 { max-width: 830px; font-size: clamp(38px, 4vw, 61px); }
+.cup-womens-overview { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(330px, .92fr); border-top: 3px solid var(--space-blue); }
+.cup-womens-overview > article { padding: clamp(28px, 4vw, 44px); border: 1px solid var(--line); border-top: 0; background: linear-gradient(135deg, #edf5ff, white 72%); }
+.cup-womens-overview > article > p:first-child, .cup-archive-source-section div > div > p { color: var(--aviation-blue); font-size: 9px; font-weight: 850; letter-spacing: .16em; }
+.cup-womens-overview > article h3 { margin-top: 10px; font-size: clamp(26px, 3vw, 38px); }
+.cup-womens-overview > article p:last-child { max-width: 650px; margin-top: 18px; color: var(--muted); font-size: 13px; line-height: 1.85; }
+.cup-womens-overview > dl { margin: 0; border-right: 1px solid var(--line); }
+.cup-womens-overview > dl > div { display: grid; grid-template-columns: 92px 1fr; gap: 18px; padding: 17px 22px; border-bottom: 1px solid var(--line); background: white; }
+.cup-womens-overview dt { color: var(--muted); font-size: 9px; }.cup-womens-overview dd { margin: 0; font-size: 11px; font-weight: 720; }
+.cup-womens-podium { display: grid; grid-template-columns: 1.12fr .94fr .94fr; border-top: 3px solid var(--space-blue); }
+.cup-womens-podium article { min-height: 190px; display: flex; align-items: flex-start; flex-direction: column; padding: 24px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: white; }
+.cup-womens-podium article:first-child { min-height: 225px; background: linear-gradient(145deg, #102f68, #071831); color: white; }
+.cup-womens-podium article > span { color: var(--aviation-blue); font-size: 24px; font-weight: 820; }.cup-womens-podium article:first-child > span { color: #83caff; }
+.cup-womens-podium article > p { margin-top: auto; color: var(--aviation-blue); font-size: 9px; font-weight: 800; }.cup-womens-podium article h3 { margin-top: 7px; font-size: clamp(18px, 2vw, 25px); line-height: 1.35; }.cup-womens-podium article small { margin-top: 8px; color: var(--muted); font-size: 9px; }.cup-womens-podium article:first-child small { color: rgba(255,255,255,.65); }
+.cup-womens-awards { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 22px; border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.cup-womens-awards article { min-height: 148px; display: flex; flex-direction: column; padding: 20px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: white; }.cup-womens-awards span { color: var(--aviation-blue); font-size: 8px; font-weight: 850; letter-spacing: .12em; }.cup-womens-awards h3 { margin-top: 12px; color: var(--muted); font-size: 11px; }.cup-womens-awards strong { margin-top: auto; padding-top: 20px; color: var(--nuaa-blue); font-size: 22px; }
+.cup-womens-story-card { display: grid; grid-template-columns: minmax(0, .98fr) minmax(0, 1.02fr); border-top: 3px solid var(--space-blue); background: white; }
+.cup-womens-story-card > div { position: relative; min-height: 390px; overflow: hidden; }.cup-womens-story-card > article { display: flex; align-items: flex-start; flex-direction: column; padding: clamp(27px, 4vw, 44px); border: 1px solid var(--line); border-top: 0; }.cup-womens-story-card article > span { color: var(--aviation-blue); font-size: 9px; font-weight: 800; }.cup-womens-story-card h3 { margin-top: 14px; font-size: clamp(24px, 3vw, 34px); line-height: 1.4; }.cup-womens-story-card p { margin-top: 18px; color: var(--muted); font-size: 12px; line-height: 1.8; }.cup-womens-story-card b { margin-top: auto; padding-top: 24px; color: var(--aviation-blue); font-size: 11px; }
+.cup-archive-source-section { scroll-margin-top: calc(var(--header-height) + var(--archive-nav-height) + 14px); padding: 34px 0; background: #e9f1fa; }
+.cup-archive-source-section .page-shell { display: grid; grid-template-columns: minmax(220px, .55fr) minmax(0, 1.45fr); align-items: center; gap: 36px; }.cup-archive-source-section h2 { margin-top: 6px; font-size: 24px; }.cup-archive-source-section .page-shell > p { color: #526178; font-size: 11px; line-height: 1.8; }
 
 @media (max-width: 1080px) {
   .cup-archive-hero-inner { grid-template-columns: minmax(0, 1fr) 290px; gap: 38px; }
@@ -112,10 +139,12 @@
   .cup-team-roster > section > div { grid-template-columns: repeat(3, 1fr); }
   .cup-assignment-list { grid-template-columns: 1fr; }.cup-assignment-list details:nth-child(odd) { border-right: 1px solid var(--line); }.cup-assignment-list details:nth-child(n) { border-top: 0; }.cup-assignment-list details:first-child { border-top: 1px solid var(--line); }
   .cup-final-officials dl { grid-template-columns: repeat(2, 1fr); }
+  .cup-womens-overview { grid-template-columns: 1fr; }.cup-womens-overview > dl { border-left: 1px solid var(--line); }
+  .cup-gallery-balanced { columns: 2 280px; }
 }
 
 @media (max-width: 820px) {
-  .cup-archive-hero { min-height: auto; }.cup-archive-hero-inner { min-height: 760px; grid-template-columns: 1fr; align-content: end; gap: 30px; padding-block: 86px 52px; }
+  .cup-archive-hero { min-height: auto; }.cup-archive-hero-inner { min-height: 680px; grid-template-columns: 1fr; align-content: end; gap: 28px; padding-block: 54px 38px; }
   .cup-archive-hero-summary { display: grid; grid-template-columns: repeat(2, 1fr); }.cup-archive-hero-summary > div { grid-template-columns: 1fr; gap: 5px; }
   .cup-section-heading { align-items: flex-start; flex-direction: column; gap: 15px; }
   .cup-standing-groups { grid-template-columns: 1fr; }
@@ -126,14 +155,15 @@
   .cup-team-roster { grid-template-columns: 1fr; padding-left: 24px; }
   .cup-official-overview, .cup-final-officials { grid-template-columns: 1fr; }.cup-official-overview > article { min-height: 145px; }.cup-final-officials dl { grid-template-columns: repeat(3, 1fr); }
   .cup-story-list { grid-template-columns: 1fr; }.cup-story-list > a, .cup-story-list > a.is-featured { grid-column: auto; grid-template-columns: 220px 1fr; min-height: 220px; border-right: 0; }.cup-story-list > a.is-featured > div { min-height: 220px; }.cup-story-list .is-featured h3 { font-size: 20px; }
-  .cup-gallery { grid-template-columns: repeat(2, 1fr); }
+  .cup-womens-story-card { grid-template-columns: 1fr; }.cup-womens-story-card > div { min-height: 330px; }
+  .cup-womens-podium { grid-template-columns: 1fr 1fr; }.cup-womens-podium article:first-child { grid-column: 1 / -1; }
 }
 
 @media (max-width: 720px) {
   .cup-archive-hero-image { object-position: 58% 56%; }.cup-archive-hero-overlay { background: linear-gradient(0deg, rgba(5,17,43,.98) 0%, rgba(7,25,58,.9) 58%, rgba(5,16,38,.52) 100%); }
-  .cup-archive-hero-inner { min-height: 760px; padding-block: 76px 42px; }.cup-archive-hero-copy h1 { font-size: clamp(39px, 11vw, 50px); }.cup-archive-hero-copy > p:not(:first-child) { font-size: 12px; }.cup-archive-hero-copy > div { flex-direction: column; }.cup-archive-hero-copy a { width: 100%; min-height: 50px; }
+  .cup-archive-page { --archive-nav-height: 48px; }.cup-archive-hero-inner { min-height: 650px; padding-block: 44px 34px; }.cup-archive-hero-copy h1, .cup-archive-hero-womens .cup-archive-hero-copy h1 { font-size: clamp(34px, 10vw, 44px); }.cup-archive-hero-copy > p:not(:first-child) { font-size: 12px; }.cup-archive-hero-copy > div { flex-direction: column; }.cup-archive-hero-copy a { width: 100%; min-height: 50px; }
   .cup-archive-nav .page-shell { width: 100%; }.cup-archive-nav a { min-height: 48px; padding-inline: 14px; }
-  .cup-archive-section { scroll-margin-top: calc(var(--header-height) + 48px); padding: 64px 0; }.cup-section-heading h2 { font-size: 34px; }.cup-section-heading > span { font-size: 11px; }
+  .cup-archive-section { padding: 52px 0; }.cup-section-heading h2 { font-size: 34px; }.cup-section-heading > span { font-size: 11px; }
   .cup-overview-primary { padding: 24px 18px; }.cup-overview-primary h3 { font-size: 23px; }.cup-overview-primary dl > div { grid-template-columns: 82px 1fr; }.cup-overview-secondary { grid-template-columns: 1fr; }.cup-overview-secondary section { padding: 23px 18px; }.cup-overview-stats > div { min-height: 98px; padding: 14px; }.cup-overview-stats strong { font-size: 29px; }
   .cup-results-table-wrap, .cup-standing-table-wrap, .cup-stat-table-wrap { display: none; }.cup-results-mobile, .cup-standing-mobile, .cup-stat-mobile { display: grid; }
   .cup-results-mobile { gap: 11px; }.cup-results-mobile article { padding: 15px; border-left: 4px solid var(--aviation-blue); background: white; }.cup-results-mobile header { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 8px; }.cup-results-mobile article > div { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 8px; min-height: 78px; }.cup-results-mobile article > div strong { min-width: 0; font-size: 11px; overflow-wrap: anywhere; }.cup-results-mobile article > div strong:last-child { text-align: right; }.cup-results-mobile article > div b { color: var(--nuaa-blue); font-size: 13px; text-align: center; }.cup-results-mobile footer { padding-top: 10px; border-top: 1px solid var(--line); color: var(--muted); font-size: 8px; }
@@ -142,7 +172,8 @@
   .cup-discipline-row { grid-template-columns: 28px 66px minmax(0, 1fr); }.cup-discipline-row > b { grid-column: 2 / -1; }.cup-red-card-panel > div:last-child, .cup-awards-panel > div:last-child { grid-template-columns: 1fr 1fr; }.cup-awards-panel article { min-height: 135px; padding: 16px; }.cup-awards-panel article strong { font-size: 18px; }
   .cup-team-list summary, .cup-assignment-list summary { min-height: 92px; gap: 10px; padding-inline: 13px; }.cup-team-list summary { grid-template-columns: 35px minmax(0, 1fr) 39px 18px; }.cup-team-roster { gap: 26px; padding: 21px 15px; }.cup-team-roster > section > div { grid-template-columns: repeat(2, 1fr); }
   .cup-official-overview { grid-template-columns: 1fr; }.cup-official-overview > section { padding: 20px 16px; }.cup-assignment-list summary { grid-template-columns: 34px minmax(0, 1fr) 18px; }.cup-assignment-list summary > p { display: none; }.cup-assignment-list details dl { grid-template-columns: 1fr 1fr; padding: 0 13px 16px 47px; }.cup-final-officials dl { grid-template-columns: 1fr 1fr; }
-  .cup-story-list > a, .cup-story-list > a.is-featured { grid-template-columns: 1fr; }.cup-story-list > a > div, .cup-story-list > a.is-featured > div { min-height: 230px; }.cup-story-list article { min-height: 230px; padding: 19px; }.cup-gallery { grid-auto-rows: 170px; }.cup-gallery figure.is-wide { grid-column: 1 / -1; grid-row: span 2; }.cup-document-callout { align-items: stretch; flex-direction: column; padding: 22px 18px; }.cup-document-callout > a { width: 100%; justify-content: center; }
+  .cup-story-list > a, .cup-story-list > a.is-featured { grid-template-columns: 1fr; }.cup-story-list > a > div, .cup-story-list > a.is-featured > div { min-height: 230px; }.cup-story-list article { min-height: 230px; padding: 19px; }.cup-document-callout { align-items: stretch; flex-direction: column; padding: 22px 18px; }.cup-document-callout > a { width: 100%; justify-content: center; }
+  .cup-gallery-balanced, .detail-archive-gallery { columns: 1; }.cup-womens-awards { grid-template-columns: 1fr; }.cup-womens-podium { grid-template-columns: 1fr; }.cup-womens-podium article:first-child { grid-column: auto; }.cup-womens-podium article, .cup-womens-podium article:first-child { min-height: 160px; }.cup-womens-story-card > div { min-height: 250px; }.cup-womens-overview > dl > div { grid-template-columns: 78px 1fr; padding-inline: 16px; }.cup-archive-source-section .page-shell { grid-template-columns: 1fr; gap: 14px; }
   .cup-archive-return .page-shell { align-items: flex-start; flex-direction: column; gap: 8px; }
   .detail-story-list { padding: 17px 17px 17px 34px; font-size: 12px; }
 }

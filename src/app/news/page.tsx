@@ -13,7 +13,7 @@ export default function NewsPage() {
   const [featured, ...news] = newsFeed;
   const filters = <><span aria-current="true">全部</span><span>新闻</span><span>通知公告</span><span>赛事</span><small>筛选功能待内容系统接入后开放</small></>;
   return (
-    <ListPageLayout eyebrow="NEWS & NOTICES" title="新闻与公告" description="用高密度列表连接比赛战报、协会动态和正式公告，并为未来筛选与分页预留结构。" listTitle="最新发布" listDescription="2026男子足球院际杯5篇正式报道已归档；演示内容继续保留并明确标注。" statusLabel="正式报道 + 演示公告" filters={filters}>
+    <ListPageLayout eyebrow="NEWS & NOTICES" title="新闻与公告" description="用高密度列表连接比赛战报、协会动态和正式公告，并为未来筛选与分页预留结构。" listTitle="最新发布" listDescription="2026男、女子足球院际杯正式报道已归档；演示内容继续保留并明确标注。" statusLabel="正式报道 + 演示公告" filters={filters}>
       <div className="news-list-layout">
         <div className="news-list-stream">
           <article className="news-list-featured">

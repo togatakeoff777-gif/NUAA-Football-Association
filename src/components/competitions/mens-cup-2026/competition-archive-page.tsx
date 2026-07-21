@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { ArchiveSectionNav } from "@/components/competitions/archive/archive-section-nav";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { mensIntercollegeCup2026 } from "@/data/mens-intercollege-cup-2026";
@@ -15,14 +16,14 @@ import { CompetitionStories } from "./competition-stories";
 import { CompetitionTeams } from "./competition-teams";
 
 const archiveNavigation = [
-  ["overview", "赛事概览"],
-  ["schedule", "赛程赛果"],
-  ["standings", "积分榜"],
-  ["final", "决赛档案"],
-  ["statistics", "赛事数据"],
-  ["teams", "参赛球队"],
-  ["officials", "裁判安排"],
-  ["stories", "新闻影像"],
+  { id: "overview", label: "赛事概览" },
+  { id: "schedule", label: "赛程赛果" },
+  { id: "standings", label: "积分榜" },
+  { id: "final", label: "决赛档案" },
+  { id: "statistics", label: "赛事数据" },
+  { id: "teams", label: "参赛球队" },
+  { id: "officials", label: "裁判安排" },
+  { id: "stories", label: "新闻影像" },
 ] as const;
 
 export function CompetitionArchivePage() {
@@ -30,7 +31,7 @@ export function CompetitionArchivePage() {
 
   return (
     <>
-      <SiteHeader />
+      <SiteHeader fixed />
       <main className="cup-archive-page" id="main-content">
         <section className="cup-archive-hero" aria-labelledby="cup-archive-title">
           <Image className="cup-archive-hero-image" src={competition.heroImage} alt="天目湖校区西操场晚霞与足球" fill preload sizes="100vw" />
@@ -52,9 +53,7 @@ export function CompetitionArchivePage() {
           </div>
         </section>
 
-        <nav className="cup-archive-nav" aria-label="赛事档案章节">
-          <div className="page-shell">{archiveNavigation.map(([id, label]) => <a href={`#${id}`} key={id}>{label}</a>)}</div>
-        </nav>
+        <ArchiveSectionNav items={archiveNavigation} />
 
         <CompetitionOverview />
         <CompetitionResults />

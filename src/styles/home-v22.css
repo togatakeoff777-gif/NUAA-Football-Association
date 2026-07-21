@@ -56,14 +56,20 @@
   position: absolute;
   z-index: 0;
   inset: 0 0 0 auto;
-  width: 85%;
+  width: 80%;
   overflow: hidden;
   background: var(--space-blue);
 }
 
 .home-screen-hero .hero-image {
   object-fit: cover;
-  object-position: 58% 45%;
+  object-position: 57% 48%;
+}
+
+.home-screen-hero .hero-overlay {
+  background:
+    linear-gradient(90deg, #07152ff7 0%, #0a1d42f2 38%, #0a1d42c4 57%, #0611289e 100%),
+    linear-gradient(0deg, #07152fe6 0%, transparent 44%);
 }
 
 .home-screen-hero .hero-radar {
@@ -325,6 +331,53 @@
   bottom: -38px;
 }
 
+.association-summary-links {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: clamp(18px, 3vh, 30px);
+  border-block: 1px solid var(--line);
+}
+
+.association-summary-links a {
+  min-width: 0;
+  min-height: 72px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, .32);
+  transition: color .18s ease, background .18s ease;
+}
+
+.association-summary-links a + a {
+  border-left: 1px solid var(--line);
+}
+
+.association-summary-links a:hover,
+.association-summary-links a:focus-visible {
+  color: var(--nuaa-blue);
+  background: rgba(255, 255, 255, .82);
+}
+
+.association-summary-links small {
+  color: var(--aviation-blue);
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: .12em;
+}
+
+.association-summary-links strong {
+  font-size: 13px;
+}
+
+.association-summary-links span {
+  color: var(--aviation-blue);
+  font-size: 15px;
+}
+
 .home-footer-flow {
   background: var(--space-blue);
 }
@@ -370,8 +423,8 @@
 }
 
 .site-footer-home .footer-emblem img {
-  width: 40px;
-  height: 40px;
+  width: 58px;
+  height: 58px;
 }
 
 .site-footer-home .footer-declarations {
@@ -630,6 +683,15 @@ body:has(.home-scroll-shell.is-footer-flow) .home-screen-dots {
     bottom: -28px;
   }
 
+  .association-summary-links {
+    margin-top: 14px;
+  }
+
+  .association-summary-links a {
+    min-height: 60px;
+    padding-block: 10px;
+  }
+
   .site-footer-home .footer-main {
     gap: 42px;
     padding-bottom: 23px;
@@ -661,8 +723,8 @@ body:has(.home-scroll-shell.is-footer-flow) .home-screen-dots {
   }
 
   .site-footer-home .footer-emblem img {
-    width: 34px;
-    height: 34px;
+    width: 52px;
+    height: 52px;
   }
 
   .site-footer-home .footer-declarations {
@@ -755,6 +817,18 @@ body:has(.home-scroll-shell.is-footer-flow) .home-screen-dots {
 
   .home-about-screen .home-association-summary {
     transform: translateY(-44px);
+  }
+
+  .association-summary-links {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .association-summary-links a {
+    grid-template-columns: 1fr auto;
+  }
+
+  .association-summary-links small {
+    grid-column: 1 / -1;
   }
 
   .site-footer-home .footer-main {
@@ -852,6 +926,16 @@ body:has(.home-scroll-shell.is-footer-flow) .home-screen-dots {
 
   .home-about-screen .association-summary-id {
     position: static;
+  }
+
+  .association-summary-links {
+    grid-template-columns: 1fr;
+    margin-top: 0;
+  }
+
+  .association-summary-links a + a {
+    border-top: 1px solid var(--line);
+    border-left: 0;
   }
 
   .site-footer-home {

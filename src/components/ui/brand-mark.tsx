@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 type BrandMarkProps = {
   compact?: boolean;
 };
@@ -5,7 +7,12 @@ type BrandMarkProps = {
 export function BrandMark({ compact = false }: BrandMarkProps) {
   return (
     <span className={compact ? "brand-mark brand-mark-compact" : "brand-mark"} aria-hidden="true">
-      <span>FA</span>
+      <Image
+        src="/brand/nuaa-fa-logo.jpg"
+        alt=""
+        fill
+        sizes={compact ? "42px" : "52px"}
+      />
     </span>
   );
 }

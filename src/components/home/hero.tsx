@@ -12,7 +12,7 @@ export function Hero() {
           alt="足球鞋踩在足球上，象征天目湖校园足球蓄势出发"
           fill
           preload
-          sizes="(min-width: 768px) 85vw, 100vw"
+          sizes="(min-width: 768px) 80vw, 100vw"
         />
       </div>
       <div className="hero-overlay" aria-hidden="true" />
@@ -44,7 +44,7 @@ export function Hero() {
         </p>
         <div className="hero-actions" data-home-reveal data-home-delay="4">
           <Link className="button button-primary" href="/competitions/schedule">
-            赛程赛果 <span aria-hidden="true">↗</span>
+            赛程&amp;赛果 <span aria-hidden="true">↗</span>
           </Link>
           <Link className="button button-outline" href="/participation">
             参赛指南 <span aria-hidden="true">→</span>

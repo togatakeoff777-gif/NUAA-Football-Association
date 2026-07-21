@@ -10,16 +10,17 @@ type ListPageLayoutProps = {
   description: string;
   listTitle: string;
   listDescription: string;
+  statusLabel?: string;
   filters?: React.ReactNode;
   children: React.ReactNode;
 };
 
-export function ListPageLayout({ eyebrow, title, description, listTitle, listDescription, filters, children }: ListPageLayoutProps) {
+export function ListPageLayout({ eyebrow, title, description, listTitle, listDescription, statusLabel = "列表模板 · 演示内容", filters, children }: ListPageLayoutProps) {
   return (
     <>
       <SiteHeader />
       <main className="template-page template-list-page" id="main-content">
-        <PageIntro eyebrow={eyebrow} title={title} description={description} statusLabel="列表模板 · 演示内容" variant="list" />
+        <PageIntro eyebrow={eyebrow} title={title} description={description} statusLabel={statusLabel} variant="list" />
         <section className="template-section" aria-labelledby="list-page-title">
           <div className="page-shell">
             <div className="template-section-heading template-section-heading-compact">

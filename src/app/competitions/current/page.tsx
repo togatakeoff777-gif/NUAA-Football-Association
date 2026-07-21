@@ -13,7 +13,9 @@ const items = annualCompetitions.map((competition) => ({
   title: competition.name,
   description: competition.organizerNote,
   meta: `${competition.semesterLabel} · ${competition.eventType}`,
-  status: `${competition.displayStatus.label} · 演示`,
+  status: `${competition.displayStatus.label} · ${competition.displayStatus.badge}`,
+  href: competition.detailHref,
+  actionLabel: competition.displayStatus.dataStatus === "confirmed" ? "查看正式档案" : "查看赛事入口",
 }));
 
 export default function CurrentCompetitionsPage() {
@@ -23,8 +25,8 @@ export default function CurrentCompetitionsPage() {
       title="当前赛事"
       description="展示任务书确认的四项核心赛事名称与年度结构。"
       sectionTitle="四项核心赛事"
-      sectionDescription="当前状态均为界面演示，不构成正式开赛、报名或完赛通知。"
-      notice="赛事状态、日期、队伍和成绩须待协会确认后发布；本页不虚构真实赛况。"
+      sectionDescription="2026男子足球院际杯已接入官方归档，其余赛事继续保留明确标注的演示状态。"
+      notice="正式赛事数据均标注“官方数据”；其余日期、队伍和成绩仍须待协会确认后发布。"
       items={items}
     />
   );

@@ -3,6 +3,7 @@ import {
   ASSOCIATION_ORGANIZATION_ID,
 } from "@/data/association";
 import { BILIBILI_PROFILE_URL } from "@/data/platforms";
+import { officialMensCupNews } from "@/data/mens-intercollege-cup-2026";
 import type { NewsCategory, NewsItem, NoticeCategory, NoticeItem } from "@/types";
 
 const sharedMetadata = {
@@ -72,6 +73,24 @@ export const demoNews = [
     badge: "演示内容",
   },
 ] as const satisfies readonly NewsItem[];
+
+export const publishedNews = [...officialMensCupNews].sort((left, right) =>
+  right.dateLabel.localeCompare(left.dateLabel),
+);
+
+export const newsFeed = [...publishedNews, ...demoNews] as const;
+
+function requirePublishedNews(id: string) {
+  const item = publishedNews.find((story) => story.id === id);
+  if (!item) throw new Error(`Missing published news item: ${id}`);
+  return item;
+}
+
+export const homeNews = [
+  requirePublishedNews("2026-mens-cup-final-report"),
+  requirePublishedNews("2026-mens-cup-closing"),
+  requirePublishedNews("2026-mens-cup-final-preview"),
+] as const;
 
 export const demoAnnouncements = [
   {

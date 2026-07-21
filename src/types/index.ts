@@ -15,7 +15,7 @@ export type CompetitionFormat = "eleven-a-side" | "futsal";
 export type CompetitionDisplayStatus = {
   key: CompetitionStatus;
   label: "筹备中" | "报名中" | "进行中" | "已结束";
-  dataStatus: "demo";
+  dataStatus: "demo" | "confirmed";
   badge: string;
 };
 
@@ -92,8 +92,9 @@ export type NewsItem = ContentOwnership & {
   image: string;
   imageAlt: string;
   href: string;
-  dataStatus: "demo";
+  dataStatus: "demo" | "confirmed";
   badge: string;
+  source?: string;
 };
 
 export type NoticeItem = ContentOwnership & {

@@ -1,0 +1,119 @@
+{
+  "groups": [
+    {
+      "group": "A",
+      "table": [
+        {
+          "position": 1,
+          "teamId": "civil-aviation-flight-united",
+          "team": "民航通飞联队",
+          "played": 3,
+          "won": 3,
+          "drawn": 0,
+          "lost": 0,
+          "goalsFor": 15,
+          "goalsAgainst": 1,
+          "goalDifference": 14,
+          "points": 9
+        },
+        {
+          "position": 2,
+          "teamId": "zhihui-college",
+          "team": "致慧书院",
+          "played": 3,
+          "won": 2,
+          "drawn": 0,
+          "lost": 1,
+          "goalsFor": 10,
+          "goalsAgainst": 7,
+          "goalDifference": 3,
+          "points": 6
+        },
+        {
+          "position": 3,
+          "teamId": "mathematics-college",
+          "team": "数学学院",
+          "played": 3,
+          "won": 1,
+          "drawn": 0,
+          "lost": 2,
+          "goalsFor": 1,
+          "goalsAgainst": 6,
+          "goalDifference": -5,
+          "points": 3
+        },
+        {
+          "position": 4,
+          "teamId": "telecom-humanities-computing-united",
+          "team": "电信-人文-计算机联队",
+          "played": 3,
+          "won": 0,
+          "drawn": 0,
+          "lost": 3,
+          "goalsFor": 5,
+          "goalsAgainst": 17,
+          "goalDifference": -12,
+          "points": 0
+        }
+      ]
+    },
+    {
+      "group": "B",
+      "table": [
+        {
+          "position": 1,
+          "teamId": "economics-continuing-education-united",
+          "team": "经管-继教联队",
+          "played": 3,
+          "won": 3,
+          "drawn": 0,
+          "lost": 0,
+          "goalsFor": 7,
+          "goalsAgainst": 1,
+          "goalDifference": 6,
+          "points": 9
+        },
+        {
+          "position": 2,
+          "teamId": "zhiwei-zhihe-united",
+          "team": "致微-致和书院联队",
+          "played": 3,
+          "won": 2,
+          "drawn": 0,
+          "lost": 1,
+          "goalsFor": 7,
+          "goalsAgainst": 2,
+          "goalDifference": 5,
+          "points": 6
+        },
+        {
+          "position": 3,
+          "teamId": "automation-college",
+          "team": "自动化学院",
+          "played": 3,
+          "won": 1,
+          "drawn": 0,
+          "lost": 2,
+          "goalsFor": 8,
+          "goalsAgainst": 5,
+          "goalDifference": 3,
+          "points": 3
+        },
+        {
+          "position": 4,
+          "teamId": "zhiyuan-college",
+          "team": "致元书院",
+          "played": 3,
+          "won": 0,
+          "drawn": 0,
+          "lost": 3,
+          "goalsFor": 1,
+          "goalsAgainst": 15,
+          "goalDifference": -14,
+          "points": 0
+        }
+      ],
+      "sourceNote": "足球中国截图中经管-继教联队积分显示为6分；按三战全胜及赛事3分制规则，官网归档统一按9分计算。"
+    }
+  ]
+}

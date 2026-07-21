@@ -6,18 +6,20 @@ import { PageIntro } from "@/components/templates/page-intro";
 
 type DetailMeta = { source: string; published: string; updated: string };
 type RelatedItem = { title: string; href: string; meta: string };
+type DetailAttachment = string | { label: string; href: string; external?: boolean };
 
 type DetailPageLayoutProps = {
   eyebrow: string;
   title: string;
   description: string;
   meta: DetailMeta;
-  attachments?: readonly string[];
+  attachments?: readonly DetailAttachment[];
   related?: readonly RelatedItem[];
+  statusLabel?: string;
   children: React.ReactNode;
 };
 
-export function DetailPageLayout({ eyebrow, title, description, meta, attachments = [], related = [], children }: DetailPageLayoutProps) {
+export function DetailPageLayout({ eyebrow, title, description, meta, attachments = [], related = [], statusLabel = "演示详情 · 非正式发布", children }: DetailPageLayoutProps) {
   const aside = (
     <dl className="detail-meta-panel">
       <div><dt>来源</dt><dd>{meta.source}</dd></div>
@@ -29,12 +31,12 @@ export function DetailPageLayout({ eyebrow, title, description, meta, attachment
     <>
       <SiteHeader />
       <main className="template-page template-detail-page" id="main-content">
-        <PageIntro eyebrow={eyebrow} title={title} description={description} statusLabel="演示详情 · 非正式发布" variant="detail" aside={aside} />
+        <PageIntro eyebrow={eyebrow} title={title} description={description} statusLabel={statusLabel} variant="detail" aside={aside} />
         <article className="template-section detail-article">
           <div className="page-shell detail-article-grid">
             <div className="detail-prose">{children}</div>
             <aside className="detail-article-aside">
-              <section><p>ATTACHMENTS</p><h2>附件</h2>{attachments.length ? <ul>{attachments.map((item) => <li key={item}>{item}</li>)}</ul> : <span>当前没有可下载附件。</span>}</section>
+              <section><p>ATTACHMENTS</p><h2>附件</h2>{attachments.length ? <ul>{attachments.map((item) => typeof item === "string" ? <li key={item}>{item}</li> : <li key={item.href}><a href={item.href} target={item.external ? "_blank" : undefined} rel={item.external ? "noopener noreferrer" : undefined}>{item.label}</a></li>)}</ul> : <span>当前没有可下载附件。</span>}</section>
               <section><p>RELATED</p><h2>相关内容</h2>{related.length ? <ul>{related.map((item) => <li key={item.title}><Link href={item.href}><span>{item.meta}</span><strong>{item.title}</strong></Link></li>)}</ul> : <span>暂无相关内容。</span>}</section>
             </aside>
           </div>

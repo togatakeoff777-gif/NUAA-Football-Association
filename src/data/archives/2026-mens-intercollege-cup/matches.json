@@ -1,0 +1,494 @@
+[
+  {
+    "id": 1,
+    "stage": "group",
+    "round": "第1轮",
+    "group": "A",
+    "dateTime": "2026-03-20T19:30:00+08:00",
+    "venue": "天目湖校区西操场",
+    "homeTeamId": "civil-aviation-flight-united",
+    "homeTeam": "民航通飞联队",
+    "awayTeamId": "zhihui-college",
+    "awayTeam": "致慧书院",
+    "homeScore": 3,
+    "awayScore": 0,
+    "officials": {
+      "matchSupervisor": "郭洪波",
+      "refereeAssessor": "彭云逸",
+      "referee": "王相翰",
+      "assistantReferee1": "胡兵",
+      "assistantReferee2": "李乐言",
+      "fourthOfficial": "季子杨",
+      "reserveAssistantReferee": null
+    }
+  },
+  {
+    "id": 2,
+    "stage": "group",
+    "round": "第1轮",
+    "group": "A",
+    "dateTime": "2026-03-22T13:00:00+08:00",
+    "venue": "天目湖校区西操场",
+    "homeTeamId": "telecom-humanities-computing-united",
+    "homeTeam": "电信-人文-计算机联队",
+    "awayTeamId": "mathematics-college",
+    "awayTeam": "数学学院",
+    "homeScore": 0,
+    "awayScore": 1,
+    "officials": {
+      "matchSupervisor": null,
+      "refereeAssessor": null,
+      "referee": "吴佳宇",
+      "assistantReferee1": "赵宣淇",
+      "assistantReferee2": "陈昀暄",
+      "fourthOfficial": "胡兵",
+      "reserveAssistantReferee": null
+    }
+  },
+  {
+    "id": 3,
+    "stage": "group",
+    "round": "第1轮",
+    "group": "B",
+    "dateTime": "2026-03-22T15:30:00+08:00",
+    "venue": "天目湖校区西操场",
+    "homeTeamId": "zhiwei-zhihe-united",
+    "homeTeam": "致微-致和书院联队",
+    "awayTeamId": "automation-college",
+    "awayTeam": "自动化学院",
+    "homeScore": 2,
+    "awayScore": 1,
+    "officials": {
+      "matchSupervisor": null,
+      "refereeAssessor": null,
+      "referee": "王相翰",
+      "assistantReferee1": "黄泽鑫",
+      "assistantReferee2": "倪树伟",
+      "fourthOfficial": "吴佳宇",
+      "reserveAssistantReferee": null
+    }
+  },
+  {
+    "id": 4,
+    "stage": "group",
+    "round": "第1轮",
+    "group": "B",
+    "dateTime": "2026-03-22T10:30:00+08:00",
+    "venue": "天目湖校区西操场",
+    "homeTeamId": "zhiyuan-college",
+    "homeTeam": "致元书院",
+    "awayTeamId": "economics-continuing-education-united",
+    "awayTeam": "经管-继教联队",
+    "homeScore": 0,
+    "awayScore": 4,
+    "officials": {
+      "matchSupervisor": null,
+      "refereeAssessor": null,
+      "referee": "胡兵",
+      "assistantReferee1": "朱俊弛",
+      "assistantReferee2": "魏宇轩",
+      "fourthOfficial": "陈昀暄",
+      "reserveAssistantReferee": null
+    }
+  },
+  {
+    "id": 5,
+    "stage": "group",
+    "round": "第2轮",
+    "group": "A",
+    "dateTime": "2026-03-28T15:00:00+08:00",
+    "venue": "天目湖校区西操场",
+    "homeTeamId": "civil-aviation-flight-united",
+    "homeTeam": "民航通飞联队",
+    "awayTeamId": "telecom-humanities-computing-united",
+    "awayTeam": "电信-人文-计算机联队",
+    "homeScore": 8,
+    "awayScore": 1,
+    "officials": {
+      "matchSupervisor": null,
+      "refereeAssessor": null,
+      "referee": "王相翰",
+      "assistantReferee1": "胡兵",
+      "assistantReferee2": "朱旭发",
+      "fourthOfficial": "魏宇轩",
+      "reserveAssistantReferee": null
+    }
+  },
+  {
+    "id": 6,
+    "stage": "group",
+    "round": "第2轮",
+    "group": "A",
+    "dateTime": "2026-03-29T16:00:00+08:00",
+    "venue": "天目湖校区西操场",
+    "homeTeamId": "mathematics-college",
+    "homeTeam": "数学学院",
+    "awayTeamId": "zhihui-college",
+    "awayTeam": "致慧书院",
+    "homeScore": 0,
+    "awayScore": 2,
+    "officials": {
+      "matchSupervisor": null,
+      "refereeAssessor": null,
+      "referee": "陈飞宇",
+      "assistantReferee1": "王相翰",
+      "assistantReferee2": "颜铭宣",
+      "fourthOfficial": "胡兵",
+      "reserveAssistantReferee": null
+    }
+  },
+  {
+    "id": 7,
+    "stage": "group",
+    "round": "第2轮",
+    "group": "B",
+    "dateTime": "2026-03-29T14:00:00+08:00",
+    "venue": "天目湖校区西操场",
+    "homeTeamId": "zhiwei-zhihe-united",
+    "homeTeam": "致微-致和书院联队",
+    "awayTeamId": "zhiyuan-college",
+    "awayTeam": "致元书院",
+    "homeScore": 5,
+    "awayScore": 0,
+    "officials": {
+      "matchSupervisor": null,
+      "refereeAssessor": null,
+      "referee": "颜铭宣",
+      "assistantReferee1": "马俊",
+      "assistantReferee2": "吴佳宇",
+      "fourthOfficial": "穆怡馨",
+      "reserveAssistantReferee": null
+    }
+  },
+  {
+    "id": 8,
+    "stage": "group",
+    "round": "第2轮",
+    "group": "B",
+    "dateTime": "2026-04-07T19:30:00+08:00",
+    "venue": "天目湖校区西操场",
+    "homeTeamId": "economics-continuing-education-united",
+    "homeTeam": "经管-继教联队",
+    "awayTeamId": "automation-college",
+    "awayTeam": "自动化学院",
+    "homeScore": 2,
+    "awayScore": 1,
+    "officials": {
+      "matchSupervisor": null,
+      "refereeAssessor": null,
+      "referee": "彭云逸",
+      "assistantReferee1": "郭原序",
+      "assistantReferee2": "陈飞宇",
+      "fourthOfficial": "马俊",
+      "reserveAssistantReferee": null
+    }
+  },
+  {
+    "id": 9,
+    "stage": "group",
+    "round": "第3轮",
+    "group": "A",
+    "dateTime": "2026-04-15T19:30:00+08:00",
+    "venue": "天目湖校区西操场",
+    "homeTeamId": "civil-aviation-flight-united",
+    "homeTeam": "民航通飞联队",
+    "awayTeamId": "mathematics-college",
+    "awayTeam": "数学学院",
+    "homeScore": 4,
+    "awayScore": 0,
+    "officials": {
+      "matchSupervisor": "王相翰",
+      "refereeAssessor": null,
+      "referee": "颜铭宣",
+      "assistantReferee1": "吴佳宇",
+      "assistantReferee2": "魏宇轩",
+      "fourthOfficial": "季子杨",
+      "reserveAssistantReferee": null
+    }
+  },
+  {
+    "id": 10,
+    "stage": "group",
+    "round": "第3轮",
+    "group": "A",
+    "dateTime": "2026-04-10T15:00:00+08:00",
+    "venue": "天目湖校区西操场",
+    "homeTeamId": "zhihui-college",
+    "homeTeam": "致慧书院",
+    "awayTeamId": "telecom-humanities-computing-united",
+    "awayTeam": "电信-人文-计算机联队",
+    "homeScore": 8,
+    "awayScore": 4,
+    "officials": {
+      "matchSupervisor": null,
+      "refereeAssessor": null,
+      "referee": "王相翰",
+      "assistantReferee1": "颜铭宣",
+      "assistantReferee2": "阿合卓勒·叶尔麦克",
+      "fourthOfficial": "魏宇轩",
+      "reserveAssistantReferee": null
+    }
+  },
+  {
+    "id": 11,
+    "stage": "group",
+    "round": "第3轮",
+    "group": "B",
+    "dateTime": "2026-04-20T19:30:00+08:00",
+    "venue": "天目湖校区西操场",
+    "homeTeamId": "zhiwei-zhihe-united",
+    "homeTeam": "致微-致和书院联队",
+    "awayTeamId": "economics-continuing-education-united",
+    "awayTeam": "经管-继教联队",
+    "homeScore": 0,
+    "awayScore": 1,
+    "officials": {
+      "matchSupervisor": null,
+      "refereeAssessor": null,
+      "referee": "彭云逸",
+      "assistantReferee1": "高羽键",
+      "assistantReferee2": "马俊",
+      "fourthOfficial": "黄敬瀚",
+      "reserveAssistantReferee": null
+    }
+  },
+  {
+    "id": 12,
+    "stage": "group",
+    "round": "第3轮",
+    "group": "B",
+    "dateTime": "2026-04-11T19:00:00+08:00",
+    "venue": "天目湖校区西操场",
+    "homeTeamId": "automation-college",
+    "homeTeam": "自动化学院",
+    "awayTeamId": "zhiyuan-college",
+    "awayTeam": "致元书院",
+    "homeScore": 6,
+    "awayScore": 1,
+    "officials": {
+      "matchSupervisor": null,
+      "refereeAssessor": null,
+      "referee": "马俊",
+      "assistantReferee1": "王相翰",
+      "assistantReferee2": "魏宇轩",
+      "fourthOfficial": "王睿阳",
+      "reserveAssistantReferee": null
+    }
+  },
+  {
+    "id": 13,
+    "stage": "knockout",
+    "round": "半决赛",
+    "dateTime": "2026-04-24T19:35:00+08:00",
+    "venue": "天目湖校区西操场",
+    "homeTeamId": "civil-aviation-flight-united",
+    "homeTeam": "民航通飞联队",
+    "awayTeamId": "zhiwei-zhihe-united",
+    "awayTeam": "致微-致和书院联队",
+    "homeScore": 4,
+    "awayScore": 1,
+    "officials": {
+      "matchSupervisor": null,
+      "refereeAssessor": "彭云逸",
+      "referee": "王相翰",
+      "assistantReferee1": "吴佳宇",
+      "assistantReferee2": "马俊",
+      "fourthOfficial": "高羽键",
+      "reserveAssistantReferee": null
+    }
+  },
+  {
+    "id": 14,
+    "stage": "knockout",
+    "round": "半决赛",
+    "dateTime": "2026-04-26T19:00:00+08:00",
+    "venue": "天目湖校区西操场",
+    "homeTeamId": "zhihui-college",
+    "homeTeam": "致慧书院",
+    "awayTeamId": "economics-continuing-education-united",
+    "awayTeam": "经管-继教联队",
+    "homeScore": 3,
+    "awayScore": 1,
+    "officials": {
+      "matchSupervisor": null,
+      "refereeAssessor": "彭云逸",
+      "referee": "胡兵",
+      "assistantReferee1": "吴作昊",
+      "assistantReferee2": "颜铭宣",
+      "fourthOfficial": "郭原序",
+      "reserveAssistantReferee": null
+    }
+  },
+  {
+    "id": 15,
+    "stage": "knockout",
+    "round": "三四名决赛",
+    "dateTime": "2026-05-10T19:35:00+08:00",
+    "venue": "天目湖校区西操场",
+    "homeTeamId": "zhiwei-zhihe-united",
+    "homeTeam": "致微-致和书院联队",
+    "awayTeamId": "economics-continuing-education-united",
+    "awayTeam": "经管-继教联队",
+    "homeScore": 1,
+    "awayScore": 1,
+    "homePenaltyScore": 1,
+    "awayPenaltyScore": 2,
+    "officials": {
+      "matchSupervisor": null,
+      "refereeAssessor": null,
+      "referee": "颜铭宣",
+      "assistantReferee1": "高羽键",
+      "assistantReferee2": "黄敬瀚",
+      "fourthOfficial": "马俊",
+      "reserveAssistantReferee": null
+    }
+  },
+  {
+    "id": 16,
+    "stage": "knockout",
+    "round": "决赛",
+    "dateTime": "2026-05-17T14:00:00+08:00",
+    "preMatchActivityTime": "2026-05-17T13:30:00+08:00",
+    "venue": "天目湖校区西操场",
+    "homeTeamId": "civil-aviation-flight-united",
+    "homeTeam": "民航通飞联队",
+    "awayTeamId": "zhihui-college",
+    "awayTeam": "致慧书院",
+    "homeScore": 2,
+    "awayScore": 2,
+    "homePenaltyScore": 7,
+    "awayPenaltyScore": 8,
+    "officials": {
+      "matchSupervisor": "郭洪波",
+      "refereeAssessor": "陈爽",
+      "referee": "王相翰",
+      "assistantReferee1": "颜铭宣",
+      "assistantReferee2": "吴佳宇",
+      "fourthOfficial": "石翔宇",
+      "reserveAssistantReferee": "高羽键"
+    },
+    "events": [
+      {
+        "minute": 7,
+        "type": "goal",
+        "teamId": "civil-aviation-flight-united",
+        "number": 17,
+        "player": "刘晋毅"
+      },
+      {
+        "minute": 21,
+        "type": "yellow-card",
+        "teamId": "zhihui-college",
+        "number": 77,
+        "player": "王义晗"
+      },
+      {
+        "minute": 25,
+        "type": "goal",
+        "teamId": "civil-aviation-flight-united",
+        "number": 10,
+        "player": "金成俊"
+      },
+      {
+        "minute": 34,
+        "type": "goal",
+        "teamId": "zhihui-college",
+        "number": 10,
+        "player": "黄敬瀚"
+      },
+      {
+        "minute": 41,
+        "type": "goal",
+        "teamId": "zhihui-college",
+        "number": 14,
+        "player": "李靖愷"
+      },
+      {
+        "minute": 90,
+        "type": "yellow-card",
+        "teamId": "civil-aviation-flight-united",
+        "number": 9,
+        "player": "陈飞宇"
+      },
+      {
+        "minute": 90,
+        "type": "yellow-card",
+        "teamId": "zhihui-college",
+        "number": 6,
+        "player": "江艺彬"
+      },
+      {
+        "minute": 92,
+        "type": "yellow-card",
+        "teamId": "civil-aviation-flight-united",
+        "number": 91,
+        "player": "李曜"
+      },
+      {
+        "minute": 95,
+        "type": "yellow-card",
+        "teamId": "zhihui-college",
+        "number": 3,
+        "player": "邹阳"
+      }
+    ],
+    "penaltyShootout": [
+      {
+        "order": 1,
+        "homePlayer": "李唯嘉",
+        "homeScored": true,
+        "awayPlayer": "黄敬瀚",
+        "awayScored": true
+      },
+      {
+        "order": 2,
+        "homePlayer": "龚子腾",
+        "homeScored": true,
+        "awayPlayer": "江艺彬",
+        "awayScored": true
+      },
+      {
+        "order": 3,
+        "homePlayer": "陈飞宇",
+        "homeScored": true,
+        "awayPlayer": "杨飞扬",
+        "awayScored": true
+      },
+      {
+        "order": 4,
+        "homePlayer": "刘晋毅",
+        "homeScored": true,
+        "awayPlayer": "拜宜乐",
+        "awayScored": true
+      },
+      {
+        "order": 5,
+        "homePlayer": "金成俊",
+        "homeScored": true,
+        "awayPlayer": "王义晗",
+        "awayScored": true
+      },
+      {
+        "order": 6,
+        "homePlayer": "陈柏潼",
+        "homeScored": true,
+        "awayPlayer": "李靖愷",
+        "awayScored": true
+      },
+      {
+        "order": 7,
+        "homePlayer": "李曜",
+        "homeScored": true,
+        "awayPlayer": "周宸伟",
+        "awayScored": true
+      },
+      {
+        "order": 8,
+        "homePlayer": "徐嘉乐",
+        "homeScored": false,
+        "awayPlayer": "李欣睿",
+        "awayScored": true
+      }
+    ]
+  }
+]

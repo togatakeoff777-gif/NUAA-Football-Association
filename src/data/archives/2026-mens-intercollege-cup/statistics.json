@@ -1,0 +1,181 @@
+{
+  "summary": {
+    "teams": 8,
+    "players": 169,
+    "matches": 16,
+    "goals": 69,
+    "yellowCards": 36,
+    "redCards": 8
+  },
+  "topScorers": [
+    {
+      "position": 1,
+      "player": "刘晋毅",
+      "number": 17,
+      "team": "民航通飞联队",
+      "goals": 3,
+      "regularGoals": 3,
+      "penaltyGoals": 0
+    },
+    {
+      "position": 2,
+      "player": "金成俊",
+      "number": 10,
+      "team": "民航通飞联队",
+      "goals": 2,
+      "regularGoals": 2,
+      "penaltyGoals": 0
+    },
+    {
+      "position": 3,
+      "player": "李靖愷",
+      "number": 14,
+      "team": "致慧书院",
+      "goals": 2,
+      "regularGoals": 2,
+      "penaltyGoals": 0
+    },
+    {
+      "position": 4,
+      "player": "黄敬瀚",
+      "number": 10,
+      "team": "致慧书院",
+      "goals": 2,
+      "regularGoals": 1,
+      "penaltyGoals": 1
+    },
+    {
+      "position": 5,
+      "player": "李曜",
+      "number": 91,
+      "team": "民航通飞联队",
+      "goals": 1,
+      "regularGoals": 1,
+      "penaltyGoals": 0
+    },
+    {
+      "position": 6,
+      "player": "莫子轩",
+      "number": 6,
+      "team": "致微-致和书院联队",
+      "goals": 1,
+      "regularGoals": 1,
+      "penaltyGoals": 0
+    },
+    {
+      "position": 7,
+      "player": "且增罗布",
+      "number": 27,
+      "team": "经管-继教联队",
+      "goals": 1,
+      "regularGoals": 1,
+      "penaltyGoals": 0
+    },
+    {
+      "position": 8,
+      "player": "王义晗",
+      "number": 77,
+      "team": "致慧书院",
+      "goals": 1,
+      "regularGoals": 1,
+      "penaltyGoals": 0
+    },
+    {
+      "position": 9,
+      "player": "洛松多吉",
+      "number": 6,
+      "team": "经管-继教联队",
+      "goals": 1,
+      "regularGoals": 1,
+      "penaltyGoals": 0
+    },
+    {
+      "position": 10,
+      "player": "范文博",
+      "number": 8,
+      "team": "致微-致和书院联队",
+      "goals": 1,
+      "regularGoals": 1,
+      "penaltyGoals": 0
+    }
+  ],
+  "disciplineLeaders": [
+    {
+      "player": "王义晗",
+      "number": 77,
+      "team": "致慧书院",
+      "yellowCards": 3,
+      "redCards": 0
+    },
+    {
+      "player": "王皓千",
+      "number": 4,
+      "team": "电信-人文-计算机联队",
+      "yellowCards": 1,
+      "redCards": 1
+    },
+    {
+      "player": "邹阳",
+      "number": 3,
+      "team": "致慧书院",
+      "yellowCards": 2,
+      "redCards": 0
+    },
+    {
+      "player": "黄泽鑫",
+      "number": 7,
+      "team": "民航通飞联队",
+      "yellowCards": 2,
+      "redCards": 0
+    },
+    {
+      "player": "陈飞宇",
+      "number": 9,
+      "team": "民航通飞联队",
+      "yellowCards": 2,
+      "redCards": 0
+    }
+  ],
+  "redCards": [
+    {
+      "player": "王皓千",
+      "number": 4,
+      "team": "电信-人文-计算机联队"
+    },
+    {
+      "player": "龙宣任",
+      "number": 15,
+      "team": "致微-致和书院联队"
+    },
+    {
+      "player": "黄敬瀚",
+      "number": 10,
+      "team": "致慧书院"
+    },
+    {
+      "player": "纳凯",
+      "number": 12,
+      "team": "数学学院"
+    },
+    {
+      "player": "祖力哈尔·哈尔买提",
+      "number": 8,
+      "team": "数学学院"
+    },
+    {
+      "player": "郭原序",
+      "number": 22,
+      "team": "民航通飞联队"
+    },
+    {
+      "player": "季子杨",
+      "number": 1,
+      "team": "致微-致和书院联队"
+    },
+    {
+      "player": "姬正雄",
+      "number": 7,
+      "team": "致元书院"
+    }
+  ]
+}

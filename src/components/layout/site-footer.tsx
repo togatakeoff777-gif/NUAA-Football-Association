@@ -64,7 +64,7 @@ export function SiteFooter({ homeCompact = false }: SiteFooterProps) {
 
         <div className="footer-bottom">
           <p>© 2026 {associationIdentity.shortName} · {associationIdentity.establishedLabel}</p>
-          <p>{homeCompact ? "V2.3 首页体验原型" : "V2.1 静态原型"} · 演示内容均不代表真实历史记录</p>
+          <p>{homeCompact ? "V2.3 首页体验原型" : "公开档案与裁判功能版本"} · 测试数据均有明确标识</p>
         </div>
       </div>
     </footer>

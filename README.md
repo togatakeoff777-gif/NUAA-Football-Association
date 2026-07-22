@@ -1,6 +1,6 @@
 # 南京航空航天大学天目湖足球协会网站
 
-南航天目湖足协官网 V2.1 静态前端原型。项目使用 Next.js 16、TypeScript、React 19 与 Tailwind CSS 4，当前聚焦天目湖校区校园足球的信息展示，不代表南京航空航天大学三个校区的统一足球组织。
+南航天目湖足协官网。项目使用 Next.js 16、TypeScript、React 19、Tailwind CSS 4，以及 Prisma 7 + SQLite，当前聚焦天目湖校区校园足球的信息展示与裁判事务，不代表南京航空航天大学三个校区的统一足球组织。
 
 ## 本轮已完成
 
@@ -8,7 +8,8 @@
 - 组件化首页 V2.1：精简 Hero、比赛信息中心、公告与快捷入口、“一大三小”当前赛事、新闻与影像、协会摘要
 - 栏目入口、列表、数据、详情、档案与流程六类可复用视觉模板
 - 桌面表格与移动分组列表两套赛事数据呈现
-- 裁判与规则栏目、开放执裁场次、本地报名交互演示、裁判选派公示
+- 赛事中心统一目录、真实赛程筛选、赛事文件中心及 2026 男、女子院际杯公开归档
+- 裁判中心真实闭环：公开名录、待选派比赛、执裁意向、管理员审核、选派草稿、发布、撤回与历史记录
 - 裁判员公开招募流程原型与独立二维码配置（当前尚未开放）
 - 仲裁与申诉静态原型
 - 赛事、球队、新闻、影像、协会、参赛指南与赛事子栏目占位路由
@@ -22,8 +23,13 @@
 
 ```bash
 npm install
+copy .env.example .env.local
+npm run db:migrate
+npm run db:seed
 npm run dev
 ```
+
+请在 `.env.local` 中设置强管理员密码及至少 32 个字符的 Session secret；真实值不得提交到 Git。SQLite 文件位于 `prisma/dev.db`，已被 Git 忽略。生产环境应在备份后使用 `npx prisma migrate deploy`，不要使用开发迁移命令。
 
 浏览器访问 [http://localhost:3000](http://localhost:3000)。
 
@@ -43,9 +49,13 @@ npm run start
 - `/competitions`：栏目入口模板的天目湖赛事中心
 - `/competitions/current`、`schedule`、`standings`、`scorers`、`history`、`cross-campus`：赛事子栏目原型
 - `/competitions/arbitration`：仲裁与申诉原型
-- `/referees`：裁判与规则
-- `/referees/open-matches`：开放执裁场次与报名演示
-- `/referees/assignments`：裁判选派公示
+- `/competitions/files`：真实赛事规则、纪律文件与工作表下载
+- `/referees`：裁判中心功能入口
+- `/referees/directory`：注册裁判员公开名录
+- `/referees/open-matches`、`/referees/open-matches/[slug]`：待选派比赛、岗位需求与真实执裁意向提交
+- `/referees/assignments`：已发布且未撤回的未来比赛选派公告
+- `/referees/history`：已发布的历史选派记录
+- `/referees/admin/login`、`/referees/admin`：环境变量保护的裁判管理后台
 - `/referees/recruitment`：裁判员公开招募流程原型
 - `/participation`：参赛与报名入口及指南路由
 - `/news`：新闻与公告列表模板
@@ -55,4 +65,4 @@ npm run start
 
 ## 当前边界
 
-本轮没有账号、登录、数据库、后台、真实报名提交、足球中国 API/爬虫或真实数据同步。足球中国按钮仅指向平台入口；正式赛事信息、球队资料、历史档案、联系人姓名与具体视频仍须由协会核验后更新。
+裁判中心使用基础单管理员 Session，不是完整账号系统，也不包含支付、短信、多角色权限或个人资料管理。项目没有足球中国 API、爬虫或实时同步；足球中国按钮仅指向平台入口。正式开放场次、裁判员资格、联系人与尚未核验的赛事数据仍须由协会确认。Seed 中 2099 年比赛明确标注为本地功能测试数据，不代表真实赛程。

@@ -23,15 +23,19 @@ const files = diff.stdout
 
 const binaryExtensions = new Set([
   ".avif",
+  ".docx",
   ".gif",
   ".ico",
   ".jpeg",
   ".jpg",
   ".pdf",
   ".png",
+  ".pptx",
   ".webp",
   ".woff",
   ".woff2",
+  ".xlsx",
+  ".zip",
 ]);
 
 const decoder = new TextDecoder("utf-8", { fatal: true });

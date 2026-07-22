@@ -7,6 +7,7 @@ import "@/styles/page-templates.css";
 import "@/styles/home-v21.css";
 import "@/styles/home-v22.css";
 import "@/styles/competition-archive.css";
+import "@/styles/functional-pages.css";
 
 export const metadata: Metadata = {
   title: {

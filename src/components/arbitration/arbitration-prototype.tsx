@@ -1,73 +1,47 @@
 import Link from "next/link";
+
 import {
-  arbitrationPrototypeNotice,
-  arbitrationSections,
+  arbitrationGuide,
+  arbitrationPublicNotice,
+  arbitrationResources,
 } from "@/data/arbitration";
+
+function DefinitionSection({ title, items }: { title: string; items: readonly string[] }) {
+  return <section><h3>{title}</h3><ul>{items.map((item) => <li key={item}>{item}</li>)}</ul></section>;
+}
 
 export function ArbitrationPrototype() {
   return (
-    <main className="detail-page" id="main-content">
-      <section className="detail-hero">
-        <div className="detail-shell detail-hero-grid">
-          <div className="detail-hero-copy">
-            <p className="detail-eyebrow">ARBITRATION &amp; APPEALS</p>
-            <h1 className="detail-title">仲裁与申诉</h1>
-            <p className="detail-lede">
-              赛事治理体系下的独立入口，用于说明申请条件、时限、流程、纪律规则与决定公示。
-            </p>
-            <div className="detail-actions">
-              <Link className="detail-button" href="/competitions">
-                返回天目湖赛事
-              </Link>
-              <Link
-                className="detail-button detail-button-secondary"
-                href="/referees"
-              >
-                前往裁判与规则
-              </Link>
-            </div>
+    <main className="functional-page" id="main-content">
+      <section className="functional-hero">
+        <div className="detail-shell"><p>ARBITRATION & APPEALS</p><h1>仲裁与申诉</h1><p>公开申请范围、主体、材料、处理步骤和真实文件入口；本轮不收集个人信息，也不开放在线提交。</p></div>
+      </section>
+
+      <section className="functional-section">
+        <div className="detail-shell">
+          <div className="functional-notice"><strong>受理边界</strong><p>{arbitrationPublicNotice}</p></div>
+          <div className="arbitration-definition-grid">
+            <DefinitionSection title="适用范围" items={arbitrationGuide.scope} />
+            <DefinitionSection title="不予受理" items={arbitrationGuide.notAccepted} />
+            <DefinitionSection title="申请主体" items={arbitrationGuide.applicants} />
+            <DefinitionSection title="准备材料" items={arbitrationGuide.materials} />
           </div>
-          <div className="detail-hero-panel">
-            <span className="detail-badge">静态页面原型</span>
-            <strong>本轮不开放正式在线提交</strong>
-            <p>{arbitrationPrototypeNotice}</p>
-          </div>
+          <section className="arbitration-deadline"><span>申请时限</span><strong>{arbitrationGuide.deadline}</strong></section>
         </div>
       </section>
 
-      <section className="detail-section" aria-labelledby="arbitration-sections-title">
+      <section className="functional-section functional-section-tint" aria-labelledby="arbitration-process-title">
         <div className="detail-shell">
-          <div className="detail-section-head">
-            <div>
-              <p className="detail-kicker">原型结构 / PROTOTYPE STRUCTURE</p>
-              <h2 className="detail-section-title" id="arbitration-sections-title">
-                仲裁与申诉信息结构
-              </h2>
-            </div>
-            <p className="detail-section-copy">
-              以下内容仅建立未来信息架构；不含账号、认证、数据库、真实表单或敏感个人信息收集。
-            </p>
-          </div>
+          <div className="functional-section-head"><div><span>PUBLIC PROCESS</span><h2 id="arbitration-process-title">处理流程</h2></div><p>提交方式未确认前，不使用虚构联系人或无持久化能力的假表单。</p></div>
+          <ol className="arbitration-process-list">{arbitrationGuide.process.map((step, index) => <li key={step.id}><span>{String(index + 1).padStart(2, "0")}</span><div><h3>{step.title}</h3><p>{step.description}</p></div></li>)}</ol>
+          <div className="arbitration-contact-state"><span>{arbitrationGuide.submission.status}</span><p>{arbitrationGuide.submission.contact}</p></div>
+        </div>
+      </section>
 
-          <div className="detail-grid detail-grid-three">
-            {arbitrationSections.map((section, index) => (
-              <article className="detail-card" key={section.id}>
-                <div className="detail-card-head">
-                  <span className="detail-index" aria-hidden="true">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <span className="detail-badge">{section.statusLabel}</span>
-                </div>
-                <h3 className="detail-card-title">{section.title}</h3>
-                <p className="detail-card-copy">{section.description}</p>
-              </article>
-            ))}
-          </div>
-
-          <aside className="detail-note detail-note-prominent">
-            <strong>原型边界</strong>
-            <p>{arbitrationPrototypeNotice}</p>
-          </aside>
+      <section className="functional-section" aria-labelledby="arbitration-resources-title">
+        <div className="detail-shell">
+          <div className="functional-section-head"><div><span>FILES & DECISIONS</span><h2 id="arbitration-resources-title">材料与决定</h2></div><p>只提供任务包内存在的真实文件；缺失模板保持正式空状态。</p></div>
+          <div className="arbitration-resource-list">{arbitrationResources.map((resource) => <article key={resource.title}><span>{resource.status}</span><h3>{resource.title}</h3><p>{resource.description}</p>{"href" in resource ? <Link href={resource.href}>查看文件 →</Link> : null}</article>)}</div>
         </div>
       </section>
     </main>

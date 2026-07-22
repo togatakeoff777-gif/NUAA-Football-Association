@@ -40,7 +40,7 @@ export const officialWomensCupNews: readonly NewsItem[] = [
     category: "比赛战报",
     dateLabel: "2026-06-22 16:53",
     title: archiveData.competition.sourceArticleTitle,
-    summary: "2026天目湖校区女足赛事圆满收官，人文-自动化-外国语联队获得冠军，三类个人奖项同步揭晓。",
+    summary: "2026天目湖校区女足赛事圆满收官，人文外国语自动化联队获得冠军，三类个人奖项同步揭晓。",
     image: `${imageRoot}/16-event-group-photo.jpg`,
     imageAlt: "2026天目湖校区女足赛事集体合影",
     href: "/news/2026-womens-intercollege-cup-closing",
@@ -68,7 +68,7 @@ export const womensCupArticle = {
     },
     {
       type: "paragraph",
-      text: "校级官方账号报道确认，人文-自动化-外国语联队获得冠军，并以2:0赢得比赛；经济与管理学院获得亚军，牧星学院获得季军。现有资料未提供完整对阵与逐场赛况，赛事档案仅呈现已经确认的结果。",
+      text: "校级官方账号报道确认，人文外国语自动化联队获得冠军，并在决赛中以2:0战胜经济与管理学院；致和-致慧-致元联队获得季军。完整8场赛果、积分榜和已核验选派信息已并入赛事档案。",
     },
     {
       type: "heading",
@@ -95,6 +95,16 @@ export const womensCupArticle = {
 
 export const womensIntercollegeCup2026 = {
   ...archiveData,
+  podium: [
+    { rank: 1, team: archiveData.awards.champion, note: "决赛2:0获胜" },
+    { rank: 2, team: archiveData.awards.runnerUp },
+    { rank: 3, team: archiveData.awards.thirdPlace },
+  ],
+  awardList: [
+    { award: "赛事MVP（金球奖）", recipient: archiveData.awards.mvp },
+    { award: "赛事最佳射手（金靴奖）", recipient: archiveData.awards.topScorers.join("、") },
+    { award: "赛事最佳门将（金手套奖）", recipient: archiveData.awards.bestGoalkeeper },
+  ],
   heroImage: `${imageRoot}/16-event-group-photo.jpg`,
   gallery: womensCupGallery,
   news: officialWomensCupNews[0],

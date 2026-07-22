@@ -1,48 +1,328 @@
 {
   "competition": {
+    "slug": "2026-womens-intercollege-cup",
+    "name": "2026年南京航空航天大学女子足球院际杯（天目湖校区）",
+    "shortName": "2026女子足球院际杯",
     "canonicalTitle": "2026年南京航空航天大学女子足球院际杯（天目湖校区）",
     "shortTitle": "2026女子足球院际杯",
+    "status": "completed",
     "archiveStatus": "已结束",
     "year": 2026,
-    "venue": "南京航空航天大学天目湖校区",
-    "exactCompetitionDates": null,
+    "campus": "天目湖校区",
+    "format": "五人制",
+    "venue": "天目湖校区西操场五人制球场",
+    "registration": {
+      "start": "2026-04-12 01:00:00",
+      "end": "2026-04-13 14:49:02",
+      "feePerTeam": 0,
+      "depositPerTeam": 200
+    },
+    "summary": {
+      "teams": 3,
+      "players": 24,
+      "matches": 8,
+      "goals": 46,
+      "yellowCards": 0,
+      "redCards": 0
+    },
+    "rules": {
+      "firstHalfMinutes": 20,
+      "secondHalfMinutes": 20,
+      "extraTimeFirstHalfMinutes": 0,
+      "extraTimeSecondHalfMinutes": 0,
+      "points": {
+        "win": 3,
+        "draw": 1,
+        "loss": 0,
+        "penaltyWin": 3,
+        "penaltyLoss": 0
+      },
+      "playerYellowSuspension": {
+        "cards": 2,
+        "matches": 1
+      },
+      "playerRedSuspension": {
+        "cards": 1,
+        "matches": 1
+      },
+      "officialYellowSuspension": {
+        "cards": 2,
+        "matches": 1
+      },
+      "officialRedSuspension": {
+        "cards": 1,
+        "matches": 1
+      },
+      "substituteLimit": 9,
+      "publishStartingLineupMinutesBefore": 30,
+      "publishRefereeListMinutesBefore": 30
+    },
     "sourceArticlePublishedAt": "2026-06-22 16:53",
     "sourceArticlePublisher": "NUAA湖畔印象",
     "sourceArticleTitle": "跃动牧星·活力青年｜绿茵逐梦，铿锵绽放——2026天目湖校区女足联赛圆满收官"
   },
-  "podium": [
+  "teams": [
     {
       "rank": 1,
-      "team": "人文-自动化-外国语联队",
-      "note": "报道确认冠军队以2:0赢得比赛"
+      "name": "人文外国语自动化联队",
+      "played": 4,
+      "won": 4,
+      "drawn": 0,
+      "lost": 0,
+      "goalsFor": 14,
+      "goalsAgainst": 1,
+      "goalDifference": 13,
+      "points": 12
     },
     {
       "rank": 2,
-      "team": "经济与管理学院"
+      "name": "经济与管理学院",
+      "played": 4,
+      "won": 2,
+      "drawn": 0,
+      "lost": 2,
+      "goalsFor": 10,
+      "goalsAgainst": 6,
+      "goalDifference": 4,
+      "points": 6
     },
     {
       "rank": 3,
-      "team": "牧星学院"
+      "name": "致和-致慧-致元联队",
+      "played": 4,
+      "won": 0,
+      "drawn": 0,
+      "lost": 4,
+      "goalsFor": 1,
+      "goalsAgainst": 18,
+      "goalDifference": -17,
+      "points": 0
     }
   ],
-  "awards": [
+  "matches": [
     {
-      "award": "赛事MVP（金球奖）",
-      "recipient": "赵晨希"
+      "number": 1,
+      "stage": "联赛第1轮",
+      "kickoff": "2026-04-14 20:30",
+      "home": "人文外国语自动化联队",
+      "away": "经济与管理学院",
+      "homeScore": 2,
+      "awayScore": 0,
+      "officials": {
+        "matchSupervisor": "王柏翰",
+        "refereeAssessor": null,
+        "referee": "胡兵",
+        "secondReferee": "李子杨",
+        "thirdReferee": "朱俊驰",
+        "timekeeper": null
+      }
     },
     {
-      "award": "赛事最佳射手（金靴奖）",
-      "recipient": "祝飞雨、季彦廷"
+      "number": 2,
+      "stage": "联赛第2轮",
+      "kickoff": "2026-05-08 21:00",
+      "home": "经济与管理学院",
+      "away": "致和-致慧-致元联队",
+      "homeScore": 6,
+      "awayScore": 1,
+      "officials": {
+        "matchSupervisor": null,
+        "refereeAssessor": null,
+        "referee": "王相翰",
+        "secondReferee": "马俊",
+        "thirdReferee": "张娟",
+        "timekeeper": null
+      }
     },
     {
-      "award": "赛事最佳门将（金手套奖）",
-      "recipient": "许京俏"
+      "number": 3,
+      "stage": "联赛第3轮",
+      "kickoff": "2026-05-17 20:30",
+      "home": "致和-致慧-致元联队",
+      "away": "人文外国语自动化联队",
+      "homeScore": 0,
+      "awayScore": 3,
+      "officials": {
+        "matchSupervisor": null,
+        "refereeAssessor": null,
+        "referee": "王相翰",
+        "secondReferee": "颜铭宣",
+        "thirdReferee": "胡兵",
+        "timekeeper": "马俊"
+      }
+    },
+    {
+      "number": 4,
+      "stage": "联赛第4轮",
+      "kickoff": "2026-04-26 19:15",
+      "home": "经济与管理学院",
+      "away": "人文外国语自动化联队",
+      "homeScore": 1,
+      "awayScore": 3,
+      "officials": {
+        "matchSupervisor": null,
+        "refereeAssessor": null,
+        "referee": "李子杨",
+        "secondReferee": "黄泽鑫",
+        "thirdReferee": "魏宇轩",
+        "timekeeper": null
+      }
+    },
+    {
+      "number": 5,
+      "stage": "联赛第5轮",
+      "kickoff": "2026-05-14 20:30",
+      "home": "致和-致慧-致元联队",
+      "away": "经济与管理学院",
+      "homeScore": 0,
+      "awayScore": 3,
+      "officials": {
+        "matchSupervisor": null,
+        "refereeAssessor": null,
+        "referee": "马俊",
+        "secondReferee": null,
+        "thirdReferee": "高羽键",
+        "timekeeper": null
+      }
+    },
+    {
+      "number": 6,
+      "stage": "联赛第6轮",
+      "kickoff": "2026-04-17 21:00",
+      "home": "人文外国语自动化联队",
+      "away": "致和-致慧-致元联队",
+      "homeScore": 6,
+      "awayScore": 0,
+      "officials": {
+        "matchSupervisor": null,
+        "refereeAssessor": null,
+        "referee": "王相翰",
+        "secondReferee": "李子杨",
+        "thirdReferee": "朱俊驰",
+        "timekeeper": null
+      }
+    },
+    {
+      "number": 7,
+      "stage": "淘汰赛 1/2",
+      "kickoff": "2026-05-23 20:30",
+      "home": "经济与管理学院",
+      "away": "致和-致慧-致元联队",
+      "homeScore": 17,
+      "awayScore": 2,
+      "officials": {
+        "matchSupervisor": null,
+        "refereeAssessor": null,
+        "referee": "马俊",
+        "secondReferee": null,
+        "thirdReferee": "颜铭宣",
+        "timekeeper": null
+      }
+    },
+    {
+      "number": 8,
+      "stage": "决赛",
+      "kickoff": "2026-05-30 19:00",
+      "home": "人文外国语自动化联队",
+      "away": "经济与管理学院",
+      "homeScore": 2,
+      "awayScore": 0,
+      "officials": {
+        "matchSupervisor": "王柏翰",
+        "refereeAssessor": "彭云逸",
+        "referee": "马俊",
+        "secondReferee": "高羽键",
+        "thirdReferee": "魏宇轩",
+        "timekeeper": "胡兵"
+      }
+    }
+  ],
+  "awards": {
+    "champion": "人文外国语自动化联队",
+    "runnerUp": "经济与管理学院",
+    "thirdPlace": "致和-致慧-致元联队",
+    "mvp": "赵晨希",
+    "topScorers": [
+      "祝飞雨",
+      "季彦廷"
+    ],
+    "bestGoalkeeper": "许京俏"
+  },
+  "scorers": {
+    "leaders": [
+      {
+        "name": "祝飞雨",
+        "goals": null,
+        "basis": "赛事最佳射手（金靴奖）"
+      },
+      {
+        "name": "季彦廷",
+        "goals": null,
+        "basis": "赛事最佳射手（金靴奖）"
+      }
+    ],
+    "note": "任务包未提供可核验的完整射手榜与个人进球数。"
+  },
+  "discipline": {
+    "summaryYellowCards": 0,
+    "summaryRedCards": 0,
+    "publishedRecords": [],
+    "unresolved": "赛事概况汇总显示黄牌0、红牌0；截图中的红黄牌页另显示一条球队工作人员黄牌记录，统计口径冲突，暂不并入公开纪律表。"
+  },
+  "rosters": [
+    {
+      "team": "人文外国语自动化联队",
+      "coverage": "verified",
+      "players": [
+        { "number": 3, "name": "李锦桦" },
+        { "number": 4, "name": "吴夏薇" },
+        { "number": 5, "name": "祝飞雨" },
+        { "number": 6, "name": "季彦廷" },
+        { "number": 7, "name": "张娟" },
+        { "number": 17, "name": "刘柯楠" },
+        { "number": 28, "name": "赵晨希" },
+        { "number": 72, "name": "许家倩" }
+      ],
+      "staff": [
+        { "role": "领队", "name": "邵梓滨" },
+        { "role": "主教练", "name": "卓之恒" },
+        { "role": "队医", "name": "张靖卓" }
+      ],
+      "note": "球员与工作人员姓名来自任务包足球中国截图。"
+    },
+    {
+      "team": "经济与管理学院",
+      "coverage": "partial",
+      "players": [
+        { "number": 2, "name": "王朝悦" },
+        { "number": 3, "name": "周婕" },
+        { "number": 5, "name": "李欣雨" },
+        { "number": 8, "name": "王韵雅" },
+        { "number": 9, "name": "李杨" },
+        { "number": 10, "name": "沈慧玲" }
+      ],
+      "staff": [],
+      "note": "截图中另有2名球员及工作人员姓名尚需人工复核，未在此猜测。"
+    },
+    {
+      "team": "致和-致慧-致元联队",
+      "coverage": "partial",
+      "players": [],
+      "staff": [
+        { "role": "领队", "name": "王梓涵" },
+        { "role": "主教练", "name": "魏宇轩" },
+        { "role": "助理教练", "name": "李子杨" },
+        { "role": "队务", "name": "胡兵" },
+        { "role": "队医", "name": "吴霄鹏" }
+      ],
+      "note": "现有截图未提供可完整核验的球员名单。"
     }
   ],
   "knownLimitations": [
-    "未提供完整赛程、逐场比分、积分榜、球队完整名单或逐场裁判安排。",
-    "不得根据照片、报道措辞或男足数据推测缺失字段。",
-    "不得虚构参赛队数量、精确赛期、其他奖项或个人数据。",
-    "没有处罚决定或单场战报资料，本轮不创建虚构的纪律与比赛报告内容。"
+    "经济与管理学院2名球员姓名及部分工作人员姓名仍需复核。",
+    "致和-致慧-致元联队球员名单未在任务包中完整提供。",
+    "第5场和第7场第二裁判员姓名显示不清，未予猜测。",
+    "未提供完整射手榜、个人进球数和逐球时间线。",
+    "纪律汇总与红黄牌截图存在口径冲突，等待赛事方确认。"
   ]
 }

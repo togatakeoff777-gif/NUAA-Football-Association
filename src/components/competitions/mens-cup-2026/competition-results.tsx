@@ -19,7 +19,7 @@ export function CompetitionResults() {
             <thead><tr><th>场次</th><th>阶段</th><th>日期</th><th>主队</th><th>比分</th><th>客队</th><th>场地</th></tr></thead>
             <tbody>
               {matches.map((match) => (
-                <tr key={match.id}>
+                <tr id={`match-${match.id}`} key={match.id}>
                   <td>#{String(match.id).padStart(2, "0")}</td>
                   <td>{formatMatchStage(match)}</td>
                   <td>{formatMatchDateTime(match.dateTime)}</td>
@@ -35,7 +35,7 @@ export function CompetitionResults() {
 
         <div className="cup-results-mobile" aria-label="移动端赛程与赛果">
           {matches.map((match) => (
-            <article key={match.id}>
+            <article id={`mobile-match-${match.id}`} key={match.id}>
               <header><span>#{String(match.id).padStart(2, "0")} · {formatMatchStage(match)}</span><time>{formatMatchDateTime(match.dateTime)}</time></header>
               <div><strong>{match.homeTeam}</strong><b>{formatMatchScore(match)}</b><strong>{match.awayTeam}</strong></div>
               <footer>{match.venue}</footer>

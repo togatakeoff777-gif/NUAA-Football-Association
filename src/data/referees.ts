@@ -226,15 +226,10 @@ export const refereeAssignmentPublications: readonly RefereeAssignmentPublicatio
   },
 ];
 
-export const refereeAffairsEntries = [
-  {
-    id: "introduction",
-    title: "裁判工作介绍",
-    description: "了解天目湖校园赛事裁判工作的职责、协作方式与基本要求。",
-  },
+export const refereePrimaryEntries = [
   {
     id: "join",
-    title: "加入裁判队伍",
+    title: "如何加入裁判队伍",
     description:
       "面向希望成为裁判员的新生，以及已有证书、希望加入天目湖裁判团队的人员。",
     href: "/referees/recruitment",
@@ -246,41 +241,19 @@ export const refereeAffairsEntries = [
     href: "/referees/directory",
   },
   {
-    id: "open-matches",
-    title: "开放执裁场次",
-    description: "查看当前开放表达执裁意向的比赛与报名截止时间。",
-    href: "/referees/open-matches",
-  },
-  {
-    id: "application",
-    title: "比赛执裁报名",
-    description:
-      "面向已被协会确认的裁判员；报名只表达执裁意向，不等于正式获得任务。",
-    href: "/referees/open-matches",
-  },
-  {
     id: "assignments",
     title: "裁判员选派公示",
-    description: "按场次查看管理员已发布且未撤回的裁判组选派结果。",
+    description: "按场次查看管理员已发布且未撤回的裁判组选派结果；访客也可查看公开场次。",
     href: "/referees/assignments",
   },
+] as const;
+
+export const refereeSecondaryEntries = [
   {
     id: "history",
     title: "历史选派记录",
     description: "按比赛回看已经公开归档的裁判组与岗位记录。",
     href: "/referees/history",
-  },
-  {
-    id: "my-tasks",
-    title: "我的报名与执裁任务",
-    description: "当前没有裁判员个人账号，暂不展示个人报名与执裁任务。",
-    badge: "功能规划中",
-  },
-  {
-    id: "training",
-    title: "裁判培训与发展",
-    description: "培训安排、能力发展路径与学习资料将在资料确认后更新。",
-    badge: "资料待更新",
   },
   {
     id: "stories",
@@ -289,16 +262,16 @@ export const refereeAffairsEntries = [
     badge: "内容待更新",
   },
   {
-    id: "contact",
-    title: "联系裁判负责人",
-    description: "咨询招募、培训、报名、选派、临时改派与规则问题。",
-    href: "#referee-contact",
+    id: "resources",
+    title: "规则与资料",
+    description: "查看足球、五人制规则更新与裁判工作资料下载。",
+    href: "#referee-rules",
   },
   {
-    id: "admin",
-    title: "管理入口",
-    description: "供授权管理人员审核报名、配置岗位、保存草稿并发布或撤回选派。",
-    href: "/referees/admin/login",
+    id: "training",
+    title: "培训材料",
+    description: "后续用于培训课件、规则讲解、典型判例、视频或图文资料。",
+    badge: "资料待协会确认",
   },
 ] as const;
 
@@ -318,23 +291,11 @@ export const rulesResourceEntries = [
     badge: "真实文件",
   },
   {
-    id: "local-regulations",
-    title: "校内赛事特别规定",
-    description: "各赛事经确认的补充规定将在此集中展示。",
-    badge: "暂无公开文件",
-  },
-  {
     id: "rule-updates",
     title: "规则更新",
     description: "追踪适用于校园赛事的规则版本和重点变化。",
     href: "/documents/rules/football/2026-27-changes-explained-zh.pdf",
     badge: "真实文件",
-  },
-  {
-    id: "case-studies",
-    title: "常见判例分析",
-    description: "通过典型比赛情境辅助理解判罚原则。",
-    badge: "内容待确认",
   },
   {
     id: "referee-downloads",
@@ -344,11 +305,10 @@ export const rulesResourceEntries = [
     badge: "3份真实文件",
   },
   {
-    id: "rule-downloads",
-    title: "规则文件下载",
-    description: "按赛制与版本下载已经接入的正式规则文件。",
-    href: "#referee-rules",
-    badge: "3份真实文件",
+    id: "training-materials",
+    title: "培训材料",
+    description: "培训课件、规则讲解、典型判例、视频或图文资料将在取得真实来源后发布。",
+    badge: "资料待协会确认",
   },
 ] as const;
 
@@ -360,6 +320,7 @@ export const refereeWorkFiles = [
     version: "2026",
     publishedAt: "发布日期待确认",
     scope: "十一人制比赛裁判组 / 比赛官员",
+    source: "协会提供的原始工作文件",
     href: "/documents/templates/eleven-a-side-match-report.pdf",
   },
   {
@@ -369,6 +330,7 @@ export const refereeWorkFiles = [
     version: "2026",
     publishedAt: "发布日期待确认",
     scope: "女子足球院际杯裁判组 / 比赛官员",
+    source: "协会提供的原始工作文件",
     href: "/documents/templates/womens-intercollege-cup-match-report.pdf",
   },
   {
@@ -378,6 +340,7 @@ export const refereeWorkFiles = [
     version: "2025",
     publishedAt: "发布日期待确认",
     scope: "五人制比赛裁判组 / 比赛官员",
+    source: "协会提供的原始工作文件",
     href: "/documents/templates/futsal-referee-report.docx",
   },
 ] as const;

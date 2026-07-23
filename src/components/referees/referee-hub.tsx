@@ -2,58 +2,177 @@ import Link from "next/link";
 
 import { RefereeContactCard } from "@/components/referees/referee-contact-card";
 import {
-  refereeAffairsEntries,
-  refereeRoleDefinitions,
-  refereeRoleTemplateNotes,
+  refereePrimaryEntries,
+  refereeSecondaryEntries,
   refereeWorkFiles,
   rulesResourceEntries,
 } from "@/data/referees";
 
-const workflow = ["了解", "加入", "报名", "选派", "公示", "归档", "学习"] as const;
-
-function AffairEntry({ entry, index }: { entry: (typeof refereeAffairsEntries)[number]; index: number }) {
-  const content = <><span>{String(index + 1).padStart(2, "0")}</span><div><h3>{entry.title}</h3><p>{entry.description}</p></div><strong>{"badge" in entry ? entry.badge : "进入 →"}</strong></>;
-  return "href" in entry ? <Link href={entry.href} id={`referee-affair-${entry.id}`}>{content}</Link> : <article id={`referee-affair-${entry.id}`}>{content}</article>;
-}
-
 export function RefereeHub() {
-  const elevenRoles = refereeRoleDefinitions.filter((role) => role.format === "eleven-a-side");
-  const futsalRoles = refereeRoleDefinitions.filter((role) => role.format === "futsal");
-
   return (
     <main className="functional-page referee-center" id="main-content">
-      <section className="functional-hero"><div className="detail-shell"><p>REFEREE OPERATIONS</p><h1>裁判中心</h1><p>建立“了解—加入—报名—选派—公示—归档—学习”的完整入口，并保留注册名录、执裁意向、审核与选派的持久化工作闭环。</p></div></section>
-
-      <section className="referee-workflow" aria-label="裁判工作流程"><div className="detail-shell">{workflow.map((item, index) => <span key={item}><b>{String(index + 1).padStart(2, "0")}</b>{item}</span>)}</div></section>
-
-      <section className="functional-section"><div className="detail-shell">
-        <div className="functional-section-head"><div><span>REFEREE AFFAIRS</span><h2>裁判事务</h2></div><p>公开服务与管理入口使用同一套 Prisma + SQLite 数据；个人账号尚未建设的功能会明确标注。</p></div>
-        <div className="referee-affairs-grid">{refereeAffairsEntries.map((entry, index) => <AffairEntry entry={entry} index={index} key={entry.id} />)}</div>
-      </div></section>
-
-      <section className="functional-section functional-section-tint" id="referee-rules"><div className="detail-shell">
-        <div className="functional-section-head"><div><span>LAWS & RESOURCES</span><h2>规则与资料</h2></div><p>规则文件保持原始版本；没有真实文件或内容来源的栏目保留正式状态，不生成空下载链接。</p></div>
-        <div className="referee-rule-directory">{rulesResourceEntries.map((entry, index) => {
-          const content = <><span>{String(index + 1).padStart(2, "0")}</span><div><h3>{entry.title}</h3><p>{entry.description}</p></div><strong>{entry.badge}</strong></>;
-          return "href" in entry ? <Link href={entry.href} key={entry.id}>{content}</Link> : <article key={entry.id}>{content}</article>;
-        })}</div>
-      </div></section>
-
-      <section className="functional-section" id="referee-downloads"><div className="detail-shell">
-        <div className="functional-section-head"><div><span>OFFICIALS&apos; WORK FILES</span><h2>裁判工作资料下载</h2></div><p>以下文件已从赛事文件中心归入裁判中心，仅用于裁判组或比赛官员工作。</p></div>
-        <div className="referee-work-file-list">{refereeWorkFiles.map((file) => <article key={file.id}><span>{file.fileType}</span><div><h3>{file.title}</h3><p>{file.scope}</p></div><dl><div><dt>版本</dt><dd>{file.version}</dd></div><div><dt>发布日期</dt><dd>{file.publishedAt}</dd></div></dl><a download href={file.href}>下载原文件</a></article>)}</div>
-      </div></section>
-
-      <section className="functional-section functional-section-tint" id="referee-learning"><div className="detail-shell">
-        <div className="functional-section-head"><div><span>ROLE TEMPLATES & DEVELOPMENT</span><h2>岗位模板与学习发展</h2></div><p>管理员可按赛制切换完整岗位模板，并按场次启用或停用可选岗位。</p></div>
-        <div className="referee-template-grid">
-          <article><header><span>ELEVEN-A-SIDE</span><h3>十一人制岗位</h3></header><ol>{elevenRoles.map((role) => <li key={role.key}><b>{String(role.order).padStart(2, "0")}</b>{role.label}</li>)}</ol><ul>{refereeRoleTemplateNotes["eleven-a-side"].map((note) => <li key={note}>{note}</li>)}</ul></article>
-          <article><header><span>FUTSAL</span><h3>五人制岗位</h3></header><ol>{futsalRoles.map((role) => <li key={role.key}><b>{String(role.order).padStart(2, "0")}</b>{role.label}</li>)}</ol><ul>{refereeRoleTemplateNotes.futsal.map((note) => <li key={note}>{note}</li>)}</ul></article>
-          <aside><span>TRAINING & CASES</span><h3>培训、发展与判例</h3><p>培训安排、能力发展路径、常见判例分析与裁判员风采将在取得可公开资料后发布。</p><strong>内容待协会确认</strong></aside>
+      <section className="functional-hero referee-center-hero">
+        <div className="detail-shell">
+          <p>REFEREE CENTER</p>
+          <h1>裁判中心</h1>
+          <p>
+            公开裁判名录、场次、选派与历史记录；已登记裁判员和管理员分别进入受保护的工作入口。
+          </p>
+          <div className="referee-hero-actions">
+            <Link href="/referees/login">裁判员登录</Link>
+            <Link href="/referees/admin/login">管理员登录</Link>
+          </div>
         </div>
-      </div></section>
+      </section>
 
-      <section className="functional-section referee-contact-section"><div className="detail-shell"><div className="functional-section-head"><div><span>CONTACT</span><h2>联系裁判负责人</h2></div><p>负责人姓名未确认，不公开私人手机号或微信号；赛事与规则咨询使用协会公开邮箱。</p></div><RefereeContactCard /></div></section>
+      <section className="functional-section referee-contact-section referee-contact-section-early">
+        <div className="detail-shell referee-contact-layout">
+          <div className="functional-section-head">
+            <div>
+              <span>CONTACT</span>
+              <h2>联系裁判负责人</h2>
+            </div>
+            <p>
+              负责人姓名尚未确认，不公开私人手机号或微信号；赛事、规则与执裁事务统一使用协会公开邮箱。
+            </p>
+          </div>
+          <RefereeContactCard />
+        </div>
+      </section>
+
+      <section className="functional-section functional-section-tint">
+        <div className="detail-shell">
+          <div className="referee-center-intro">
+            <div>
+              <span>PUBLIC INFORMATION</span>
+              <h2>公开信息对所有访客开放</h2>
+              <p>
+                公开名录只展示经确认可公开的信息；开放场次可直接浏览。正式提交执裁意向、查看个人审核状态与任务，需要裁判员登录。
+              </p>
+            </div>
+            <Link href="/referees/open-matches">查看公开场次 →</Link>
+          </div>
+          <div className="referee-affairs-grid referee-affairs-grid-primary">
+            {refereePrimaryEntries.map((entry, index) => (
+              <Link href={entry.href} id={`referee-affair-${entry.id}`} key={entry.id}>
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <div>
+                  <h3>{entry.title}</h3>
+                  <p>{entry.description}</p>
+                </div>
+                <strong>进入 →</strong>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="functional-section">
+        <div className="detail-shell">
+          <div className="functional-section-head">
+            <div>
+              <span>RESOURCES & RECORDS</span>
+              <h2>资料、培训与历史</h2>
+            </div>
+            <p>第二层入口承载规则学习、历史公示与经授权的人物内容，不与比赛申请入口重复。</p>
+          </div>
+          <div className="referee-secondary-directory">
+            {refereeSecondaryEntries.map((entry, index) => {
+              const content = (
+                <>
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  <div>
+                    <h3>{entry.title}</h3>
+                    <p>{entry.description}</p>
+                  </div>
+                  <strong>{"badge" in entry ? entry.badge : "进入 →"}</strong>
+                </>
+              );
+              return "href" in entry ? (
+                <Link href={entry.href} key={entry.id}>{content}</Link>
+              ) : (
+                <article key={entry.id}>{content}</article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="functional-section functional-section-tint" id="referee-rules">
+        <div className="detail-shell">
+          <div className="functional-section-head">
+            <div>
+              <span>LAWS & RESOURCES</span>
+              <h2>规则与资料</h2>
+            </div>
+            <p>按足球、五人制、规则更新、工作资料和培训材料五类组织，不生成无真实来源的下载链接。</p>
+          </div>
+          <div className="referee-rule-directory">
+            {rulesResourceEntries.map((entry, index) => {
+              const content = (
+                <>
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  <div>
+                    <h3>{entry.title}</h3>
+                    <p>{entry.description}</p>
+                  </div>
+                  <strong>{entry.badge}</strong>
+                </>
+              );
+              return "href" in entry ? (
+                <Link href={entry.href} key={entry.id}>{content}</Link>
+              ) : (
+                <article key={entry.id}>{content}</article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="functional-section" id="referee-downloads">
+        <div className="detail-shell">
+          <div className="functional-section-head">
+            <div>
+              <span>OFFICIALS&apos; WORK FILES</span>
+              <h2>裁判工作资料下载</h2>
+            </div>
+            <p>以下真实文件已从赛事文件中心归入裁判中心，仅用于裁判组或比赛官员工作。</p>
+          </div>
+          <div className="referee-work-file-list">
+            {refereeWorkFiles.map((file) => (
+              <article key={file.id}>
+                <span>{file.fileType}</span>
+                <div>
+                  <h3>{file.title}</h3>
+                  <p>{file.scope}</p>
+                </div>
+                <dl>
+                  <div><dt>版本</dt><dd>{file.version}</dd></div>
+                  <div><dt>发布日期</dt><dd>{file.publishedAt}</dd></div>
+                  <div><dt>来源</dt><dd>{file.source}</dd></div>
+                </dl>
+                <a download href={file.href}>下载原文件</a>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="functional-section functional-section-tint">
+        <div className="detail-shell referee-secure-access">
+          <div>
+            <span>SECURE WORK AREAS</span>
+            <h2>受保护的工作入口</h2>
+            <p>
+              裁判员可提交执裁意向并查看个人申请、正式任务和培训状态；管理员保留审核、选派、发布与撤回的完整持久化闭环。
+            </p>
+          </div>
+          <div>
+            <Link href="/referees/login">裁判员登录</Link>
+            <Link href="/referees/admin/login">管理员登录</Link>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }

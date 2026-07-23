@@ -11,5 +11,5 @@ export function PublicAppointmentList({ items, emptyTitle }: { items: PublicAppo
 }
 
 export function RefereeSubnav() {
-  return <nav aria-label="裁判中心功能导航" className="referee-subnav"><Link href="/referees">裁判中心</Link><Link href="/referees/directory">公开名录</Link><Link href="/referees/open-matches">待选派比赛</Link><Link href="/referees/assignments">选派公告</Link><Link href="/referees/history">历史记录</Link></nav>;
+  return <nav aria-label="裁判中心功能导航" className="referee-subnav"><Link href="/referees">裁判中心</Link><Link href="/referees/directory">公开名录</Link><Link href="/referees/open-matches">公开场次</Link><Link href="/referees/assignments">选派公告</Link><Link href="/referees/history">历史记录</Link><Link href="/referees/workspace">个人工作区</Link></nav>;
 }

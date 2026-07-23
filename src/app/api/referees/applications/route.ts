@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { isSameOrigin } from "@/lib/referee-auth";
+import { getRefereeMemberSession } from "@/lib/referee-member-auth";
 import { createRefereeApplication, RefereeServiceError } from "@/lib/referee-service";
 import { isRecord, positionKeys, readEnum, readShortText } from "@/lib/referee-validation";
 
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) return NextResponse.json({ error: "请求来源无效。" }, { status: 403 });
+  const session = await getRefereeMemberSession();
+  if (!session) {
+    return NextResponse.json({ error: "请先登录裁判员工作区。" }, { status: 401 });
+  }
   try {
     const body: unknown = await request.json();
     if (!isRecord(body)) throw new Error("提交内容格式不正确。" );
@@ -13,7 +18,7 @@ export async function POST(request: Request) {
     }
     const application = await createRefereeApplication({
       matchId: readShortText(body.matchId, "比赛", 64),
-      refereeId: readShortText(body.refereeId, "裁判员", 64),
+      refereeId: session.refereeId,
       preferredPositions: body.preferredPositions.map((item) => readEnum(item, positionKeys, "意向岗位")),
       note: readShortText(body.note, "补充说明", 240, false),
     });

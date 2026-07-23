@@ -126,6 +126,7 @@ model Referee {
   updatedAt    DateTime              @updatedAt
   applications RefereeApplication[]
   positions    AppointmentPosition[]
+  sessions     RefereeSession[]
 }
 
 model RefereeApplication {
@@ -182,5 +183,18 @@ model AdminSession {
   createdAt  DateTime @default(now())
   lastSeenAt DateTime @default(now())
 
+  @@index([expiresAt])
+}
+
+model RefereeSession {
+  id         String   @id @default(cuid())
+  refereeId  String
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  referee    Referee  @relation(fields: [refereeId], references: [id], onDelete: Cascade)
+
+  @@index([refereeId])
   @@index([expiresAt])
 }

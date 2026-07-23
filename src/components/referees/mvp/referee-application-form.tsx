@@ -3,17 +3,16 @@
 import { useState } from "react";
 import type { AppointmentPositionKey } from "@/generated/prisma/browser";
 
-type RefereeOption = { id: string; publicCode: string; name: string };
 type PositionOption = { key: AppointmentPositionKey; label: string };
 
 export function RefereeApplicationForm({
   matchId,
-  referees,
   positions,
+  referee,
 }: {
   matchId: string;
-  referees: RefereeOption[];
   positions: PositionOption[];
+  referee: { publicCode: string; name: string };
 }) {
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -29,7 +28,6 @@ export function RefereeApplicationForm({
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         matchId,
-        refereeId: form.get("refereeId"),
         preferredPositions: form.getAll("preferredPositions"),
         note: form.get("note"),
       }),
@@ -46,15 +44,10 @@ export function RefereeApplicationForm({
 
   return (
     <form className="referee-form" onSubmit={submit}>
-      <label>
-        <span>注册裁判员</span>
-        <select name="refereeId" required defaultValue="">
-          <option disabled value="">请选择名录记录</option>
-          {referees.map((referee) => (
-            <option key={referee.id} value={referee.id}>{referee.publicCode} · {referee.name}</option>
-          ))}
-        </select>
-      </label>
+      <div className="referee-form-identity">
+        <span>当前登录裁判员</span>
+        <strong>{referee.publicCode} · {referee.name}</strong>
+      </div>
       <fieldset>
         <legend>意向岗位（至少选择一项）</legend>
         <div className="referee-checkbox-grid">

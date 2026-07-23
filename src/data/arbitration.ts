@@ -56,6 +56,6 @@ export const arbitrationResources = [
     title: "竞赛规则与工作资料",
     status: "真实文件已接入",
     description: "竞赛规则位于赛事文件中心，裁判组工作表单位于裁判中心。",
-    href: "/competitions/files#regulations",
+    href: "/referees#referee-downloads",
   },
 ] as const;

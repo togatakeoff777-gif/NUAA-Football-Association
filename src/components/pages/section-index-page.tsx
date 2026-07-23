@@ -80,7 +80,7 @@ export function SectionIndexPage({
   sectionTitle = "页面入口",
   sectionDescription,
   notice,
-  statusLabel = "静态原型 · 资料待更新",
+  statusLabel = "公开信息 · 资料待更新",
   items,
 }: SectionIndexPageProps) {
   return (

@@ -3,7 +3,7 @@ import { ASSOCIATION_EMAIL } from "@/data/platforms";
 
 export const refereeContact: ContactCardData = {
   role: "裁判事务负责人",
-  name: "待更新",
+  name: "待协会确认",
   responsibilities: [
     "招募",
     "培训",

@@ -17,7 +17,7 @@ export function ArchivePageLayout({ eyebrow, title, description, identity, child
     <>
       <SiteHeader />
       <main className="template-page template-archive-page" id="main-content">
-        <PageIntro eyebrow={eyebrow} title={title} description={description} statusLabel="协会公开档案 · V2.1" variant="archive" aside={identity} />
+        <PageIntro eyebrow={eyebrow} title={title} description={description} statusLabel="协会公开档案" variant="archive" aside={identity} />
         <section className="template-section archive-body">
           <div className="page-shell">{children}<Link className="template-back-link" href="/">← 返回首页</Link></div>
         </section>

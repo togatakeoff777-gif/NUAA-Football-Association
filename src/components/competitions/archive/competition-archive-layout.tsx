@@ -56,7 +56,7 @@ export function CompetitionArchiveLayout({
       <SiteHeader fixed />
       <main className={`cup-archive-page ${className}`.trim()} id="main-content">
         <section className="cup-archive-hero" aria-labelledby={titleId}>
-          <Image className="cup-archive-hero-image" src={heroImage} alt={heroAlt} fill preload sizes="100vw" />
+          <Image className="cup-archive-hero-image" src={heroImage} alt={heroAlt} fill loading="eager" sizes="100vw" />
           <div className="cup-archive-hero-overlay" aria-hidden="true" />
           <div className="page-shell cup-archive-hero-inner">
             <div className="cup-archive-hero-copy">

@@ -107,9 +107,9 @@
 .detail-article-aside li > a:not(:has(strong)) { color: var(--aviation-blue); font-size: 10px; font-weight: 760; }
 .detail-archive-gallery { columns: 2 260px; margin-block: 22px 30px; }
 
-.cup-archive-hero-womens .cup-archive-hero-image { object-position: center 48%; }
-.cup-archive-hero-womens .cup-archive-hero-overlay { background: linear-gradient(90deg, rgba(5,17,43,.98) 0%, rgba(7,25,58,.92) 47%, rgba(6,19,44,.46) 75%, rgba(4,12,30,.26) 100%), linear-gradient(0deg, rgba(5,15,37,.78), transparent 58%); }
-.cup-archive-hero-womens .cup-archive-hero-copy h1 { max-width: 830px; font-size: clamp(38px, 4vw, 61px); }
+.cup-womens-page .cup-archive-hero-image { object-position: center 48%; }
+.cup-womens-page .cup-archive-hero-overlay { background: linear-gradient(90deg, rgba(5,17,43,.98) 0%, rgba(7,25,58,.92) 47%, rgba(6,19,44,.46) 75%, rgba(4,12,30,.26) 100%), linear-gradient(0deg, rgba(5,15,37,.78), transparent 58%); }
+.cup-womens-page .cup-archive-hero-copy h1 { max-width: 830px; font-size: clamp(38px, 4vw, 61px); }
 .cup-womens-overview { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(330px, .92fr); border-top: 3px solid var(--space-blue); }
 .cup-womens-overview > article { padding: clamp(28px, 4vw, 44px); border: 1px solid var(--line); border-top: 0; background: linear-gradient(135deg, #edf5ff, white 72%); }
 .cup-womens-overview > article > p:first-child, .cup-archive-source-section div > div > p { color: var(--aviation-blue); font-size: 9px; font-weight: 850; letter-spacing: .16em; }
@@ -161,7 +161,7 @@
 
 @media (max-width: 720px) {
   .cup-archive-hero-image { object-position: 58% 56%; }.cup-archive-hero-overlay { background: linear-gradient(0deg, rgba(5,17,43,.98) 0%, rgba(7,25,58,.9) 58%, rgba(5,16,38,.52) 100%); }
-  .cup-archive-page { --archive-nav-height: 48px; }.cup-archive-hero-inner { min-height: 650px; padding-block: 44px 34px; }.cup-archive-hero-copy h1, .cup-archive-hero-womens .cup-archive-hero-copy h1 { font-size: clamp(34px, 10vw, 44px); }.cup-archive-hero-copy > p:not(:first-child) { font-size: 12px; }.cup-archive-hero-copy > div { flex-direction: column; }.cup-archive-hero-copy a { width: 100%; min-height: 50px; }
+  .cup-archive-page { --archive-nav-height: 48px; }.cup-archive-hero-inner { min-height: 650px; padding-block: 44px 34px; }.cup-archive-hero-copy h1, .cup-womens-page .cup-archive-hero-copy h1 { font-size: clamp(34px, 10vw, 44px); }.cup-archive-hero-copy > p:not(:first-child) { font-size: 12px; }.cup-archive-hero-copy > div { flex-direction: column; }.cup-archive-hero-copy a { width: 100%; min-height: 50px; }
   .cup-archive-nav .page-shell { width: 100%; }.cup-archive-nav a { min-height: 48px; padding-inline: 14px; }
   .cup-archive-section { padding: 52px 0; }.cup-section-heading h2 { font-size: 34px; }.cup-section-heading > span { font-size: 11px; }
   .cup-overview-primary { padding: 24px 18px; }.cup-overview-primary h3 { font-size: 23px; }.cup-overview-primary dl > div { grid-template-columns: 82px 1fr; }.cup-overview-secondary { grid-template-columns: 1fr; }.cup-overview-secondary section { padding: 23px 18px; }.cup-overview-stats > div { min-height: 98px; padding: 14px; }.cup-overview-stats strong { font-size: 29px; }
@@ -180,4 +180,30 @@
 
 @media (prefers-reduced-motion: reduce) {
   .cup-team-list summary > i, .cup-assignment-list summary > i { transition: none; }
+}
+
+/* Shared archive tables: readable on desktop, grouped cards on narrow screens. */
+.cup-results-table { min-width: 1180px; }
+.cup-results-table th { height: 48px; font-size: 14px; }
+.cup-results-table td { height: 72px; padding: 13px 14px; font-size: 14px; line-height: 1.5; }
+.cup-results-table td:nth-child(3) > strong { display: block; font-size: 14px; }
+.cup-results-table td:nth-child(3) > small { display: block; margin-top: 4px; font-size: 13px; }
+.cup-results-table td:nth-child(4),
+.cup-results-table td:nth-child(6) { font-size: 15px; font-weight: 650; }
+.cup-results-table td:nth-child(5) > b { display: block; font-size: 21px; }
+.cup-results-table td:nth-child(5) > small { display: block; margin-top: 3px; font-size: 12px; }
+.cup-results-table td:last-child { min-width: 180px; }
+.cup-results-table td:last-child a { display: inline-flex; min-height: 36px; align-items: center; padding: 0 9px; border: 1px solid #bfd5ed; color: var(--aviation-blue); font-size: 12px; font-weight: 750; }
+.cup-results-table td:last-child a + a { margin-left: 6px; }
+
+@media (max-width: 720px) {
+  .cup-results-mobile article { padding: 17px 15px; }
+  .cup-results-mobile header { align-items: flex-start; font-size: 12px; line-height: 1.5; }
+  .cup-results-mobile header time { flex: 0 0 118px; text-align: right; }
+  .cup-results-mobile article > div { min-height: 98px; }
+  .cup-results-mobile article > div strong { font-size: 15px; line-height: 1.4; }
+  .cup-results-mobile article > div b { display: grid; gap: 2px; font-size: 20px; }
+  .cup-results-mobile article > div b small { color: var(--muted); font-size: 12px; }
+  .cup-results-mobile footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; line-height: 1.5; }
+  .cup-results-mobile footer a { color: var(--aviation-blue); font-size: 13px; font-weight: 750; }
 }

@@ -1,46 +1,35 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 
-import { SectionIndexPage } from "@/components/pages/section-index-page";
+import { SiteFooter } from "@/components/layout/site-footer";
+import { SiteHeader } from "@/components/layout/site-header";
+import { verifiedCompetitionTeams } from "@/data/teams";
 
 export const metadata: Metadata = {
-  title: "天目湖球队",
-  description: "天目湖校区球队信息入口与资料更新说明。",
+  title: "球队信息",
+  description: "2026男、女子足球院际杯真实参赛队伍入口。",
 };
-
-const items = [
-  {
-    title: "球队名录",
-    description:
-      "未来展示经球队负责人和赛事组织方确认的天目湖球队信息；当前不虚构球队名称、队徽或阵容。",
-    meta: "天目湖校区",
-    status: "资料待更新",
-  },
-  {
-    title: "参赛队伍",
-    description:
-      "参赛名单将按具体赛事分别发布，并明确区分天目湖赛事与经确认的跨校区赛事。",
-    meta: "按赛事归档",
-    status: "资料待更新",
-  },
-  {
-    title: "球队信息维护",
-    description:
-      "为后续后台管理预留球队简介、负责人、队徽与赛季信息更新结构，不在本轮收集个人信息。",
-    meta: "维护预留",
-    status: "功能未开放",
-  },
-];
 
 export default function TeamsPage() {
   return (
-    <SectionIndexPage
-      eyebrow="TIANMUHU TEAMS"
-      title="天目湖球队"
-      description="建立天目湖校园足球球队资料入口，并为后续赛事管理与球队维护预留清晰结构。"
-      sectionTitle="球队信息"
-      sectionDescription="本页不使用未经确认的球队、球员、队徽或历史成绩。"
-      notice="当前页面为资料框架，真实球队名录将在完成授权与核验后更新。"
-      items={items}
-    />
+    <>
+      <SiteHeader />
+      <main className="functional-page" id="main-content">
+        <section className="functional-hero"><div className="detail-shell"><p>VERIFIED COMPETITION TEAMS</p><h1>球队信息</h1><p>按赛事展示已经核验的真实参赛队伍，详细名单与赛事数据复用对应归档，不建立重复常量。</p></div></section>
+        <section className="functional-section"><div className="detail-shell">
+          <div className="functional-section-head"><div><span>TEAM DIRECTORY</span><h2>2026参赛队伍</h2></div><p>不公开手机号、证件号等个人信息；名单范围以赛事归档的公开资料为准。</p></div>
+          <div className="verified-team-groups">
+            {verifiedCompetitionTeams.map((competition) => (
+              <section key={competition.competitionId}>
+                <header><div><span>COMPETITION ARCHIVE</span><h2>{competition.competitionName}</h2><p>{competition.summary}</p></div><Link href={competition.competitionHref}>进入赛事归档 →</Link></header>
+                <div>{competition.teams.map((team, index) => <Link href={competition.competitionHref} key={team.id}><span>{String(index + 1).padStart(2, "0")}</span><div><h3>{team.name}</h3><p>{team.meta}</p></div><strong>查看名单 →</strong></Link>)}</div>
+              </section>
+            ))}
+          </div>
+          <div className="functional-notice"><strong>球队信息维护</strong><p>球队资料维护属于后续能力，当前未开放独立后台或信息提交表单。</p></div>
+        </div></section>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

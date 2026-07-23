@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { StatusBadge } from "@/components/ui/status-badge";
-import { demoAnnouncements } from "@/data/content";
+import { homepageDisciplineDecisions } from "@/data/public-information";
 
 export function NoticeQuickLinks() {
   return (
@@ -13,11 +13,11 @@ export function NoticeQuickLinks() {
             <Link className="text-link" href="/news#notices">查看全部公告 →</Link>
           </div>
           <div className="priority-notice-list">
-            {demoAnnouncements.slice(0, 3).map((notice) => (
+            {homepageDisciplineDecisions.map((notice) => (
               <Link href={notice.href} key={notice.id} data-home-reveal data-home-delay="1">
                 <time>{notice.dateLabel}</time>
                 <div><span>{notice.category}</span><h3>{notice.title}</h3></div>
-                <StatusBadge tone={notice.publicationStatus === "置顶" ? "warning" : "neutral"}>{notice.publicationStatus} · 演示</StatusBadge>
+                <StatusBadge tone="neutral">{notice.category}</StatusBadge>
               </Link>
             ))}
           </div>

@@ -15,7 +15,7 @@ type ListPageLayoutProps = {
   children: React.ReactNode;
 };
 
-export function ListPageLayout({ eyebrow, title, description, listTitle, listDescription, statusLabel = "列表模板 · 演示内容", filters, children }: ListPageLayoutProps) {
+export function ListPageLayout({ eyebrow, title, description, listTitle, listDescription, statusLabel = "公开内容列表", filters, children }: ListPageLayoutProps) {
   return (
     <>
       <SiteHeader />

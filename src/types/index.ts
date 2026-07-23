@@ -81,7 +81,7 @@ export type DemoScorer = {
 };
 
 export type NewsCategory = "比赛战报" | "协会动态" | "人物专访" | "校园足球文化" | "裁判内容";
-export type NoticeCategory = "报名通知" | "赛程调整" | "竞赛规程" | "招募通知" | "赛事纪律通知";
+export type NoticeCategory = "报名通知" | "赛程调整" | "竞赛规程" | "招募通知" | "赛事纪律通知" | "纪律决定";
 
 export type NewsItem = ContentOwnership & {
   id: string;
@@ -112,7 +112,7 @@ export type NoticeItem = ContentOwnership & {
   summary: string;
   href: string;
   publicationStatus: "置顶" | "最新";
-  dataStatus: "demo";
+  dataStatus: "demo" | "confirmed";
   badge: string;
 };
 
@@ -144,14 +144,14 @@ export type TeamShowcaseItem = ContentOwnership & {
   description: string;
   image: string;
   imageAlt: string;
-  dataStatus: "demo";
+  dataStatus: "demo" | "confirmed";
   badge: string;
   competitiveDataAvailable: boolean;
 };
 
 export type PlatformItem = {
-  id: "wechat" | "bilibili" | "football-china" | "email";
-  kind: "wechat" | "bilibili" | "football-china" | "email";
+  id: "wechat" | "bilibili" | "douyin" | "football-china" | "email";
+  kind: "wechat" | "bilibili" | "douyin" | "football-china" | "email";
   name: string;
   label: string;
   description: string;
@@ -161,6 +161,7 @@ export type PlatformItem = {
   qrImage?: string;
   qrAlt?: string;
   interactionLabel?: string;
+  qrStatus?: string;
   scopeNotice?: string;
   securityNotice?: string;
   target?: "_blank";

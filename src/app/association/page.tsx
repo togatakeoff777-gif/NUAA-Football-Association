@@ -12,7 +12,7 @@ import {
   associationScope,
   associationTerms,
 } from "@/data/association";
-import { ASSOCIATION_EMAIL } from "@/data/platforms";
+import { ASSOCIATION_EMAIL, bilibiliPlatform, douyinPlatform, wechatPlatform } from "@/data/platforms";
 
 export const metadata: Metadata = { title: "协会", description: "南京航空航天大学天目湖足球协会公开档案。" };
 
@@ -35,6 +35,20 @@ export default function AssociationPage() {
       <section className="association-governance" aria-labelledby="association-governance-title">
         <article><p>CAMPUS RELATIONSHIP</p><h2 id="association-governance-title">{associationCampusRelationship.title}</h2><strong>{associationCampusRelationship.description}</strong><p>{associationCampusRelationship.sharedPlatform}</p><p>{associationCampusRelationship.separatePlatform}</p></article>
         <article><p>DATA GOVERNANCE</p><h2>赛事数据治理</h2><ul>{associationDataGovernance.map((item) => <li key={item}>{item}</li>)}</ul></article>
+      </section>
+      <section className="association-contact-section" aria-labelledby="association-contact-title">
+        <div><p>CONTACT US</p><h2 id="association-contact-title">联系我们</h2><span>赛事、裁判、媒体与内容纠错均使用公开渠道，不展示未经同意的私人联系方式。</span></div>
+        <dl>
+          <div><dt>协会名称</dt><dd>{associationIdentity.formalName}</dd></div>
+          <div><dt>服务范围</dt><dd>{associationScope.representedCampus}</dd></div>
+          <div><dt>公开邮箱</dt><dd><a href={`mailto:${ASSOCIATION_EMAIL}`}>{ASSOCIATION_EMAIL}</a></dd></div>
+          <div><dt>微信公众号</dt><dd>{wechatPlatform.name}</dd></div>
+          <div><dt>哔哩哔哩</dt><dd><a href={bilibiliPlatform.href} rel="noopener noreferrer" target="_blank">{bilibiliPlatform.name}</a></dd></div>
+          <div><dt>抖音</dt><dd>{douyinPlatform.name} · {douyinPlatform.label}</dd></div>
+          <div><dt>裁判事务</dt><dd><Link href="/referees#referee-contact">进入裁判中心联系区</Link></dd></div>
+          <div><dt>赛事事务</dt><dd><Link href="/competitions">进入赛事中心</Link></dd></div>
+          <div><dt>新闻投稿与纠错</dt><dd>宣传部负责人联系方式待协会确认；可先使用公开邮箱。</dd></div>
+        </dl>
       </section>
       <section className="archive-scope-record" aria-labelledby="archive-scope-title"><div><p>PUBLIC SCOPE</p><h2 id="archive-scope-title">公开范围记录</h2></div><div><strong>{associationScope.summary}</strong><ul>{associationScope.permittedContent.map((item) => <li key={item}>{item}</li>)}</ul><p>不包含：{associationScope.excludedContent.join("、")}。</p><Link href="/competitions/cross-campus">查看跨校区内容边界 →</Link></div></section>
     </ArchivePageLayout>

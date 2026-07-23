@@ -50,11 +50,11 @@ export function CompetitionScheduleExplorer({ matches }: { matches: readonly Pub
             <table className="functional-schedule-table">
               <caption>已归档赛事的统一赛程与赛果</caption>
               <thead><tr><th>日期 / 时间</th><th>赛事 / 阶段</th><th>主队</th><th>比分</th><th>客队</th><th>场地</th><th>入口</th></tr></thead>
-              <tbody>{filteredMatches.map((match) => <tr key={match.id}><td><strong>{match.dateLabel}</strong><small>{match.timeLabel}</small></td><td><Link href={match.competitionHref}>{match.competitionName}</Link><small>{match.stage}</small></td><td>{match.homeTeam}</td><td><MatchScore match={match} /></td><td>{match.awayTeam}</td><td>{match.venue}</td><td><Link href={match.detailHref}>比赛记录</Link>{match.refereeHref ? <Link href={match.refereeHref}>裁判选派</Link> : null}</td></tr>)}</tbody>
+              <tbody>{filteredMatches.map((match) => <tr key={match.id}><td><strong>{match.dateLabel}</strong><small>{match.timeLabel}</small></td><td><Link href={match.competitionHref}>{match.competitionName}</Link><small>{match.stage}</small></td><td>{match.homeTeam}</td><td><MatchScore match={match} /></td><td>{match.awayTeam}</td><td>{match.venue}</td><td><Link href={match.detailHref}>比赛详情</Link>{match.refereeHref ? <Link href={match.refereeHref}>裁判选派</Link> : null}</td></tr>)}</tbody>
             </table>
           </div>
           <div className="functional-schedule-mobile">
-            {filteredMatches.map((match) => <article key={match.id}><header><span>{match.competitionName} · {match.stage}</span><time>{match.dateLabel} {match.timeLabel}</time></header><div><strong>{match.homeTeam}</strong><MatchScore match={match} /><strong>{match.awayTeam}</strong></div><p>{match.venue}</p><footer><Link href={match.detailHref}>比赛记录 →</Link>{match.refereeHref ? <Link href={match.refereeHref}>裁判选派 →</Link> : null}</footer></article>)}
+            {filteredMatches.map((match) => <article key={match.id}><header><span>{match.competitionName} · {match.stage}</span><time>{match.dateLabel} {match.timeLabel}</time></header><div><strong>{match.homeTeam}</strong><MatchScore match={match} /><strong>{match.awayTeam}</strong></div><p>{match.venue}</p><footer><Link href={match.detailHref}>比赛详情 →</Link>{match.refereeHref ? <Link href={match.refereeHref}>裁判选派 →</Link> : null}</footer></article>)}
           </div>
         </>
       ) : (

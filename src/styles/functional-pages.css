@@ -133,6 +133,72 @@
   .cup-womens-stat-strip { grid-template-columns: repeat(2, 1fr); }.cup-womens-rule-grid, .cup-womens-record-grid { grid-template-columns: 1fr; }.cup-womens-assignment-list details dl { grid-template-columns: 1fr 1fr; }.cup-womens-record-grid > section { min-height: 0; }
 }
 
+/* Acceptance pass: competition information density and public directory readability. */
+.functional-competition-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.functional-competition-facts dt,
+.functional-competition-facts small { font-size: 12px; }
+.functional-competition-facts dd,
+.functional-competition-list > article > p,
+.functional-competition-list footer a { font-size: 14px; }
+.functional-schedule-table { font-size: 14px; }
+.functional-schedule-table th { height: 48px; font-size: 14px; }
+.functional-schedule-table td { height: 72px; padding: 14px; font-size: 14px; line-height: 1.55; }
+.functional-schedule-table td:first-child > strong { font-size: 14px; }
+.functional-schedule-table td > small { font-size: 13px; }
+.functional-schedule-table td:nth-child(3),
+.functional-schedule-table td:nth-child(5) { font-size: 15px; font-weight: 650; }
+.functional-schedule-table td:last-child { min-width: 190px; }
+.functional-schedule-table td > a { display: inline-flex; min-height: 38px; align-items: center; padding: 0 10px; border: 1px solid #bfd5ed; font-size: 13px; }
+.functional-schedule-table td > a + a { margin-top: 0; margin-left: 7px; }
+.functional-score strong { font-size: 21px; }
+.functional-score small { font-size: 12px; }
+.match-penalty-note { margin-top: -4px !important; color: var(--aviation-blue) !important; font-size: 12px !important; font-weight: 750; text-align: center; }
+.verified-team-groups { display: grid; gap: 46px; }
+.verified-team-groups > section { border-top: 3px solid var(--space-blue); background: white; }
+.verified-team-groups > section > header { display: flex; align-items: flex-end; justify-content: space-between; gap: 30px; padding: 24px; border-bottom: 1px solid var(--line); }
+.verified-team-groups header span { color: var(--aviation-blue); font-size: 12px; font-weight: 800; letter-spacing: .1em; }
+.verified-team-groups header h2 { margin-top: 7px; font-size: 28px; }
+.verified-team-groups header p { margin-top: 7px; color: var(--muted); font-size: 14px; }
+.verified-team-groups header > a { color: var(--aviation-blue); font-size: 14px; font-weight: 750; }
+.verified-team-groups > section > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.verified-team-groups > section > div > a { min-width: 0; display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; align-items: center; gap: 18px; min-height: 96px; padding: 17px 22px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.verified-team-groups > section > div > a > span { color: var(--aviation-blue); font-size: 13px; font-weight: 850; }
+.verified-team-groups h3 { font-size: 17px; }
+.verified-team-groups > section > div p { margin-top: 5px; color: var(--muted); font-size: 13px; }
+.verified-team-groups > section > div strong { color: var(--aviation-blue); font-size: 13px; }
+.association-contact-section { display: grid; grid-template-columns: .6fr 1.4fr; gap: 56px; margin-top: 72px; padding: 32px 0; border-block: 1px solid var(--line); }
+.association-contact-section > div > p { color: var(--aviation-blue); font-size: 12px; font-weight: 850; letter-spacing: .14em; }
+.association-contact-section h2 { margin-top: 8px; font-size: 34px; }
+.association-contact-section > div > span { display: block; margin-top: 14px; color: var(--muted); font-size: 14px; line-height: 1.8; }
+.association-contact-section dl { display: grid; grid-template-columns: 1fr 1fr; margin: 0; border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.association-contact-section dl > div { min-width: 0; padding: 15px 17px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: white; }
+.association-contact-section dt { color: var(--muted); font-size: 12px; }
+.association-contact-section dd { margin: 6px 0 0; font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
+.association-contact-section a { color: var(--aviation-blue); }
+
+@media (max-width: 900px) {
+  .functional-competition-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .association-contact-section { grid-template-columns: 1fr; gap: 28px; }
+}
+
+@media (max-width: 720px) {
+  .functional-competition-facts,
+  .verified-team-groups > section > div,
+  .association-contact-section dl { grid-template-columns: 1fr; }
+  .functional-schedule-mobile article { padding: 17px 15px; }
+  .functional-schedule-mobile header { align-items: flex-start; font-size: 12px; line-height: 1.5; }
+  .functional-schedule-mobile header time { flex: 0 0 118px; text-align: right; }
+  .functional-schedule-mobile article > div { min-height: 96px; gap: 8px; }
+  .functional-schedule-mobile article > div > strong { font-size: 15px; line-height: 1.4; }
+  .functional-schedule-mobile article > p,
+  .functional-schedule-mobile footer a { font-size: 13px; line-height: 1.5; }
+  .functional-score strong { font-size: 20px; }
+  .functional-score small { font-size: 12px; }
+  .verified-team-groups > section > header { align-items: flex-start; flex-direction: column; }
+  .verified-team-groups > section > div > a { grid-template-columns: 34px minmax(0, 1fr); }
+  .verified-team-groups > section > div strong { grid-column: 2; }
+}
+
 /* Persistent referee center MVP */
 .referee-subnav { display: flex; justify-content: center; gap: 1px; padding: 0 max(32px, calc((100vw - 1120px) / 2)); border-bottom: 1px solid var(--line); background: white; }
 .referee-subnav a { min-height: 52px; display: inline-flex; align-items: center; justify-content: center; padding: 0 18px; color: #315574; font-size: 10px; font-weight: 750; }

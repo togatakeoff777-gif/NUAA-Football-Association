@@ -21,8 +21,12 @@ export function CompetitionCatalog({ competitions }: { competitions: readonly Pu
             <dl><dt>报名时间</dt><dd>{competition.registrationWindow}</dd></dl>
             <dl><dt>比赛时间</dt><dd>{competition.matchWindow}</dd></dl>
             <dl><dt>场地</dt><dd>{competition.venue}</dd></dl>
+            <dl><dt>主办单位</dt><dd>{competition.host}</dd></dl>
+            <dl><dt>承办单位</dt><dd>{competition.organizer}</dd></dl>
+            <dl><dt>参赛规模</dt><dd>{competition.scale}</dd></dl>
           </div>
           <ul>{competition.requirements.map((item) => <li key={item}>{item}</li>)}</ul>
+          <p><strong>赛事简介：</strong>{competition.summary}</p>
           <p>{competition.notice}</p>
           <footer>
             <Link href={competition.detailHref}>赛事详情 →</Link>

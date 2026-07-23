@@ -7,7 +7,6 @@ const categoryOrder: readonly { key: PublicFileCategory; label: string; descript
   { key: "appointments", label: "裁判选派", description: "裁判选派以官网已发布公示为准。" },
   { key: "discipline", label: "纪律决定", description: "协会提供的公开处罚决定原件。" },
   { key: "notices", label: "赛事通知", description: "可下载通知文件尚未单独提供。" },
-  { key: "forms", label: "工作表单", description: "比赛与裁判工作中使用的原始表单。" },
 ];
 
 export function CompetitionFileCenter({ files }: { files: readonly PublicCompetitionFile[] }) {

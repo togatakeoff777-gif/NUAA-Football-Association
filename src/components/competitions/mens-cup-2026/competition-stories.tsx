@@ -38,29 +38,31 @@ export function CompetitionStories() {
   const { competition, news } = mensIntercollegeCup2026;
 
   return (
-    <section className="cup-archive-section" id="stories" aria-labelledby="cup-stories-title">
-      <div className="page-shell">
-        <div className="cup-section-heading">
-          <div><p>NEWS & PHOTO ARCHIVE</p><h2 id="cup-stories-title">新闻报道与赛事影像</h2></div>
-          <span>5篇正式报道与迁移包原始照片共同构成本届赛事档案。</span>
+    <>
+      <section className="cup-archive-section" id="reports" aria-labelledby="cup-stories-title">
+        <div className="page-shell">
+          <div className="cup-section-heading">
+            <div><p>COMPETITION REPORTS</p><h2 id="cup-stories-title">赛事报道</h2></div>
+            <span>5篇正式报道记录赛前、决赛与收官节点。</span>
+          </div>
+          <div className="cup-story-list">
+            {news.map((story, index) => (
+              <Link className={index === 0 ? "is-featured" : undefined} href={story.href} key={story.id}>
+                <div><Image src={story.image} alt={story.imageAlt} fill sizes={index === 0 ? "(max-width: 760px) 100vw, 50vw" : "(max-width: 760px) 100vw, 260px"} /></div>
+                <article><span>{story.category} · {story.dateLabel}</span><h3>{story.title}</h3><p>{story.summary}</p><b>阅读全文 →</b></article>
+              </Link>
+            ))}
+          </div>
         </div>
-
-        <div className="cup-story-list">
-          {news.map((story, index) => (
-            <Link className={index === 0 ? "is-featured" : undefined} href={story.href} key={story.id}>
-              <div><Image src={story.image} alt={story.imageAlt} fill sizes={index === 0 ? "(max-width: 760px) 100vw, 50vw" : "(max-width: 760px) 100vw, 260px"} /></div>
-              <article><span>{story.category} · {story.dateLabel}</span><h3>{story.title}</h3><p>{story.summary}</p><b>阅读全文 →</b></article>
-            </Link>
-          ))}
+      </section>
+      <section className="cup-archive-section cup-archive-section-tint" id="media" aria-labelledby="cup-media-title">
+        <div className="page-shell">
+          <div className="cup-section-heading"><div><p>PHOTO ARCHIVE</p><h2 id="cup-media-title">赛事影像</h2></div><span>迁移包原始照片按赛事节点集中归档。</span></div>
+          <ArchiveGallery images={gallery} ariaLabel="2026男子足球院际杯赛事照片" />
+          <div className="cup-document-callout"><div><p>OFFICIAL DOCUMENT</p><h3>赛事秩序册</h3><span>PDF文件按迁移包原始版本保留，包含完整赛事组织与竞赛资料。</span></div><a href={competition.guidebook} download>下载 PDF <span aria-hidden="true">↓</span></a></div>
         </div>
-
-        <ArchiveGallery images={gallery} ariaLabel="2026男子足球院际杯赛事照片" />
-
-        <div className="cup-document-callout">
-          <div><p>OFFICIAL DOCUMENT</p><h3>赛事秩序册</h3><span>PDF文件按迁移包原始版本保留，包含完整赛事组织与竞赛资料。</span></div>
-          <a href={competition.guidebook} download>下载 PDF <span aria-hidden="true">↓</span></a>
-        </div>
-      </div>
-    </section>
+      </section>
+      <section className="cup-archive-source-section" id="archive-scope" aria-labelledby="cup-source-title"><div className="page-shell"><div><p>ARCHIVE SCOPE</p><h2 id="cup-source-title">资料说明</h2></div><p>本页复用结构化赛事数据、秩序册、正式赛事报道与原始照片。公开内容不包含学号、手机号、邮箱等个人敏感信息。</p></div></section>
+    </>
   );
 }

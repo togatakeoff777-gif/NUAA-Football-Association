@@ -52,6 +52,10 @@
 .list-filter-bar > span { padding: 13px 18px; color: var(--muted); font-size: 10px; font-weight: 730; }
 .list-filter-bar > span[aria-current="true"] { background: var(--space-blue); color: white; }
 .list-filter-bar > small { margin-left: auto; padding-right: 18px; color: var(--muted); font-size: 9px; }
+.list-filter-bar > button { min-height: 44px; padding: 0 18px; border: 0; border-right: 1px solid var(--line); background: white; color: var(--muted); font-size: 14px; font-weight: 730; }
+.list-filter-bar > button[aria-pressed="true"] { background: var(--space-blue); color: white; }
+.news-list-layout.is-single { grid-template-columns: 1fr; }
+.notice-list-panel article > a { display: inline-flex; margin-top: 10px; color: var(--aviation-blue); font-size: 13px; font-weight: 750; }
 .news-list-layout { display: grid; grid-template-columns: 1.25fr .75fr; gap: 24px; align-items: start; }
 .news-list-stream { display: grid; }
 .news-list-featured { display: grid; grid-template-columns: .9fr 1.1fr; min-height: 300px; background: white; border-bottom: 1px solid var(--line); }

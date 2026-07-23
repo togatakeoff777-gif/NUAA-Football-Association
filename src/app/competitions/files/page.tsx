@@ -7,7 +7,7 @@ import { publicCompetitionFiles } from "@/data/competition-center";
 
 export const metadata: Metadata = {
   title: "赛事文件中心",
-  description: "竞赛规则、秩序册、纪律决定和赛事工作表单下载。",
+  description: "面向赛事组织、参赛球队和公众的竞赛规则、秩序册与纪律决定下载。",
 };
 
 export default function CompetitionFilesPage() {
@@ -16,7 +16,7 @@ export default function CompetitionFilesPage() {
       <SiteHeader />
       <main className="functional-page" id="main-content">
         <section className="functional-hero">
-          <div className="detail-shell"><p>COMPETITION DOCUMENTS</p><h1>赛事文件中心</h1><p>按文件类型、版本、发布日期和适用范围发布任务包中的真实原文件；未提供的类别显示正式空状态。</p></div>
+          <div className="detail-shell"><p>COMPETITION DOCUMENTS</p><h1>赛事文件中心</h1><p>集中发布面向赛事组织、参赛球队和公众的真实原文件；裁判组专用工作表单已归入裁判中心。</p></div>
         </section>
         <section className="functional-section">
           <div className="detail-shell">

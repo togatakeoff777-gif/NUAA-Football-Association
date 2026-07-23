@@ -1,13 +1,12 @@
 import Link from "next/link";
 
 import { StatusBadge } from "@/components/ui/status-badge";
-import { annualCompetitions, demoMatchCentre } from "@/data/competitions";
+import { annualCompetitions } from "@/data/competitions";
 import { mensIntercollegeCup2026 } from "@/data/mens-intercollege-cup-2026";
 
 export function CurrentCompetitions() {
   const featured = annualCompetitions.find((item) => item.displayStatus.dataStatus === "confirmed") ?? annualCompetitions[0];
   const secondary = annualCompetitions.filter((item) => item.id !== featured.id);
-  const featuredMatch = featured.displayStatus.dataStatus === "demo" && demoMatchCentre.nextMatch.competitionId === featured.id ? demoMatchCentre.nextMatch : null;
   const featuredIsOfficialArchive = featured.id === mensIntercollegeCup2026.competition.competitionId;
 
   return (
@@ -25,7 +24,7 @@ export function CurrentCompetitions() {
             <dl>
               <div><dt>当前阶段</dt><dd>{featured.stageLabel}</dd></div>
               <div><dt>参赛队数量</dt><dd>{featuredIsOfficialArchive ? `${mensIntercollegeCup2026.competition.summary.teams}支` : "资料待公布"}</dd></div>
-              <div><dt>最近动态</dt><dd>{featuredIsOfficialArchive ? "致慧书院夺冠 · 2026赛季已归档" : featuredMatch ? `${featuredMatch.homeTeam} vs ${featuredMatch.awayTeam} · ${featuredMatch.dateLabel}` : "赛程待协会发布"}</dd></div>
+              <div><dt>最近动态</dt><dd>{featuredIsOfficialArchive ? "致慧书院夺冠 · 2026赛季已归档" : "赛程待协会发布"}</dd></div>
             </dl>
             <Link className="button button-light" href={featured.detailHref}>进入赛事入口 <span aria-hidden="true">↗</span></Link>
             <div className="featured-flight-route" aria-hidden="true"><i /><i /><i /></div>

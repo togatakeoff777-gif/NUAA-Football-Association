@@ -29,14 +29,14 @@ export const arbitrationGuide = {
   ],
   process: [
     { id: "prepare", title: "准备材料", description: "核对适用范围、申请主体、时限与必要材料。" },
-    { id: "submit", title: "按通知提交", description: "提交方式尚待赛事组织方确认，官网不提供虚假邮箱或在线表单。" },
+    { id: "submit", title: "按通知提交", description: "按赛事通知指定方式提交，官网不提供虚假联系人或在线表单。" },
     { id: "review", title: "材料核验", description: "赛事组织方核验申请主体、时限、事项与材料完整性。" },
     { id: "hearing", title: "审议处理", description: "由对应赛事仲裁机构依竞赛规程和纪律规则处理。" },
     { id: "publish", title: "决定公示", description: "仅公开经审核且适合公开的正式决定。" },
   ],
   submission: {
-    status: "待赛事通知确认",
-    contact: "官方邮箱、电话、办公室与受理联系人尚未提供。",
+    status: "按赛事通知指定方式提交",
+    contact: "具体渠道以对应赛事通知为准；官网不收集申诉材料。",
   },
 } as const;
 
@@ -53,9 +53,9 @@ export const arbitrationResources = [
     href: "/competitions/files#discipline",
   },
   {
-    title: "竞赛规则与工作表单",
+    title: "竞赛规则与工作资料",
     status: "真实文件已接入",
-    description: "按版本、适用范围下载竞赛规则、比赛报告和裁判报告模板。",
-    href: "/competitions/files",
+    description: "竞赛规则位于赛事文件中心，裁判组工作表单位于裁判中心。",
+    href: "/competitions/files#regulations",
   },
 ] as const;

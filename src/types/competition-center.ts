@@ -2,7 +2,8 @@ export type PublicCompetitionStatus =
   | "preparing"
   | "registration"
   | "ongoing"
-  | "completed";
+  | "completed"
+  | "pending-confirmation";
 
 export type PublicCompetitionRecord = {
   id: string;
@@ -19,6 +20,10 @@ export type PublicCompetitionRecord = {
   registrationWindow: string;
   matchWindow: string;
   venue: string;
+  host: string;
+  organizer: string;
+  scale: string;
+  summary: string;
   requirements: readonly string[];
   filesHref: string;
   notice: string;

@@ -1,8 +1,11 @@
+import type { PlatformItem } from "@/types";
+
 export const WECHAT_QR_IMAGE = "/images/huqu-fa-wechat-qr.jpg";
 export const BILIBILI_PROFILE_URL =
   "https://space.bilibili.com/1030999538?spm_id_from=333.337.0.0";
 export const FOOTBALL_CHINA_URL = "http://www.lyzg90.com/";
 export const ASSOCIATION_EMAIL = "nuaafootball@163.com";
+export const DOUYIN_ID = "nuaafa";
 
 export const wechatPlatform = {
   id: "wechat",
@@ -29,6 +32,16 @@ export const bilibiliPlatform = {
   external: true,
   target: "_blank",
   rel: "noopener noreferrer",
+} as const;
+
+export const douyinPlatform = {
+  id: "douyin",
+  kind: "douyin",
+  name: "南航足协",
+  label: `抖音号：${DOUYIN_ID}`,
+  description: "南京航空航天大学天目湖足球协会独立官方抖音账号。",
+  qrStatus: "二维码待协会提供",
+  external: false,
 } as const;
 
 export const footballChinaPlatform = {
@@ -63,9 +76,9 @@ export const emailPlatform = {
 export const officialPlatforms = [
   wechatPlatform,
   bilibiliPlatform,
+  douyinPlatform,
   footballChinaPlatform,
   emailPlatform,
 ] as const satisfies readonly PlatformItem[];
 
 export const platforms = officialPlatforms;
-import type { PlatformItem } from "@/types";

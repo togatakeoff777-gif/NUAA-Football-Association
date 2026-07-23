@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { SectionIndexPage } from "@/components/pages/section-index-page";
+import { ASSOCIATION_EMAIL, DOUYIN_ID } from "@/data/platforms";
 
 export const metadata: Metadata = {
   title: "影像",
@@ -8,6 +9,12 @@ export const metadata: Metadata = {
 };
 
 const items = [
+  {
+    title: "南航足协 · 抖音",
+    description: `抖音号 ${DOUYIN_ID}，南京航空航天大学天目湖足球协会独立官方账号。项目暂未取得抖音二维码原图。`,
+    meta: "天目湖足协独立官方账号",
+    status: "二维码待协会提供",
+  },
   {
     title: "南航大足球协会 · 哔哩哔哩",
     description:
@@ -29,9 +36,11 @@ const items = [
   {
     title: "影像投稿与纠错",
     description:
-      "未来提供投稿规范、授权说明和内容纠错方式，本轮不开放文件上传或个人资料收集。",
+      `不建设上传表单或后台。宣传部负责人联系方式待协会确认，可先通过 ${ASSOCIATION_EMAIL} 联系。`,
     meta: "内容协作",
-    status: "功能未开放",
+    status: "联系人待确认",
+    href: `mailto:${ASSOCIATION_EMAIL}`,
+    actionLabel: "邮件联系",
   },
 ];
 
@@ -43,7 +52,7 @@ export default function MediaPage() {
       description="连接天目湖校园足球影像档案与南航校园足球共享视频平台。"
       sectionTitle="影像入口"
       sectionDescription="影像发布须经过内容确认与授权，不使用未经授权的人物照片。"
-      notice="“南航大足球协会”哔哩哔哩账号为校区共享视频平台，不是天目湖足协独立账号。"
+      notice="抖音“南航足协”（nuaafa）为天目湖足协独立官方账号；“南航大足球协会”哔哩哔哩账号为校区共享视频平台。"
       items={items}
     />
   );

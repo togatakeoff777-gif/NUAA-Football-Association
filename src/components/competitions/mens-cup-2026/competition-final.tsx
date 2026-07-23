@@ -22,10 +22,10 @@ export function CompetitionFinal() {
   ]);
 
   return (
-    <section className="cup-archive-section cup-final-section" id="final" aria-labelledby="cup-final-title">
+    <section className="cup-archive-section cup-final-section" id="honours" aria-labelledby="cup-final-title">
       <div className="page-shell">
         <div className="cup-section-heading cup-section-heading-light">
-          <div><p>KNOCKOUT & FINAL</p><h2 id="cup-final-title">淘汰赛与冠军之路</h2></div>
+          <div><p>HONOURS & FINAL</p><h2 id="cup-final-title">名次与奖项</h2></div>
           <span>致慧书院在决赛点球大战第八轮锁定冠军。</span>
         </div>
 

@@ -19,7 +19,7 @@ export const metadata: Metadata = { title: "协会", description: "南京航空�
 export default function AssociationPage() {
   const identity = <div className="archive-identity-card"><BrandMark /><div><span>公开档案编号</span><strong>NUAA-TMH-FA / 2021</strong><small>南京航空航天大学天目湖足球协会</small></div></div>;
   return (
-    <ArchivePageLayout eyebrow="ASSOCIATION ARCHIVE" title="南京航空航天大学天目湖足球协会" description="因热爱，奔赴绿茵。以档案式结构呈现协会身份、工作范围与经核验的发展记录。" identity={identity}>
+    <ArchivePageLayout eyebrow="ASSOCIATION ARCHIVE" title={<><span className="association-title-line">南京航空航天大学</span><span className="association-title-line">天目湖足球协会</span></>} description="因热爱，奔赴绿茵。以档案式结构呈现协会身份、工作范围与经核验的发展记录。" identity={identity}>
       <div className="archive-overview-grid">
         <section className="archive-profile" aria-labelledby="archive-profile-title"><p>BASIC PROFILE</p><h2 id="archive-profile-title">基本信息</h2><dl><div><dt>正式名称</dt><dd>{associationIdentity.formalName}</dd></div><div><dt>英文名称</dt><dd>{associationIdentity.englishName}</dd></div><div><dt>成立年份</dt><dd>{associationIdentity.establishedYear}</dd></div><div><dt>服务范围</dt><dd>{associationScope.representedCampus}</dd></div><div><dt>公开邮箱</dt><dd><a href={`mailto:${ASSOCIATION_EMAIL}`}>{ASSOCIATION_EMAIL}</a></dd></div></dl></section>
         <section className="archive-stats" aria-labelledby="archive-stats-title"><p>VERIFIED DATA</p><h2 id="archive-stats-title">已确认数据</h2><div>{associationDevelopmentFacts.map((fact) => <article key={fact.id}><strong>{fact.value}</strong><span>{fact.label}</span><small>{fact.note}</small></article>)}</div></section>
@@ -29,7 +29,7 @@ export default function AssociationPage() {
         <div><p>ORGANIZATION</p><h2 id="association-structure-title">组织架构与历届成员</h2><span>岗位框架与成员名单分开呈现；没有来源的岗位对应关系不会推测。</span></div>
         <div className="association-role-strip" aria-label="协会岗位框架">{associationRoleFramework.map((role) => <span key={role}>{role}</span>)}</div>
         <div className="association-term-list">
-          {associationTerms.map((term) => <article key={term.term}><header><span>{term.term}</span><time>{term.academicYear}</time></header>{term.confirmedChair ? <p><strong>已确认主席：</strong>{term.confirmedChair}</p> : null}<ul>{term.members.map((member) => <li key={member}>{member}</li>)}</ul>{"deputies" in term ? <dl>{term.deputies.map((item) => <div key={item.role}><dt>{item.role}</dt><dd>{item.name}</dd></div>)}</dl> : null}<small>{term.roleNote}</small></article>)}
+          {associationTerms.map((term) => <article key={term.term}><header><span>{term.term}</span><time>{term.academicYear}</time></header>{term.positions.length ? <dl>{term.positions.map((item) => <div key={item.role}><dt>{item.role}</dt><dd>{item.name}</dd></div>)}</dl> : null}{term.unassignedMembers.length ? <><p><strong>岗位待核验成员</strong></p><ul>{term.unassignedMembers.map((member) => <li key={member}>{member}</li>)}</ul></> : null}<small>{term.roleNote}</small></article>)}
         </div>
       </section>
       <section className="association-governance" aria-labelledby="association-governance-title">
@@ -45,9 +45,10 @@ export default function AssociationPage() {
           <div><dt>微信公众号</dt><dd>{wechatPlatform.name}</dd></div>
           <div><dt>哔哩哔哩</dt><dd><a href={bilibiliPlatform.href} rel="noopener noreferrer" target="_blank">{bilibiliPlatform.name}</a></dd></div>
           <div><dt>抖音</dt><dd>{douyinPlatform.name} · {douyinPlatform.label}</dd></div>
+          <div><dt>招新 QQ 群</dt><dd>招新群待创建</dd></div>
           <div><dt>裁判事务</dt><dd><Link href="/referees#referee-contact">进入裁判中心联系区</Link></dd></div>
           <div><dt>赛事事务</dt><dd><Link href="/competitions">进入赛事中心</Link></dd></div>
-          <div><dt>新闻投稿与纠错</dt><dd>宣传部负责人联系方式待协会确认；可先使用公开邮箱。</dd></div>
+          <div><dt>新闻投稿与纠错</dt><dd><a href={`mailto:${ASSOCIATION_EMAIL}`}>{ASSOCIATION_EMAIL}</a></dd></div>
         </dl>
       </section>
       <section className="archive-scope-record" aria-labelledby="archive-scope-title"><div><p>PUBLIC SCOPE</p><h2 id="archive-scope-title">公开范围记录</h2></div><div><strong>{associationScope.summary}</strong><ul>{associationScope.permittedContent.map((item) => <li key={item}>{item}</li>)}</ul><p>不包含：{associationScope.excludedContent.join("、")}。</p><Link href="/competitions/cross-campus">查看跨校区内容边界 →</Link></div></section>

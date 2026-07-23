@@ -23,6 +23,7 @@ type SectionIndexPageProps = {
   sectionDescription?: string;
   notice?: string;
   statusLabel?: string;
+  pageClassName?: string;
   items: SectionIndexItem[];
 };
 
@@ -81,12 +82,13 @@ export function SectionIndexPage({
   sectionDescription,
   notice,
   statusLabel = "公开信息 · 资料待更新",
+  pageClassName,
   items,
 }: SectionIndexPageProps) {
   return (
     <>
       <SiteHeader />
-      <main className="detail-page" id="main-content">
+      <main className={`detail-page${pageClassName ? ` ${pageClassName}` : ""}`} id="main-content">
         <section className="detail-hero" aria-labelledby="detail-page-title">
           <div className="page-shell detail-hero-inner">
             <p className="detail-eyebrow">{eyebrow}</p>

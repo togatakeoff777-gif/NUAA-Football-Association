@@ -47,12 +47,14 @@ const items = [
 export default function MediaPage() {
   return (
     <SectionIndexPage
+      pageClassName="media-index-page"
       eyebrow="MEDIA"
       title="影像"
       description="连接天目湖校园足球影像档案与南航校园足球共享视频平台。"
       sectionTitle="影像入口"
       sectionDescription="影像发布须经过内容确认与授权，不使用未经授权的人物照片。"
       notice="抖音“南航足协”（nuaafa）为天目湖足协独立官方账号；“南航大足球协会”哔哩哔哩账号为校区共享视频平台。"
+      statusLabel="官方平台与影像档案"
       items={items}
     />
   );

@@ -207,3 +207,175 @@
   .cup-results-mobile footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; line-height: 1.5; }
   .cup-results-mobile footer a { color: var(--aviation-blue); font-size: 13px; font-weight: 750; }
 }
+
+/* Next-round shared archive readability for both men's and women's cups. */
+.cup-archive-nav a {
+  font-size: 14px;
+}
+
+.cup-section-heading > div > p,
+.cup-overview-primary > p,
+.cup-overview-secondary section > p,
+.cup-final-scorecard > p:first-child,
+.cup-final-timeline header p,
+.cup-shootout header p,
+.cup-scorers-panel header p,
+.cup-discipline-panel section > p,
+.cup-red-card-panel > div:first-child p,
+.cup-awards-panel > div:first-child p,
+.cup-official-overview p,
+.cup-final-officials > div > p,
+.cup-document-callout p {
+  font-size: 12px;
+}
+
+.cup-section-heading > span,
+.cup-overview-primary p,
+.cup-overview-secondary section > span,
+.cup-source-note,
+.cup-archive-source-section .page-shell > p {
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.cup-standing-table th,
+.cup-stat-table th {
+  height: 48px;
+  font-size: 14px;
+}
+
+.cup-standing-table td,
+.cup-stat-table td {
+  height: 62px;
+  padding: 11px 12px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.cup-standing-table td:last-child,
+.cup-stat-table td:last-child {
+  font-size: 18px;
+}
+
+.cup-team-list summary > span,
+.cup-assignment-list summary > span,
+.cup-team-list summary small,
+.cup-assignment-list summary small,
+.cup-team-list summary > p,
+.cup-assignment-list summary > p,
+.cup-team-roster > section > p,
+.cup-team-roster > aside > p,
+.cup-team-roster aside dt,
+.cup-team-roster aside > span,
+.cup-assignment-list dt {
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.cup-team-list summary strong,
+.cup-assignment-list summary strong,
+.cup-team-list summary > b,
+.cup-team-roster > section > div > span,
+.cup-team-roster aside dd,
+.cup-assignment-list dd {
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.cup-team-roster > section > div > span {
+  min-height: 54px;
+  padding: 10px;
+}
+
+.cup-team-roster > section > div b {
+  font-size: 12px;
+}
+
+.cup-official-overview article > span,
+.cup-official-overview section > div span {
+  font-size: 13px;
+}
+
+.cup-official-overview h3,
+.cup-final-officials h3 {
+  font-size: 23px;
+}
+
+.cup-final-officials dt,
+.cup-final-officials dd {
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.cup-red-card-panel article > span,
+.cup-red-card-panel article small,
+.cup-awards-panel article > span,
+.cup-awards-panel article > p,
+.cup-awards-panel article small,
+.cup-womens-awards span,
+.cup-womens-awards h3,
+.cup-womens-podium article > p,
+.cup-womens-podium article small {
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.cup-red-card-panel article strong {
+  font-size: 15px;
+}
+
+.cup-womens-overview dt,
+.cup-womens-overview dd {
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+@media (max-width: 720px) {
+  .cup-archive-nav a {
+    font-size: 14px;
+  }
+
+  .cup-section-heading > span {
+    font-size: 15px;
+  }
+
+  .cup-standing-mobile > div,
+  .cup-stat-mobile > div {
+    min-height: 82px;
+    padding-block: 14px;
+  }
+
+  .cup-standing-mobile > div > span,
+  .cup-stat-mobile > div > span {
+    font-size: 13px;
+  }
+
+  .cup-standing-mobile section strong,
+  .cup-stat-mobile section strong {
+    font-size: 15px;
+  }
+
+  .cup-standing-mobile section small,
+  .cup-stat-mobile section p {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .cup-standing-mobile > div > b,
+  .cup-stat-mobile > div > b {
+    font-size: 22px;
+  }
+
+  .cup-team-list summary,
+  .cup-assignment-list summary {
+    min-height: 104px;
+  }
+
+  .cup-team-roster > section > div {
+    grid-template-columns: 1fr;
+  }
+
+  .cup-assignment-list details dl {
+    grid-template-columns: 1fr;
+  }
+}

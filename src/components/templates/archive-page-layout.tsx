@@ -6,7 +6,7 @@ import { PageIntro } from "@/components/templates/page-intro";
 
 type ArchivePageLayoutProps = {
   eyebrow: string;
-  title: string;
+  title: React.ReactNode;
   description: string;
   identity: React.ReactNode;
   children: React.ReactNode;

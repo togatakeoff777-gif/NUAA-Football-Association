@@ -16,6 +16,8 @@ export const verifiedCompetitionTeams = [
       id: team.id,
       name: team.displayName,
       meta: `${team.group}组 · ${team.players.length}名公开名单球员`,
+      description: "2026男子足球院际杯参赛队伍，公开名单与比赛数据以赛事归档为准。",
+      contact: "联系方式待球队负责人确认",
     })),
   },
   {
@@ -27,6 +29,8 @@ export const verifiedCompetitionTeams = [
       id: team.name,
       name: team.name,
       meta: `最终第${team.rank}名 · ${team.played}场比赛`,
+      description: "2026女子足球院际杯参赛队伍，现有公开信息以赛事归档为准。",
+      contact: "联系方式待球队负责人确认",
     })),
   },
 ] as const;

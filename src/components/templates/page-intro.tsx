@@ -1,6 +1,6 @@
 type PageIntroProps = {
   eyebrow: string;
-  title: string;
+  title: React.ReactNode;
   description: string;
   statusLabel?: string;
   variant: "category" | "list" | "data" | "detail" | "archive" | "process";

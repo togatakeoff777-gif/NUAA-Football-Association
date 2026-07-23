@@ -319,3 +319,684 @@
   .referee-work-file-list a { grid-column: 1 / -1; }
   .referee-template-grid aside { grid-column: auto; }
 }
+
+/* Next-round public readability and authenticated referee workspace. */
+.functional-hero .detail-shell > p:first-child,
+.functional-section-head span {
+  font-size: 12px;
+}
+
+.functional-hero .detail-shell > p:last-child,
+.functional-section-head > p,
+.functional-notice p {
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.functional-notice strong {
+  font-size: 15px;
+}
+
+.functional-file-groups header span,
+.functional-file-list article small,
+.functional-file-list dt {
+  font-size: 12px;
+}
+
+.functional-file-groups header p,
+.functional-file-list dd,
+.functional-file-list a {
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.functional-file-list article strong {
+  font-size: 16px;
+}
+
+.arbitration-definition-grid ul,
+.arbitration-deadline strong,
+.arbitration-process-list p,
+.arbitration-contact-state p,
+.arbitration-resource-list p,
+.arbitration-resource-list a {
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.arbitration-deadline span,
+.arbitration-process-list li > span,
+.arbitration-resource-list article > span,
+.arbitration-contact-state span {
+  font-size: 12px;
+}
+
+.verified-team-groups > section > div > article {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) minmax(170px, .55fr);
+  align-items: center;
+  gap: 18px;
+  min-height: 126px;
+  padding: 20px 22px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.verified-team-groups > section > div > article > span {
+  color: var(--aviation-blue);
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.verified-team-groups > section > div > article small {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.verified-team-groups > section > div > article > strong {
+  color: #765019;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.team-join-guide {
+  display: grid;
+  grid-template-columns: .7fr 1.3fr;
+  gap: 44px;
+  margin-top: 48px;
+  padding: 30px;
+  border-top: 4px solid var(--aviation-blue);
+  background: white;
+}
+
+.team-join-guide > div > span {
+  color: var(--aviation-blue);
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: .12em;
+}
+
+.team-join-guide h2 {
+  margin-top: 8px;
+  font-size: 30px;
+}
+
+.team-join-guide ol {
+  display: grid;
+  gap: 1px;
+  list-style: none;
+  background: var(--line);
+}
+
+.team-join-guide li {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  align-items: center;
+  gap: 14px;
+  min-height: 64px;
+  padding: 12px 16px;
+  background: #f7faff;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.team-join-guide li strong {
+  color: var(--aviation-blue);
+  font-size: 13px;
+}
+
+.team-join-guide > a {
+  grid-column: 2;
+  width: fit-content;
+  color: var(--aviation-blue);
+  font-size: 15px;
+  font-weight: 760;
+}
+
+.association-title-line {
+  display: block;
+}
+
+.archive-profile dt,
+.archive-stats article small,
+.archive-timeline time,
+.archive-timeline section span,
+.association-structure > div:first-child > p,
+.association-governance article > p:first-child {
+  font-size: 12px;
+}
+
+.archive-profile dd,
+.archive-stats article span,
+.archive-timeline > div > span,
+.archive-timeline section p,
+.archive-scope-record ul,
+.archive-scope-record > div:last-child > p,
+.archive-scope-record a,
+.association-structure > div:first-child > span,
+.association-governance article > strong,
+.association-governance article > p:not(:first-child),
+.association-governance ul {
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.association-role-strip span,
+.association-term-list time,
+.association-term-list article > p,
+.association-term-list article > small,
+.association-term-list dt {
+  font-size: 13px;
+}
+
+.association-term-list li,
+.association-term-list dd {
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.association-term-list dl {
+  grid-template-columns: 1fr;
+}
+
+.association-term-list dl div {
+  display: grid;
+  grid-template-columns: minmax(120px, .8fr) minmax(0, 1.2fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.association-contact-section dt {
+  font-size: 14px;
+}
+
+.association-contact-section dd,
+.association-contact-section > div > span {
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.referee-center-hero .detail-shell > p:last-of-type {
+  max-width: 800px;
+}
+
+.referee-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.referee-hero-actions a,
+.referee-secure-access a {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 19px;
+  border: 1px solid rgba(151, 211, 255, .55);
+  background: rgba(255, 255, 255, .08);
+  color: white;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.referee-hero-actions a:first-child {
+  border-color: white;
+  background: white;
+  color: var(--space-blue);
+}
+
+.referee-contact-section-early {
+  padding-block: 50px;
+}
+
+.referee-contact-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, .68fr) minmax(0, 1.32fr);
+  align-items: start;
+  gap: 48px;
+}
+
+.referee-contact-layout .functional-section-head {
+  display: block;
+  margin: 0;
+}
+
+.referee-contact-layout .functional-section-head > p {
+  margin-top: 16px;
+}
+
+.referee-contact-layout .detail-contact-card {
+  max-width: none;
+}
+
+.referee-center-intro,
+.referee-secure-access {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) auto;
+  align-items: end;
+  gap: 48px;
+  margin-bottom: 28px;
+}
+
+.referee-center-intro span,
+.referee-secure-access span {
+  color: var(--aviation-blue);
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: .13em;
+}
+
+.referee-center-intro h2,
+.referee-secure-access h2 {
+  margin-top: 8px;
+  font-size: clamp(28px, 3.3vw, 42px);
+}
+
+.referee-center-intro p,
+.referee-secure-access p {
+  max-width: 760px;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.referee-center-intro > a {
+  color: var(--aviation-blue);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.referee-affairs-grid-primary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.referee-secondary-directory {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+
+.referee-secondary-directory > * {
+  min-width: 0;
+  min-height: 126px;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: white;
+}
+
+.referee-secondary-directory > * > span {
+  color: var(--aviation-blue);
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.referee-secondary-directory h3 {
+  font-size: 18px;
+}
+
+.referee-secondary-directory p {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.referee-secondary-directory > * > strong {
+  color: var(--aviation-blue);
+  font-size: 13px;
+}
+
+.referee-work-file-list dl {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.referee-secure-access {
+  align-items: center;
+  margin-bottom: 0;
+}
+
+.referee-secure-access > div:last-child {
+  display: flex;
+  gap: 10px;
+}
+
+.referee-secure-access a {
+  border-color: var(--aviation-blue);
+  background: var(--aviation-blue);
+}
+
+.referee-secure-access a:last-child {
+  background: var(--space-blue);
+}
+
+.referee-auth-layout {
+  display: grid;
+  grid-template-columns: minmax(0, .85fr) minmax(340px, 1.15fr);
+  align-items: start;
+  gap: 56px;
+}
+
+.referee-auth-layout article {
+  padding-top: 20px;
+  border-top: 3px solid var(--space-blue);
+}
+
+.functional-kicker {
+  color: var(--aviation-blue);
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: .12em;
+}
+
+.referee-auth-layout article h2 {
+  margin-top: 8px;
+  font-size: 32px;
+}
+
+.referee-auth-layout article > p:last-child {
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.referee-login-form {
+  padding: 26px;
+  border-top: 4px solid var(--aviation-blue);
+  background: white;
+}
+
+.referee-form label > span,
+.referee-form legend,
+.referee-form-note,
+.referee-form-message {
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.referee-form input,
+.referee-form select,
+.referee-form textarea {
+  font-size: 15px;
+}
+
+.referee-form button {
+  font-size: 15px;
+}
+
+.referee-form-identity {
+  display: grid;
+  gap: 5px;
+  padding: 14px 16px;
+  background: #edf5fd;
+}
+
+.referee-form-identity span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.referee-form-identity strong {
+  color: var(--nuaa-blue);
+  font-size: 16px;
+}
+
+.referee-login-prompt a {
+  display: inline-flex;
+  margin-top: 14px;
+  color: var(--aviation-blue);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.referee-workspace-hero .detail-shell {
+  position: relative;
+}
+
+.referee-logout-button {
+  min-height: 44px;
+  margin-top: 24px;
+  padding: 0 17px;
+  border: 1px solid rgba(255, 255, 255, .42);
+  background: transparent;
+  color: white;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.referee-workspace-grid {
+  display: grid;
+  gap: 48px;
+}
+
+.functional-section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 18px;
+}
+
+.functional-section-heading p,
+.referee-training-panel > p:first-child {
+  color: var(--aviation-blue);
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: .12em;
+}
+
+.functional-section-heading h2,
+.referee-training-panel h2 {
+  margin-top: 6px;
+  font-size: 30px;
+}
+
+.functional-section-heading > a {
+  color: var(--aviation-blue);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.referee-personal-list {
+  display: grid;
+  border-top: 1px solid var(--line);
+}
+
+.referee-personal-list article {
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+  background: white;
+}
+
+.referee-personal-list span,
+.referee-personal-list p {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.referee-personal-list h3 {
+  margin: 4px 0;
+  font-size: 18px;
+}
+
+.referee-personal-list article > strong {
+  color: var(--aviation-blue);
+  font-size: 14px;
+}
+
+.referee-training-panel {
+  padding: 26px;
+  border-left: 4px solid var(--aviation-blue);
+  background: #edf5fd;
+}
+
+.referee-training-panel > p:last-child {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.referee-subnav a,
+.referee-match-list header span,
+.referee-match-detail header span,
+.referee-publication-list header span,
+.referee-match-list header > strong,
+.referee-match-detail header > strong,
+.referee-publication-list header > strong {
+  font-size: 13px;
+}
+
+.referee-match-list dt,
+.referee-publication-list dt,
+.referee-match-detail dt {
+  font-size: 13px;
+}
+
+.referee-match-list dd,
+.referee-publication-list dd,
+.referee-match-detail dd,
+.referee-match-detail li,
+.referee-match-list article > a {
+  font-size: 15px;
+}
+
+.referee-admin-filters label span,
+.referee-admin-card dt,
+.referee-admin-card dd,
+.referee-admin-card header > strong,
+.referee-appointment-editor header > strong,
+.referee-position-editor label,
+.referee-admin-history span,
+.referee-admin-history time,
+.referee-admin-history b,
+.referee-admin-card > p,
+.referee-appointment-editor > p {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.referee-admin-card input,
+.referee-admin-card select,
+.referee-appointment-editor input,
+.referee-appointment-editor select,
+.referee-admin-filters select,
+.referee-admin-card button,
+.referee-appointment-editor button,
+.referee-admin-toolbar button,
+.referee-admin-filters button {
+  font-size: 14px;
+}
+
+.referee-admin-history strong {
+  font-size: 15px;
+}
+
+@media (max-width: 1020px) {
+  .referee-contact-layout,
+  .referee-auth-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .referee-center-intro,
+  .referee-secure-access {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 20px;
+  }
+
+  .referee-work-file-list dl {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .functional-hero .detail-shell > p:last-child,
+  .functional-section-head > p {
+    font-size: 15px;
+  }
+
+  .verified-team-groups > section > div > article {
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: 12px;
+    padding: 18px 15px;
+  }
+
+  .verified-team-groups > section > div > article > strong {
+    grid-column: 2;
+  }
+
+  .team-join-guide {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 24px 16px;
+  }
+
+  .team-join-guide > a {
+    grid-column: 1;
+  }
+
+  .association-title-line {
+    font-size: clamp(34px, 10vw, 41px);
+  }
+
+  .association-contact-section dl {
+    grid-template-columns: 1fr;
+  }
+
+  .referee-hero-actions,
+  .referee-secure-access > div:last-child {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .referee-hero-actions a,
+  .referee-secure-access a {
+    width: 100%;
+  }
+
+  .referee-secondary-directory,
+  .referee-affairs-grid-primary {
+    grid-template-columns: 1fr;
+  }
+
+  .referee-secondary-directory > * {
+    grid-template-columns: 30px minmax(0, 1fr);
+  }
+
+  .referee-secondary-directory > * > strong {
+    grid-column: 2;
+  }
+
+  .referee-work-file-list dl {
+    grid-template-columns: 1fr;
+  }
+
+  .functional-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .referee-personal-list article {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

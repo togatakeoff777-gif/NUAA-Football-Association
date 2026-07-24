@@ -65,3 +65,74 @@ export const footerScopeStatements = [
   "“南航大足球协会”哔哩哔哩账号为校区共享视频平台。",
   "球员注册、球队组建、赛事报名及相关竞赛管理统一通过足球中国平台完成。",
 ] as const;
+
+export const associationCampusRelationship = {
+  title: "校区足球组织关系",
+  description:
+    "天目湖校区与将军路校区足球协会分别独立开展工作；两校区在新生杯淘汰赛阶段进行跨校区主客场比赛。",
+  sharedPlatform: "“南航大足球协会”哔哩哔哩账号为校区共享视频平台。",
+  separatePlatform: "天目湖与将军路相关微信公众号分别运营。",
+} as const;
+
+export const associationRoleFramework = [
+  "主席",
+  "副主席",
+  "竞赛负责人",
+  "后勤负责人",
+  "外联负责人",
+  "宣传负责人",
+] as const;
+
+export const associationTerms = [
+  {
+    term: "第一届",
+    academicYear: "2021-2022",
+    positions: [{ role: "主席", name: "尹键峰" }],
+    unassignedMembers: [],
+    roleNote: "除主席外的成员资料尚未提供。",
+  },
+  {
+    term: "第二届",
+    academicYear: "2022-2023",
+    positions: [],
+    unassignedMembers: ["程涛", "米尔", "阿里木", "周浩楠", "朱润涛"],
+    roleNote: "任务包未明确成员与具体岗位的对应关系。",
+  },
+  {
+    term: "第三届",
+    academicYear: "2023-2024",
+    positions: [
+      { role: "主席", name: "邓宇凌" },
+      { role: "副主席（社团财务负责人）", name: "王相翰" },
+      { role: "竞赛部部长", name: "沈嫁祥" },
+      { role: "后勤部部长", name: "陈泓霖" },
+      { role: "外联部部长", name: "刘昕宇" },
+      { role: "宣传部部长", name: "努尔江·阿依肯" },
+    ],
+    unassignedMembers: [],
+    roleNote: "成员与岗位依据本轮协会确认资料公开。",
+  },
+  {
+    term: "第四届",
+    academicYear: "2024-2025",
+    positions: [
+      { role: "主席", name: "王相翰" },
+      { role: "副主席（社团财务负责人）", name: "吴作昊" },
+      { role: "竞赛部部长", name: "郭原序" },
+      { role: "后勤部部长", name: "陈飞宇" },
+      { role: "外联部部长", name: "王睿阳" },
+      { role: "宣传部部长", name: "刘晋毅" },
+      { role: "宣传部副部长", name: "陈昊" },
+      { role: "竞赛部副部长", name: "黄泽鑫" },
+    ],
+    unassignedMembers: [],
+    roleNote: "成员与岗位依据本轮协会确认资料公开，两名副部长继续保留。",
+  },
+] as const;
+
+export const associationDataGovernance = [
+  "球员注册、球队组建与赛事报名通过足球中国平台完成。",
+  "比赛数据与裁判选派可依据足球中国平台记录整理后公开。",
+  "本站不宣称与足球中国存在实时 API 同步，公开信息需经过人工核验。",
+  "身份证号、手机号、学号等报名字段不进入公开网站。",
+] as const;

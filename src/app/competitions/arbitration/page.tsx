@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 
 export const metadata: Metadata = {
   title: "仲裁与申诉",
-  description: "赛事仲裁、申诉、纪律规则与决定公示的静态页面原型。",
+  description: "赛事仲裁、申诉范围、材料流程、纪律决定与真实文件入口。",
 };
 
 export default function ArbitrationPage() {

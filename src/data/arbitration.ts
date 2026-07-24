@@ -1,5 +1,3 @@
-import type { ContentOwnership } from "@/types";
-
 const arbitrationOwnership = {
   campus: "tianmuhu" as const,
   organizationId: "nuaa-tianmuhu-fa",
@@ -7,77 +5,57 @@ const arbitrationOwnership = {
   dataSource: "local" as const,
 };
 
-export const arbitrationPrototypeNotice =
-  "本页为静态页面原型与演示数据结构，不受理正式在线提交。具体规则、时限和材料以赛事组织方最终确认的信息为准。";
+export const arbitrationPublicNotice =
+  "申诉应在比赛结束后48小时内提出；足协确认受理后，将在48小时内召开听证会。官网不开放在线提交，具体渠道、材料要求和受理主体以对应赛事规程、纪律决定或赛事通知为准。";
 
-export const arbitrationSections = [
+export const arbitrationGuide = {
+  ...arbitrationOwnership,
+  scope: [
+    "对赛事组织程序、参赛资格、纪律决定或竞赛规程适用产生的正式异议。",
+    "对应赛事规程明确允许提出仲裁或申诉的其他事项。",
+  ],
+  notAccepted: [
+    "仅对裁判员在比赛事实认定上的技术判断提出异议。",
+    "匿名、缺少明确请求或无法说明事实依据的材料。",
+    "超过赛事规程规定时限且未说明正当理由的申请。",
+  ],
+  applicants: ["参赛球队领队或赛事报名记录中的授权负责人", "纪律决定直接涉及的参赛人员或其所属球队"],
+  deadline: "比赛结束后48小时内提出；足协确认受理后48小时内召开听证会。",
+  materials: [
+    "申请事项、事实经过与明确请求",
+    "对应比赛、队伍、人员与时间信息",
+    "能够支持申请的原始材料或公开记录",
+    "申请主体的赛事身份说明",
+  ],
+  process: [
+    { id: "prepare", title: "准备材料", description: "比赛结束后48小时内，核对适用范围、申请主体与必要材料。" },
+    { id: "submit", title: "按通知提交", description: "按赛事规程、纪律决定或赛事通知指定渠道提交，官网不设置在线表单。" },
+    { id: "review", title: "确认受理", description: "赛事组织方核验申请主体、时限、事项与材料完整性，并确认是否受理。" },
+    { id: "hearing", title: "召开听证会", description: "足协确认受理后48小时内召开听证会，依对应规则审议处理。" },
+    { id: "publish", title: "决定公示", description: "仅公开经审核且适合公开的正式决定。" },
+  ],
+  submission: {
+    status: "按赛事通知指定方式提交",
+    contact: "提交渠道、材料要求和受理主体以对应赛事规程、纪律决定或赛事通知为准；官网不收集身份证号、手机号等敏感信息。",
+  },
+} as const;
+
+export const arbitrationResources = [
   {
-    ...arbitrationOwnership,
-    id: "overview",
-    title: "仲裁与申诉说明",
-    description:
-      "说明赛事治理中仲裁与申诉的适用范围，并与一般规则咨询、裁判执裁报名明确区分。",
-    statusLabel: "结构已建立",
+    title: "仲裁 / 申诉申请模板",
+    status: "暂无公开文件",
+    description: "任务包未提供正式申请模板，因此不生成无业务效力的文件。",
   },
   {
-    ...arbitrationOwnership,
-    id: "committees",
-    title: "各赛事仲裁委员会",
-    description: "委员会组成及联系方式等待各项赛事组织方确认后公布。",
-    statusLabel: "真实资料待确认",
+    title: "赛事纪律决定",
+    status: "4份公开原件",
+    description: "查看本轮提供的球员与裁判员纪律决定原文件。",
+    href: "/competitions/files#discipline",
   },
   {
-    ...arbitrationOwnership,
-    id: "eligibility",
-    title: "申请条件",
-    description: "展示申请主体、适用事项与不予受理情形的预留位置。",
-    statusLabel: "规则待确认",
+    title: "竞赛规则与工作资料",
+    status: "真实文件已接入",
+    description: "竞赛规则位于赛事文件中心，裁判组工作表单位于裁判中心。",
+    href: "/referees#referee-downloads",
   },
-  {
-    ...arbitrationOwnership,
-    id: "deadline",
-    title: "申请时限",
-    description: "正式时限将依据各赛事竞赛规程和纪律规则发布。",
-    statusLabel: "规则待确认",
-  },
-  {
-    ...arbitrationOwnership,
-    id: "process",
-    title: "申请流程",
-    description: "预留提出申请、材料核验、受理审查、审议与决定公示等步骤。",
-    statusLabel: "静态流程原型",
-  },
-  {
-    ...arbitrationOwnership,
-    id: "materials",
-    title: "申请材料下载",
-    description: "正式模板尚未提供，本轮不生成具有业务效力的申请文件。",
-    statusLabel: "文件待提供",
-  },
-  {
-    ...arbitrationOwnership,
-    id: "submission",
-    title: "申请提交",
-    description: "本轮不提供在线表单、账号认证或真实提交能力。",
-    statusLabel: "本轮不开放",
-  },
-  {
-    ...arbitrationOwnership,
-    id: "decisions",
-    title: "仲裁决定公示",
-    description: "待产生经审核且可公开的正式决定后再发布，当前不虚构历史记录。",
-    statusLabel: "暂无真实资料",
-  },
-  {
-    ...arbitrationOwnership,
-    id: "discipline",
-    title: "各赛事纪律规则",
-    description: "红黄牌、停赛、纪律与申诉规则归赛事治理栏目集中管理。",
-    statusLabel: "文件待确认",
-  },
-] as const satisfies readonly (ContentOwnership & {
-  id: string;
-  title: string;
-  description: string;
-  statusLabel: string;
-})[];
+] as const;

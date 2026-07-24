@@ -1,0 +1,94 @@
+{
+  "id": "2026-mens-intercollege-cup",
+  "slug": "2026-mens-intercollege-cup",
+  "competitionId": "mens-intercollege-cup",
+  "name": "2026年南京航空航天大学男子足球院际杯（天目湖校区）",
+  "shortName": "2026男子足球院际杯",
+  "campus": "tianmuhu",
+  "season": "2025-2026",
+  "semester": "second",
+  "status": "completed",
+  "dataStatus": "confirmed",
+  "format": "eleven-a-side",
+  "formatLabel": "十一人制",
+  "teamFormation": "院系组队",
+  "startDate": "2026-03-20",
+  "endDate": "2026-05-17",
+  "venue": "南京航空航天大学天目湖校区西操场",
+  "city": "常州",
+  "province": "江苏",
+  "organizers": {
+    "hosts": [
+      "南京航空航天大学体育部",
+      "中国共产主义青年团南京航空航天大学委员会",
+      "南京航空航天大学天目湖校区管委会",
+      "南京航空航天大学牧星学院"
+    ],
+    "organizer": "南京航空航天大学天目湖学生足球协会"
+  },
+  "structure": {
+    "groupStage": "A、B两个小组，每组4队，单循环赛制，各组前2名晋级",
+    "knockoutStage": "半决赛、三四名决赛、决赛；常规时间战平后直接点球决胜",
+    "matchDuration": "上下半场各45分钟"
+  },
+  "summary": {
+    "teams": 8,
+    "registeredPlayers": 169,
+    "matches": 16,
+    "goals": 69,
+    "yellowCards": 36,
+    "redCards": 8
+  },
+  "finalRanking": [
+    {
+      "position": 1,
+      "teamId": "zhihui-college",
+      "team": "致慧书院"
+    },
+    {
+      "position": 2,
+      "teamId": "civil-aviation-flight-united",
+      "team": "民航通飞联队"
+    },
+    {
+      "position": 3,
+      "teamId": "economics-continuing-education-united",
+      "team": "经管-继教联队"
+    },
+    {
+      "position": 4,
+      "teamId": "zhiwei-zhihe-united",
+      "team": "致微-致和书院联队"
+    }
+  ],
+  "awards": [
+    {
+      "key": "golden-ball",
+      "name": "金球奖",
+      "recipient": "黄敬瀚",
+      "team": "致慧书院"
+    },
+    {
+      "key": "golden-boot",
+      "name": "金靴奖",
+      "recipient": "刘晋毅",
+      "team": "民航通飞联队"
+    },
+    {
+      "key": "golden-glove",
+      "name": "金手套奖",
+      "recipient": "石瑞峰",
+      "team": "致慧书院"
+    },
+    {
+      "key": "golden-whistle",
+      "name": "金哨奖",
+      "recipient": "颜铭宣",
+      "team": "通用航空与飞行学院"
+    }
+  ],
+  "heroImage": "/images/competitions/2026-mens-intercollege-cup/stadium-sunset.jpg",
+  "championImage": "/images/competitions/2026-mens-intercollege-cup/champion-zhihui-team.jpg",
+  "guidebook": "/documents/competitions/2026-mens-intercollege-cup/guidebook.pdf",
+  "source": "足球中国赛事后台、赛事秩序册、湖区FA公众号及用户提供原图"
+}

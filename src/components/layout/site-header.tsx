@@ -7,6 +7,7 @@ import { navigationItems, registrationCta } from "@/data/navigation";
 import { BrandMark } from "@/components/ui/brand-mark";
 
 type SiteHeaderProps = {
+  fixed?: boolean;
   overlay?: boolean;
 };
 
@@ -22,7 +23,7 @@ function Brand() {
   );
 }
 
-export function SiteHeader({ overlay = false }: SiteHeaderProps) {
+export function SiteHeader({ fixed = false, overlay = false }: SiteHeaderProps) {
   const pathname = usePathname();
   const isCurrent = (href: string) =>
     href === "/" ? pathname === href : pathname.startsWith(`${href}/`) || pathname === href;
@@ -30,7 +31,7 @@ export function SiteHeader({ overlay = false }: SiteHeaderProps) {
   return (
     <>
       <a className="skip-link" href="#main-content">跳到主要内容</a>
-      <header className={overlay ? "site-header site-header-overlay" : "site-header site-header-solid"}>
+      <header className={`${overlay ? "site-header site-header-overlay" : "site-header site-header-solid"}${fixed ? " site-header-fixed" : ""}`}>
         <div className="page-shell header-inner">
           <Brand />
           <nav className="desktop-nav" aria-label="主导航">

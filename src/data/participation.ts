@@ -34,33 +34,6 @@ export const participationEntries = [
     status: "placeholder",
     badge: "说明页原型",
   },
-  {
-    id: "referee-registration-guide",
-    title: "裁判员注册指南",
-    description: "了解加入裁判队伍与后续培训、确认流程。",
-    href: "/participation/referee-guide",
-    external: false,
-    status: "placeholder",
-    badge: "说明页原型",
-  },
-  {
-    id: "join-association",
-    title: "加入天目湖足协",
-    description: "了解协会招新方向；真实岗位与时间安排待正式通知。",
-    href: "/participation/join-association",
-    external: false,
-    status: "placeholder",
-    badge: "资料待更新",
-  },
-  {
-    id: "join-media-team",
-    title: "加入摄影与宣传团队",
-    description: "了解赛事摄影、视频与内容宣传方向；真实安排待正式通知。",
-    href: "/participation/join-media",
-    external: false,
-    status: "placeholder",
-    badge: "资料待更新",
-  },
 ] as const satisfies readonly ParticipationEntry[];
 
 export const participationDataPolicy = {

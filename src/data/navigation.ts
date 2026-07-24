@@ -1,17 +1,17 @@
 export const mainNavigation = [
   { label: "首页", href: "/" },
-  { label: "天目湖赛事", href: "/competitions" },
-  { label: "球队", href: "/teams" },
-  { label: "新闻与公告", href: "/news" },
-  { label: "裁判与规则", href: "/referees" },
-  { label: "影像", href: "/media" },
-  { label: "协会", href: "/association" },
+  { label: "赛事中心", href: "/competitions" },
+  { label: "球队信息", href: "/teams" },
+  { label: "新闻公告", href: "/news" },
+  { label: "裁判中心", href: "/referees" },
+  { label: "影像资料", href: "/media" },
+  { label: "关于协会", href: "/association" },
 ] as const;
 
 export const navigationItems = mainNavigation;
 
 export const registrationCta = {
-  label: "参赛与报名",
+  label: "参赛指南",
   href: "/participation",
 } as const;
 
@@ -21,7 +21,6 @@ export const competitionNavigation = [
   { label: "积分榜", href: "/competitions/standings" },
   { label: "射手榜", href: "/competitions/scorers" },
   { label: "历届赛事", href: "/competitions/history" },
-  { label: "跨校区赛事", href: "/competitions/cross-campus" },
   { label: "仲裁与申诉", href: "/competitions/arbitration" },
 ] as const;
 

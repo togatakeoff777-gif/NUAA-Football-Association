@@ -9,9 +9,13 @@ import {
   wechatPlatform,
 } from "@/data/platforms";
 
-export function SiteFooter() {
+type SiteFooterProps = {
+  homeCompact?: boolean;
+};
+
+export function SiteFooter({ homeCompact = false }: SiteFooterProps) {
   return (
-    <footer className="site-footer">
+    <footer className={`site-footer${homeCompact ? " site-footer-home" : ""}`}>
       <div className="page-shell">
         <div className="footer-main">
           <div>
@@ -28,11 +32,11 @@ export function SiteFooter() {
           </div>
           <nav className="footer-column" aria-label="页脚导航">
             <h2>网站导航</h2>
-            <Link href="/competitions">天目湖赛事</Link>
-            <Link href="/news">新闻与公告</Link>
-            <Link href="/referees">裁判与规则</Link>
-            <Link href="/competitions/arbitration">仲裁与申诉</Link>
-            <Link href="/participation">参赛与报名</Link>
+            <Link href="/competitions">赛事中心</Link>
+            <Link href="/news">新闻公告</Link>
+            <Link href="/referees">裁判中心</Link>
+            <Link href="/competitions/arbitration">仲裁申诉</Link>
+            <Link href="/participation">参赛指南</Link>
           </nav>
           <div className="footer-column">
             <h2>官方平台与联系</h2>
@@ -48,8 +52,8 @@ export function SiteFooter() {
             </a>
             <a href={emailPlatform.href}>联系邮箱 · {emailPlatform.label}</a>
             <div className="footer-emblem">
-              <Image src="/images/nuaa-emblem.jpg" alt="南京航空航天大学校徽" width={46} height={46} />
-              <p>学校归属标识<br />不作为协会 Logo 使用</p>
+              <Image src="/brand/nuaa-official-emblem.jpg" alt="南京航空航天大学官方校徽" width={64} height={64} />
+              <p><strong>学校归属：南京航空航天大学</strong><br />官方校徽仅用于学校归属展示</p>
             </div>
           </div>
         </div>
@@ -60,7 +64,7 @@ export function SiteFooter() {
 
         <div className="footer-bottom">
           <p>© 2026 {associationIdentity.shortName} · {associationIdentity.establishedLabel}</p>
-          <p>V2.1 静态原型 · 演示内容均不代表真实历史记录</p>
+          <p>公开数据以协会核验内容为准 · 待确认事项不作推测</p>
         </div>
       </div>
     </footer>

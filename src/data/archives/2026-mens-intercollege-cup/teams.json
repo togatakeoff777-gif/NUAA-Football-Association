@@ -1,0 +1,854 @@
+[
+  {
+    "id": "zhihui-college",
+    "officialName": "致慧书院队",
+    "displayName": "致慧书院",
+    "group": "A",
+    "leader": "黄敬瀚",
+    "players": [
+      {
+        "number": 2,
+        "name": "王泽铭"
+      },
+      {
+        "number": 3,
+        "name": "邹阳"
+      },
+      {
+        "number": 5,
+        "name": "曹恩毓"
+      },
+      {
+        "number": 6,
+        "name": "江艺彬"
+      },
+      {
+        "number": 7,
+        "name": "刘海峰"
+      },
+      {
+        "number": 8,
+        "name": "周靖凯"
+      },
+      {
+        "number": 9,
+        "name": "李昕"
+      },
+      {
+        "number": 10,
+        "name": "黄敬瀚"
+      },
+      {
+        "number": 11,
+        "name": "贾淳阳"
+      },
+      {
+        "number": 12,
+        "name": "周宸伟"
+      },
+      {
+        "number": 13,
+        "name": "张云扬"
+      },
+      {
+        "number": 14,
+        "name": "李靖愷"
+      },
+      {
+        "number": 15,
+        "name": "杨飞扬"
+      },
+      {
+        "number": 16,
+        "name": "祝霏凡"
+      },
+      {
+        "number": 17,
+        "name": "赵丁可"
+      },
+      {
+        "number": 18,
+        "name": "石瑞峰"
+      },
+      {
+        "number": 19,
+        "name": "拜宜乐"
+      },
+      {
+        "number": 22,
+        "name": "丁宣宇"
+      },
+      {
+        "number": 24,
+        "name": "江君"
+      },
+      {
+        "number": 30,
+        "name": "赵文喆"
+      },
+      {
+        "number": 47,
+        "name": "卢之睿"
+      },
+      {
+        "number": 55,
+        "name": "王长川"
+      },
+      {
+        "number": 66,
+        "name": "张邵泽"
+      },
+      {
+        "number": 77,
+        "name": "王义晗"
+      },
+      {
+        "number": 91,
+        "name": "顾宇程"
+      },
+      {
+        "number": 96,
+        "name": "李欣睿"
+      }
+    ],
+    "officials": [
+      {
+        "role": "主教练",
+        "name": "袁贝贝"
+      },
+      {
+        "role": "队务",
+        "name": "查昕睿"
+      },
+      {
+        "role": "队医",
+        "name": "涂文乐"
+      },
+      {
+        "role": "助理教练",
+        "name": "孙锦翔"
+      }
+    ]
+  },
+  {
+    "id": "civil-aviation-flight-united",
+    "officialName": "民航-通飞联队",
+    "displayName": "民航通飞联队",
+    "group": "A",
+    "leader": "刘晋毅",
+    "players": [
+      {
+        "number": 1,
+        "name": "刘昱希"
+      },
+      {
+        "number": 2,
+        "name": "商炜"
+      },
+      {
+        "number": 3,
+        "name": "冯昕原"
+      },
+      {
+        "number": 4,
+        "name": "沈徐迪"
+      },
+      {
+        "number": 5,
+        "name": "李唯嘉"
+      },
+      {
+        "number": 6,
+        "name": "吴彦廷"
+      },
+      {
+        "number": 7,
+        "name": "黄泽鑫"
+      },
+      {
+        "number": 8,
+        "name": "杨沛霖"
+      },
+      {
+        "number": 9,
+        "name": "陈飞宇"
+      },
+      {
+        "number": 10,
+        "name": "金成俊"
+      },
+      {
+        "number": 11,
+        "name": "龚子腾"
+      },
+      {
+        "number": 12,
+        "name": "陈昊"
+      },
+      {
+        "number": 14,
+        "name": "王睿阳"
+      },
+      {
+        "number": 15,
+        "name": "徐嘉乐"
+      },
+      {
+        "number": 17,
+        "name": "刘晋毅"
+      },
+      {
+        "number": 18,
+        "name": "洪卓尔"
+      },
+      {
+        "number": 19,
+        "name": "陈柏潼"
+      },
+      {
+        "number": 20,
+        "name": "任骋怀"
+      },
+      {
+        "number": 21,
+        "name": "迈晨宇"
+      },
+      {
+        "number": 22,
+        "name": "郭原序"
+      },
+      {
+        "number": 24,
+        "name": "胡易辰"
+      },
+      {
+        "number": 27,
+        "name": "曹驭翔"
+      },
+      {
+        "number": 30,
+        "name": "杨佳奇"
+      },
+      {
+        "number": 47,
+        "name": "季子砚"
+      },
+      {
+        "number": 91,
+        "name": "李曜"
+      },
+      {
+        "number": 99,
+        "name": "李明昊"
+      }
+    ],
+    "officials": [
+      {
+        "role": "队医",
+        "name": "俞焯天"
+      }
+    ]
+  },
+  {
+    "id": "mathematics-college",
+    "officialName": "数学学院",
+    "displayName": "数学学院",
+    "group": "A",
+    "leader": "李瑞琳",
+    "players": [
+      {
+        "number": 1,
+        "name": "阿依波勒"
+      },
+      {
+        "number": 2,
+        "name": "菲热达吾斯"
+      },
+      {
+        "number": 6,
+        "name": "岩应"
+      },
+      {
+        "number": 7,
+        "name": "吐依洪"
+      },
+      {
+        "number": 8,
+        "name": "祖力哈尔"
+      },
+      {
+        "number": 9,
+        "name": "伊合巴尔"
+      },
+      {
+        "number": 11,
+        "name": "高羽键"
+      },
+      {
+        "number": 12,
+        "name": "纳凯"
+      },
+      {
+        "number": 15,
+        "name": "彭俊豪"
+      },
+      {
+        "number": 16,
+        "name": "艾力库提"
+      },
+      {
+        "number": 18,
+        "name": "金渤轩"
+      },
+      {
+        "number": 24,
+        "name": "阿力木"
+      },
+      {
+        "number": 27,
+        "name": "罗举焯"
+      },
+      {
+        "number": 28,
+        "name": "阿依萨日"
+      },
+      {
+        "number": 29,
+        "name": "阿尔法"
+      },
+      {
+        "number": 41,
+        "name": "雷昊蒙"
+      },
+      {
+        "number": 77,
+        "name": "赵冉"
+      },
+      {
+        "number": 96,
+        "name": "孟士驭"
+      }
+    ],
+    "officials": [
+      {
+        "role": "主教练",
+        "name": "达尼亚尔"
+      },
+      {
+        "role": "助理教练",
+        "name": "热那提"
+      },
+      {
+        "role": "队医",
+        "name": "巴格达尔"
+      },
+      {
+        "role": "摄影",
+        "name": "梁政潭"
+      }
+    ]
+  },
+  {
+    "id": "telecom-humanities-computing-united",
+    "officialName": "电信-人文-计算机联队",
+    "displayName": "电信-人文-计算机联队",
+    "group": "A",
+    "leader": "卓之恒",
+    "players": [
+      {
+        "number": 1,
+        "name": "顾一帆"
+      },
+      {
+        "number": 2,
+        "name": "陈佳铭"
+      },
+      {
+        "number": 4,
+        "name": "王皓千"
+      },
+      {
+        "number": 5,
+        "name": "吴与伦"
+      },
+      {
+        "number": 7,
+        "name": "张靖卓"
+      },
+      {
+        "number": 8,
+        "name": "吕顺"
+      },
+      {
+        "number": 9,
+        "name": "张皓程"
+      },
+      {
+        "number": 10,
+        "name": "吴作昊"
+      },
+      {
+        "number": 11,
+        "name": "李锦华"
+      },
+      {
+        "number": 13,
+        "name": "伍伟民"
+      },
+      {
+        "number": 14,
+        "name": "王宇豪"
+      },
+      {
+        "number": 15,
+        "name": "卓之恒"
+      },
+      {
+        "number": 16,
+        "name": "冯逸帆"
+      },
+      {
+        "number": 17,
+        "name": "安怡轩"
+      },
+      {
+        "number": 18,
+        "name": "豆雪松"
+      },
+      {
+        "number": 22,
+        "name": "金正扬"
+      },
+      {
+        "number": 33,
+        "name": "刘亚豪"
+      },
+      {
+        "number": 47,
+        "name": "郭澜浩"
+      },
+      {
+        "number": 77,
+        "name": "巫志斌"
+      }
+    ],
+    "officials": [
+      {
+        "role": "队务",
+        "name": "陈乐言"
+      },
+      {
+        "role": "助理教练",
+        "name": "江逐昕"
+      },
+      {
+        "role": "主教练",
+        "name": "戴筱莜"
+      },
+      {
+        "role": "队医",
+        "name": "张随心"
+      }
+    ]
+  },
+  {
+    "id": "economics-continuing-education-united",
+    "officialName": "经管-继教联队",
+    "displayName": "经管-继教联队",
+    "group": "B",
+    "leader": "吴佳宇",
+    "players": [
+      {
+        "number": 2,
+        "name": "王家东"
+      },
+      {
+        "number": 3,
+        "name": "赵唐磊"
+      },
+      {
+        "number": 5,
+        "name": "王志丹"
+      },
+      {
+        "number": 6,
+        "name": "洛松多吉"
+      },
+      {
+        "number": 7,
+        "name": "张宸畅"
+      },
+      {
+        "number": 8,
+        "name": "李乐言"
+      },
+      {
+        "number": 9,
+        "name": "吴佳宇"
+      },
+      {
+        "number": 10,
+        "name": "蒋敏成"
+      },
+      {
+        "number": 11,
+        "name": "沈林舜"
+      },
+      {
+        "number": 15,
+        "name": "黄星暠"
+      },
+      {
+        "number": 16,
+        "name": "王煜"
+      },
+      {
+        "number": 17,
+        "name": "景苏畅"
+      },
+      {
+        "number": 18,
+        "name": "郭一凡"
+      },
+      {
+        "number": 19,
+        "name": "费钒"
+      },
+      {
+        "number": 21,
+        "name": "张鑫宇"
+      },
+      {
+        "number": 22,
+        "name": "崔子龙"
+      },
+      {
+        "number": 23,
+        "name": "王荣凯"
+      },
+      {
+        "number": 24,
+        "name": "丁天辰"
+      },
+      {
+        "number": 28,
+        "name": "姜浩"
+      },
+      {
+        "number": 35,
+        "name": "王子凯"
+      },
+      {
+        "number": 36,
+        "name": "王相翰"
+      },
+      {
+        "number": 52,
+        "name": "张玉杭"
+      },
+      {
+        "number": 66,
+        "name": "钟权"
+      },
+      {
+        "number": 77,
+        "name": "陈梓豪"
+      },
+      {
+        "number": 88,
+        "name": "夏硙一"
+      },
+      {
+        "number": 99,
+        "name": "任泰宇"
+      }
+    ],
+    "officials": [
+      {
+        "role": "主教练",
+        "name": "孟睿涵"
+      },
+      {
+        "role": "队务",
+        "name": "高俊东"
+      },
+      {
+        "role": "队医",
+        "name": "李芷柔"
+      }
+    ]
+  },
+  {
+    "id": "zhiwei-zhihe-united",
+    "officialName": "致微-致和书院联队",
+    "displayName": "致微-致和书院联队",
+    "group": "B",
+    "leader": "赵宣淇",
+    "players": [
+      {
+        "number": 1,
+        "name": "季子杨"
+      },
+      {
+        "number": 4,
+        "name": "胡兵"
+      },
+      {
+        "number": 6,
+        "name": "莫子轩"
+      },
+      {
+        "number": 7,
+        "name": "魏宇轩"
+      },
+      {
+        "number": 8,
+        "name": "范文博"
+      },
+      {
+        "number": 10,
+        "name": "尚星宇"
+      },
+      {
+        "number": 11,
+        "name": "吕宇杰"
+      },
+      {
+        "number": 12,
+        "name": "陈泉松"
+      },
+      {
+        "number": 14,
+        "name": "任聿豪"
+      },
+      {
+        "number": 15,
+        "name": "龙宣任"
+      },
+      {
+        "number": 17,
+        "name": "罗铭恩"
+      },
+      {
+        "number": 18,
+        "name": "贾安宇"
+      },
+      {
+        "number": 21,
+        "name": "苟津玮"
+      },
+      {
+        "number": 24,
+        "name": "赵宣淇"
+      },
+      {
+        "number": 27,
+        "name": "陈德明"
+      },
+      {
+        "number": 28,
+        "name": "张超阳"
+      },
+      {
+        "number": 42,
+        "name": "李涌波"
+      },
+      {
+        "number": 60,
+        "name": "夏金龙"
+      },
+      {
+        "number": 66,
+        "name": "包一鸣"
+      },
+      {
+        "number": 69,
+        "name": "王源野"
+      }
+    ],
+    "officials": [
+      {
+        "role": "队医",
+        "name": "杨有来"
+      },
+      {
+        "role": "队务",
+        "name": "王博亿"
+      }
+    ]
+  },
+  {
+    "id": "automation-college",
+    "officialName": "自动化学院",
+    "displayName": "自动化学院",
+    "group": "B",
+    "leader": "朱俊弛",
+    "players": [
+      {
+        "number": 1,
+        "name": "苗乐天"
+      },
+      {
+        "number": 2,
+        "name": "朱俊弛"
+      },
+      {
+        "number": 4,
+        "name": "阿合卓勒"
+      },
+      {
+        "number": 7,
+        "name": "王振邦"
+      },
+      {
+        "number": 8,
+        "name": "余卓鑫"
+      },
+      {
+        "number": 9,
+        "name": "邱语"
+      },
+      {
+        "number": 10,
+        "name": "吕昊烨"
+      },
+      {
+        "number": 11,
+        "name": "邱羿凡"
+      },
+      {
+        "number": 12,
+        "name": "刘羿轩"
+      },
+      {
+        "number": 13,
+        "name": "赵文韬"
+      },
+      {
+        "number": 14,
+        "name": "董一夫"
+      },
+      {
+        "number": 17,
+        "name": "程天乐"
+      },
+      {
+        "number": 18,
+        "name": "强政和"
+      },
+      {
+        "number": 23,
+        "name": "杨智宇"
+      },
+      {
+        "number": 88,
+        "name": "陈书勤"
+      },
+      {
+        "number": 99,
+        "name": "肖开提"
+      }
+    ],
+    "officials": [
+      {
+        "role": "主教练",
+        "name": "贾庚硕"
+      },
+      {
+        "role": "队务",
+        "name": "邵海洋"
+      }
+    ]
+  },
+  {
+    "id": "zhiyuan-college",
+    "officialName": "致元书院",
+    "displayName": "致元书院",
+    "group": "B",
+    "leader": "孙文博",
+    "players": [
+      {
+        "number": 1,
+        "name": "袁鹤宁"
+      },
+      {
+        "number": 7,
+        "name": "姬正雄"
+      },
+      {
+        "number": 8,
+        "name": "伊力扎提·艾力江"
+      },
+      {
+        "number": 11,
+        "name": "赵润辰"
+      },
+      {
+        "number": 12,
+        "name": "高城博"
+      },
+      {
+        "number": 13,
+        "name": "王佳乐"
+      },
+      {
+        "number": 14,
+        "name": "叶建新"
+      },
+      {
+        "number": 17,
+        "name": "潘俊达"
+      },
+      {
+        "number": 22,
+        "name": "黄浩翰"
+      },
+      {
+        "number": 23,
+        "name": "孙文博"
+      },
+      {
+        "number": 25,
+        "name": "杨子乾"
+      },
+      {
+        "number": 26,
+        "name": "侯天宇"
+      },
+      {
+        "number": 42,
+        "name": "达瓦扎巴"
+      },
+      {
+        "number": 57,
+        "name": "李子骞"
+      },
+      {
+        "number": 66,
+        "name": "张鑫悦"
+      },
+      {
+        "number": 97,
+        "name": "孟庆杰"
+      }
+    ],
+    "officials": [
+      {
+        "role": "队务",
+        "name": "黄浩翰"
+      },
+      {
+        "role": "主教练",
+        "name": "潘俊达"
+      },
+      {
+        "role": "助理教练",
+        "name": "徐昊阳"
+      },
+      {
+        "role": "队医",
+        "name": "刘祖涵"
+      }
+    ]
+  }
+]

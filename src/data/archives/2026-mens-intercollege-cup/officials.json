@@ -1,0 +1,198 @@
+{
+  "committee": {
+    "chiefReferee": "颜铭宣",
+    "registeredReferees": [
+      "陈飞宇",
+      "陈昊",
+      "顾一帆",
+      "郭原序",
+      "胡兵",
+      "黄泽鑫",
+      "季子杨",
+      "李乐言",
+      "刘晋毅",
+      "马俊",
+      "穆怡馨",
+      "倪树伟",
+      "彭云逸",
+      "王睿阳",
+      "王相翰",
+      "魏宇轩",
+      "吴佳宇",
+      "吴作昊",
+      "颜铭宣",
+      "阿合卓勒·叶尔麦克"
+    ]
+  },
+  "finalOfficials": {
+    "matchSupervisor": "郭洪波",
+    "refereeAssessor": "陈爽",
+    "referee": "王相翰",
+    "assistantReferee1": "颜铭宣",
+    "assistantReferee2": "吴佳宇",
+    "fourthOfficial": "石翔宇",
+    "reserveAssistantReferee": "高羽键"
+  },
+  "assignments": [
+    {
+      "matchId": 1,
+      "matchSupervisor": "郭洪波",
+      "refereeAssessor": "彭云逸",
+      "referee": "王相翰",
+      "assistantReferee1": "胡兵",
+      "assistantReferee2": "李乐言",
+      "fourthOfficial": "季子杨",
+      "reserveAssistantReferee": null
+    },
+    {
+      "matchId": 2,
+      "matchSupervisor": null,
+      "refereeAssessor": null,
+      "referee": "吴佳宇",
+      "assistantReferee1": "赵宣淇",
+      "assistantReferee2": "陈昀暄",
+      "fourthOfficial": "胡兵",
+      "reserveAssistantReferee": null
+    },
+    {
+      "matchId": 3,
+      "matchSupervisor": null,
+      "refereeAssessor": null,
+      "referee": "王相翰",
+      "assistantReferee1": "黄泽鑫",
+      "assistantReferee2": "倪树伟",
+      "fourthOfficial": "吴佳宇",
+      "reserveAssistantReferee": null
+    },
+    {
+      "matchId": 4,
+      "matchSupervisor": null,
+      "refereeAssessor": null,
+      "referee": "胡兵",
+      "assistantReferee1": "朱俊弛",
+      "assistantReferee2": "魏宇轩",
+      "fourthOfficial": "陈昀暄",
+      "reserveAssistantReferee": null
+    },
+    {
+      "matchId": 5,
+      "matchSupervisor": null,
+      "refereeAssessor": null,
+      "referee": "王相翰",
+      "assistantReferee1": "胡兵",
+      "assistantReferee2": "朱旭发",
+      "fourthOfficial": "魏宇轩",
+      "reserveAssistantReferee": null
+    },
+    {
+      "matchId": 6,
+      "matchSupervisor": null,
+      "refereeAssessor": null,
+      "referee": "陈飞宇",
+      "assistantReferee1": "王相翰",
+      "assistantReferee2": "颜铭宣",
+      "fourthOfficial": "胡兵",
+      "reserveAssistantReferee": null
+    },
+    {
+      "matchId": 7,
+      "matchSupervisor": null,
+      "refereeAssessor": null,
+      "referee": "颜铭宣",
+      "assistantReferee1": "马俊",
+      "assistantReferee2": "吴佳宇",
+      "fourthOfficial": "穆怡馨",
+      "reserveAssistantReferee": null
+    },
+    {
+      "matchId": 8,
+      "matchSupervisor": null,
+      "refereeAssessor": null,
+      "referee": "彭云逸",
+      "assistantReferee1": "郭原序",
+      "assistantReferee2": "陈飞宇",
+      "fourthOfficial": "马俊",
+      "reserveAssistantReferee": null
+    },
+    {
+      "matchId": 9,
+      "matchSupervisor": "王相翰",
+      "refereeAssessor": null,
+      "referee": "颜铭宣",
+      "assistantReferee1": "吴佳宇",
+      "assistantReferee2": "魏宇轩",
+      "fourthOfficial": "季子杨",
+      "reserveAssistantReferee": null
+    },
+    {
+      "matchId": 10,
+      "matchSupervisor": null,
+      "refereeAssessor": null,
+      "referee": "王相翰",
+      "assistantReferee1": "颜铭宣",
+      "assistantReferee2": "阿合卓勒·叶尔麦克",
+      "fourthOfficial": "魏宇轩",
+      "reserveAssistantReferee": null
+    },
+    {
+      "matchId": 11,
+      "matchSupervisor": null,
+      "refereeAssessor": null,
+      "referee": "彭云逸",
+      "assistantReferee1": "高羽键",
+      "assistantReferee2": "马俊",
+      "fourthOfficial": "黄敬瀚",
+      "reserveAssistantReferee": null
+    },
+    {
+      "matchId": 12,
+      "matchSupervisor": null,
+      "refereeAssessor": null,
+      "referee": "马俊",
+      "assistantReferee1": "王相翰",
+      "assistantReferee2": "魏宇轩",
+      "fourthOfficial": "王睿阳",
+      "reserveAssistantReferee": null
+    },
+    {
+      "matchId": 13,
+      "matchSupervisor": null,
+      "refereeAssessor": "彭云逸",
+      "referee": "王相翰",
+      "assistantReferee1": "吴佳宇",
+      "assistantReferee2": "马俊",
+      "fourthOfficial": "高羽键",
+      "reserveAssistantReferee": null
+    },
+    {
+      "matchId": 14,
+      "matchSupervisor": null,
+      "refereeAssessor": "彭云逸",
+      "referee": "胡兵",
+      "assistantReferee1": "吴作昊",
+      "assistantReferee2": "颜铭宣",
+      "fourthOfficial": "郭原序",
+      "reserveAssistantReferee": null
+    },
+    {
+      "matchId": 15,
+      "matchSupervisor": null,
+      "refereeAssessor": null,
+      "referee": "颜铭宣",
+      "assistantReferee1": "高羽键",
+      "assistantReferee2": "黄敬瀚",
+      "fourthOfficial": "马俊",
+      "reserveAssistantReferee": null
+    },
+    {
+      "matchId": 16,
+      "matchSupervisor": "郭洪波",
+      "refereeAssessor": "陈爽",
+      "referee": "王相翰",
+      "assistantReferee1": "颜铭宣",
+      "assistantReferee2": "吴佳宇",
+      "fourthOfficial": "石翔宇",
+      "reserveAssistantReferee": "高羽键"
+    }
+  ]
+}

@@ -15,7 +15,7 @@ export type CompetitionFormat = "eleven-a-side" | "futsal";
 export type CompetitionDisplayStatus = {
   key: CompetitionStatus;
   label: "筹备中" | "报名中" | "进行中" | "已结束";
-  dataStatus: "demo";
+  dataStatus: "demo" | "confirmed";
   badge: string;
 };
 
@@ -81,7 +81,7 @@ export type DemoScorer = {
 };
 
 export type NewsCategory = "比赛战报" | "协会动态" | "人物专访" | "校园足球文化" | "裁判内容";
-export type NoticeCategory = "报名通知" | "赛程调整" | "竞赛规程" | "招募通知" | "赛事纪律通知";
+export type NoticeCategory = "报名通知" | "赛程调整" | "竞赛规程" | "招募通知" | "赛事纪律通知" | "纪律决定";
 
 export type NewsItem = ContentOwnership & {
   id: string;
@@ -92,8 +92,16 @@ export type NewsItem = ContentOwnership & {
   image: string;
   imageAlt: string;
   href: string;
-  dataStatus: "demo";
+  dataStatus: "demo" | "confirmed";
   badge: string;
+  source?: string;
+};
+
+export type ArchiveGalleryImage = {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
 };
 
 export type NoticeItem = ContentOwnership & {
@@ -104,7 +112,7 @@ export type NoticeItem = ContentOwnership & {
   summary: string;
   href: string;
   publicationStatus: "置顶" | "最新";
-  dataStatus: "demo";
+  dataStatus: "demo" | "confirmed";
   badge: string;
 };
 
@@ -136,14 +144,32 @@ export type TeamShowcaseItem = ContentOwnership & {
   description: string;
   image: string;
   imageAlt: string;
-  dataStatus: "demo";
+  dataStatus: "demo" | "confirmed";
   badge: string;
   competitiveDataAvailable: boolean;
 };
 
+export type CurrentTeamStatus = "recruiting" | "formed" | "paused" | "pending";
+
+export type CurrentTeamDirectoryEntry = {
+  id: string;
+  name: string;
+  schoolOrOrganization: string;
+  competitionId: string;
+  competitionName: string;
+  competitionHref: string;
+  status: CurrentTeamStatus;
+  statusLabel: string;
+  targetOrPositions: string;
+  confirmedLead?: string;
+  publicContact?: string;
+  publicQrImage?: string;
+  updatedAt: string;
+};
+
 export type PlatformItem = {
-  id: "wechat" | "bilibili" | "football-china" | "email";
-  kind: "wechat" | "bilibili" | "football-china" | "email";
+  id: "wechat" | "bilibili" | "douyin" | "football-china" | "email";
+  kind: "wechat" | "bilibili" | "douyin" | "football-china" | "email";
   name: string;
   label: string;
   description: string;
@@ -153,6 +179,7 @@ export type PlatformItem = {
   qrImage?: string;
   qrAlt?: string;
   interactionLabel?: string;
+  qrStatus?: string;
   scopeNotice?: string;
   securityNotice?: string;
   target?: "_blank";

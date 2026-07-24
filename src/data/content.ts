@@ -3,6 +3,9 @@ import {
   ASSOCIATION_ORGANIZATION_ID,
 } from "@/data/association";
 import { BILIBILI_PROFILE_URL } from "@/data/platforms";
+import { officialMensCupNews } from "@/data/mens-intercollege-cup-2026";
+import { officialWomensCupNews } from "@/data/womens-intercollege-cup-2026";
+import { disciplineDecisions } from "@/data/public-information";
 import type { NewsCategory, NewsItem, NoticeCategory, NoticeItem } from "@/types";
 
 const sharedMetadata = {
@@ -73,6 +76,24 @@ export const demoNews = [
   },
 ] as const satisfies readonly NewsItem[];
 
+export const publishedNews = [...officialMensCupNews, ...officialWomensCupNews].sort((left, right) =>
+  right.dateLabel.localeCompare(left.dateLabel),
+);
+
+export const newsFeed = publishedNews;
+
+function requirePublishedNews(id: string) {
+  const item = publishedNews.find((story) => story.id === id);
+  if (!item) throw new Error(`Missing published news item: ${id}`);
+  return item;
+}
+
+export const homeNews = [
+  requirePublishedNews("2026-mens-cup-final-report"),
+  requirePublishedNews("2026-mens-cup-closing"),
+  requirePublishedNews("2026-mens-cup-final-preview"),
+] as const;
+
 export const demoAnnouncements = [
   {
     ...sharedMetadata,
@@ -113,6 +134,8 @@ export const demoAnnouncements = [
 ] as const satisfies readonly NoticeItem[];
 
 export const demoNotices = demoAnnouncements;
+
+export const publicAnnouncements = disciplineDecisions;
 
 export const featuredVideoNotice =
   "精选视频资料仍待确认；当前卡片仅链接至南航校园足球共享视频平台主页。";

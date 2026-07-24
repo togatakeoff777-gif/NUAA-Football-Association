@@ -53,7 +53,7 @@ export function CategoryEntryLayout({ eyebrow, title, description, sectionTitle,
     <>
       <SiteHeader />
       <main className="template-page template-category-page" id="main-content">
-        <PageIntro eyebrow={eyebrow} title={title} description={description} statusLabel="栏目入口模板 · V2.1" variant="category" />
+        <PageIntro eyebrow={eyebrow} title={title} description={description} statusLabel="栏目服务入口" variant="category" />
         <section className="template-section" aria-labelledby="category-entry-title">
           <div className="page-shell">
             <div className="template-section-heading">

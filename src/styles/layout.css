@@ -11,20 +11,20 @@
 .brand { display: inline-flex; align-items: center; gap: 13px; flex-shrink: 0; }
 .brand-mark {
   position: relative;
-  width: 43px;
-  height: 49px;
+  width: 52px;
+  height: 52px;
   display: grid;
   place-items: center;
+  overflow: hidden;
   flex: 0 0 auto;
-  background: linear-gradient(145deg, #327ee0, var(--nuaa-blue));
-  color: white;
-  clip-path: polygon(50% 0, 92% 16%, 84% 76%, 50% 100%, 16% 76%, 8% 16%);
-  filter: drop-shadow(0 9px 15px rgba(0, 0, 0, 0.18));
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, .42);
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .18);
 }
-.brand-mark::after { content: ""; position: absolute; inset: 5px; border: 1px solid rgba(255, 255, 255, 0.5); clip-path: inherit; }
-.brand-mark > span { position: relative; z-index: 1; font-size: 13px; font-weight: 900; letter-spacing: -0.04em; }
-.brand-mark-compact { width: 36px; height: 41px; }
-.brand-mark-compact > span { font-size: 11px; }
+.brand-mark > img { object-fit: contain; }
+.brand-mark-compact { width: 42px; height: 42px; }
 .brand-copy { display: flex; flex-direction: column; gap: 2px; }
 .brand-copy strong { font-size: 15px; font-weight: 780; letter-spacing: 0.035em; }
 .brand-copy small { color: rgba(255, 255, 255, 0.6); font-size: 8px; font-weight: 650; letter-spacing: 0.11em; }
@@ -68,8 +68,9 @@
 .footer-wechat strong { color: white; font-size: 12px; }
 .footer-wechat small { margin-top: 3px; color: rgba(255,255,255,.56); font-size: 9px; }
 .footer-emblem { display: flex; align-items: center; gap: 13px; margin-top: 12px; padding: 10px 12px; border: 1px solid rgba(255,255,255,.12); border-radius: 10px; }
-.footer-emblem img { width: 46px; height: 46px; border-radius: 50%; background: white; object-fit: contain; }
+.footer-emblem img { width: 64px; height: 64px; flex: 0 0 auto; border-radius: 0; background: white; object-fit: contain; }
 .footer-emblem p { color: rgba(255,255,255,.62); font-size: 11px; line-height: 1.5; }
+.footer-emblem p strong { color: rgba(255,255,255,.82); font-weight: 720; }
 .footer-declarations { position: relative; display: grid; gap: 10px; padding: 26px 0; border-top: 1px solid rgba(255,255,255,.12); }
 .footer-declarations p { color: rgba(255,255,255,.72); font-size: 12px; line-height: 1.7; }
 .footer-bottom { position: relative; min-height: 62px; display: flex; align-items: center; justify-content: space-between; gap: 20px; border-top: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.68); font-size: 11px; }
@@ -86,7 +87,7 @@
 
 @media (max-width: 620px) {
   .header-inner { gap: 16px; }
-  .brand-mark { width: 36px; height: 42px; }
+  .brand-mark { width: 44px; height: 44px; padding: 2px; }
   .brand-copy strong { font-size: 13px; }
   .brand-copy small { max-width: 160px; overflow: hidden; font-size: 7px; white-space: nowrap; }
   .footer-main { grid-template-columns: 1fr; gap: 38px; }

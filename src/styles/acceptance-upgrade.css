@@ -1,0 +1,655 @@
+/* Acceptance iteration: readability, shared media ratios, and focused page refinements. */
+body {
+  font-size: 16px;
+}
+
+main p,
+main li,
+main dd {
+  font-size: 16px !important;
+  line-height: 1.7;
+}
+
+main small,
+main time,
+main dt {
+  font-size: 14px !important;
+  line-height: 1.5;
+}
+
+/* Home identity and core competition readability. */
+.home-screen-hero .hero-content {
+  max-width: 1240px;
+}
+
+.home-screen-hero .hero-content h1 {
+  width: min(760px, 68vw);
+  margin-top: 0;
+  font-size: clamp(42px, 4.45vw, 64px);
+  line-height: 1.02;
+  letter-spacing: -.055em;
+}
+
+.home-screen-hero .hero-content h1 span,
+.home-screen-hero .hero-content h1 strong {
+  display: block;
+  font-size: 1em;
+  white-space: nowrap;
+}
+
+.home-screen-hero .hero-content h1 span {
+  color: #fff;
+  font-weight: 850;
+  letter-spacing: -.045em;
+}
+
+.home-screen-hero .hero-content h1 strong {
+  margin-top: 10px;
+  color: #a9dcff;
+  font-size: .92em;
+  letter-spacing: -.04em;
+}
+
+.home-screen-hero .hero-university {
+  margin-top: 16px;
+  padding-left: 0;
+  border-left: 0;
+}
+
+.home-screen-hero .hero-university small {
+  color: rgba(255, 255, 255, .72);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.hero-summary,
+.match-penalty-note,
+.home-section-bar .text-link,
+.home-featured-news p,
+.association-summary-copy > span {
+  font-size: 16px;
+}
+
+.match-penalty-note {
+  font-size: 16px !important;
+}
+
+.featured-competition-card > p,
+.featured-competition-card dt,
+.featured-competition-card dd,
+.compact-competition-list small,
+.compact-competition-list p {
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.compact-competition-list h3 {
+  margin-top: 5px;
+  font-size: clamp(17px, 1.45vw, 20px);
+  line-height: 1.35;
+}
+
+.compact-competition-list .status-badge {
+  white-space: normal;
+  text-align: center;
+}
+
+/* Shared news media frames prevent source images from stretching. */
+.shared-news-image {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #dfeafa;
+}
+
+.shared-news-image-featured {
+  aspect-ratio: 4 / 3;
+}
+
+.shared-news-image-list {
+  aspect-ratio: 16 / 9;
+}
+
+.shared-news-image img {
+  object-fit: cover;
+  object-position: center;
+}
+
+.news-list-featured > .shared-news-image,
+.news-list-row > .shared-news-image,
+.home-featured-news > .shared-news-image {
+  min-height: 0;
+}
+
+/* Functional and template pages use 16px reading text and 14px metadata. */
+.functional-hero .detail-shell > p:last-child,
+.functional-section-head > p,
+.functional-notice p,
+.functional-competition-list > article > p,
+.functional-competition-list li,
+.functional-file-groups header p,
+.referee-center p,
+.verified-team-groups p,
+.verified-team-groups small,
+.team-join-guide span,
+.join-page p,
+.core-competition-summary,
+.core-competition-pending > p,
+.template-intro-copy > p:not(.template-eyebrow),
+.template-section-heading > span,
+.template-notice,
+.category-route-copy > span,
+.detail-lead,
+.index-notice,
+.index-card-description,
+.news-list-featured p,
+.news-list-row p,
+.notice-list-panel article > p,
+.archive-profile dd,
+.archive-timeline p,
+.archive-scope-record li,
+.archive-scope-record p,
+.association-structure > div:first-child > span,
+.association-term-list article > small,
+.association-governance article > strong,
+.association-governance article > p:not(:first-child),
+.association-governance li,
+.cup-archive-page .cup-section-heading > span,
+.cup-archive-page .cup-source-note,
+.cup-archive-page .cup-overview-primary dd,
+.cup-archive-page .cup-overview-secondary li {
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.functional-hero .detail-shell > p:first-child,
+.functional-section-head span,
+.functional-competition-list header span,
+.functional-competition-list header > strong,
+.functional-competition-facts dt,
+.functional-competition-facts small,
+.functional-file-groups header span,
+.functional-file-list dt,
+.functional-file-list small,
+.referee-center small,
+.template-eyebrow,
+.template-status,
+.template-section-heading > div > p,
+.category-route-copy > p,
+.category-route-index,
+.status-badge,
+.index-eyebrow,
+.index-card-meta,
+.index-card-status,
+.news-list-featured section > span,
+.news-list-row section > span,
+.news-list-row time,
+.notice-list-panel time,
+.notice-list-panel article > span,
+.archive-profile > p,
+.archive-stats > p,
+.archive-profile dt,
+.archive-stats article small,
+.archive-timeline > div > p,
+.archive-timeline time,
+.archive-timeline section span,
+.association-structure > div:first-child > p,
+.association-governance article > p:first-child,
+.association-term-list time,
+.association-term-list dt,
+.cup-archive-page dt,
+.cup-archive-page small,
+.cup-archive-page time {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.functional-competition-facts dd,
+.functional-competition-list footer a,
+.functional-file-list dd,
+.functional-file-list a,
+.news-list-featured a,
+.notice-list-panel article > a,
+.category-route-action > b,
+.category-route-links a,
+.index-card-action,
+.archive-scope-record a,
+.functional-back-link {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.functional-competition-facts {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.functional-competition-facts dd {
+  font-size: 16px;
+}
+
+.functional-schedule-table,
+.functional-schedule-table td,
+.cup-results-table td,
+.schedule-table td {
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.functional-schedule-table th,
+.cup-results-table th,
+.schedule-table th {
+  font-size: 14px;
+}
+
+.functional-schedule-table td > small,
+.functional-score small {
+  font-size: 14px;
+}
+
+/* Shared current-edition competition detail sections. */
+.core-competition-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--line);
+}
+
+.core-competition-facts dl {
+  min-width: 0;
+  margin: 0;
+  padding: 20px;
+  background: #fff;
+}
+
+.core-competition-facts dt {
+  color: var(--muted);
+}
+
+.core-competition-facts dd {
+  margin: 8px 0 0;
+  color: var(--ink);
+  font-weight: 720;
+  overflow-wrap: anywhere;
+}
+
+.core-competition-summary {
+  margin-top: 24px;
+  padding: 22px 24px;
+  border-left: 4px solid var(--aviation-blue);
+  background: var(--glacier);
+  color: #3f5875;
+}
+
+.core-competition-pending {
+  display: grid;
+  grid-template-columns: minmax(240px, .75fr) minmax(0, 1.25fr) auto;
+  align-items: center;
+  gap: 36px;
+}
+
+.core-competition-pending > div > p {
+  color: var(--aviation-blue);
+  font-size: 14px;
+  font-weight: 850;
+  letter-spacing: .14em;
+}
+
+.core-competition-pending h2 {
+  margin-top: 8px;
+  font-size: clamp(29px, 3vw, 42px);
+}
+
+.core-competition-pending > a {
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 16px;
+  border: 1px solid var(--aviation-blue);
+  color: var(--aviation-blue);
+  font-size: 15px;
+  font-weight: 760;
+  white-space: nowrap;
+}
+
+/* Team directory keeps current recruitment separate from historical archives. */
+.team-join-section {
+  padding-bottom: 38px;
+}
+
+.current-team-directory {
+  display: grid;
+  gap: 16px;
+}
+
+.current-team-directory article {
+  display: grid;
+  grid-template-columns: minmax(220px, .7fr) minmax(0, 1.3fr);
+  gap: 28px;
+  padding: 26px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.current-team-directory article > div > span {
+  color: var(--aviation-blue);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.current-team-directory h3 {
+  margin-top: 8px;
+  font-size: 24px;
+}
+
+.current-team-directory dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.current-team-directory dt {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.current-team-directory dd {
+  margin: 5px 0 0;
+  font-size: 16px;
+  font-weight: 680;
+}
+
+/* Referee work files now live on their own public route. */
+.functional-back-link {
+  display: inline-flex;
+  margin-top: 30px;
+  color: var(--aviation-blue);
+  font-weight: 760;
+}
+
+/* Join page and association Hero action. */
+.association-identity-aside {
+  display: grid;
+  justify-items: start;
+  gap: 16px;
+}
+
+.association-join-button {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  gap: 30px;
+  padding: 0 20px;
+  background: #4b9fea;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 780;
+}
+
+.association-title-line:first-child {
+  font-size: 1em;
+  font-weight: 850;
+}
+
+.association-title-line + .association-title-line {
+  margin-top: 8px;
+  font-size: .92em;
+}
+
+.join-direction-list {
+  display: grid;
+  gap: 1px;
+  background: var(--line);
+}
+
+.join-direction-list article {
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr) minmax(190px, .45fr) auto;
+  align-items: center;
+  gap: 24px;
+  padding: 24px;
+  background: #fff;
+}
+
+.join-direction-list article > span {
+  color: var(--aviation-blue);
+  font-size: 16px;
+  font-weight: 850;
+}
+
+.join-direction-list h3 {
+  font-size: 23px;
+}
+
+.join-direction-list strong {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.join-direction-list a {
+  color: var(--aviation-blue);
+  font-size: 15px;
+  font-weight: 760;
+}
+
+.join-contact-panel {
+  display: grid;
+  grid-template-columns: minmax(230px, .7fr) minmax(0, 1.3fr) auto;
+  align-items: center;
+  gap: 32px;
+  margin-top: 30px;
+  padding: 26px;
+  background: var(--space-blue);
+  color: #fff;
+}
+
+.join-contact-panel span {
+  color: #91ceff;
+  font-size: 14px;
+  font-weight: 820;
+}
+
+.join-contact-panel h2 {
+  margin-top: 7px;
+  font-size: 25px;
+}
+
+.join-contact-panel p {
+  color: rgba(255, 255, 255, .72);
+}
+
+.join-contact-panel a {
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 16px;
+  background: #fff;
+  color: var(--nuaa-blue);
+  font-size: 15px;
+  font-weight: 760;
+  white-space: nowrap;
+}
+
+/* Media directory: centered, compact 2x2 composition. */
+.media-index-page .index-grid {
+  width: min(960px, 100%);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin-inline: auto;
+}
+
+.media-index-page .index-card {
+  height: clamp(270px, 30vw, 310px);
+  min-height: clamp(260px, 30vw, 310px);
+  aspect-ratio: auto;
+  padding: 28px;
+}
+
+/* Footer is normal content height; small print remains readable. */
+.site-footer p,
+.site-footer a,
+.site-footer span {
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.site-footer small,
+.site-footer .footer-declarations p,
+.site-footer .footer-bottom {
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+@media (max-width: 1023px) {
+  .functional-competition-facts,
+  .core-competition-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .core-competition-pending,
+  .join-contact-panel {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .join-direction-list article {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .join-direction-list article > strong,
+  .join-direction-list article > a {
+    grid-column: 2;
+  }
+}
+
+@media (max-width: 767px) {
+  main p,
+  main li,
+  main dd,
+  main small,
+  main time,
+  main dt {
+    font-size: 15px !important;
+  }
+
+  .home-screen-hero .hero-content h1 {
+    width: 100%;
+    font-size: clamp(31px, 8.4vw, 38px);
+  }
+
+  .home-screen-hero .hero-content h1 strong {
+    margin-top: 8px;
+    font-size: 1em;
+  }
+
+  .home-screen-hero .hero-university small {
+    max-width: 100%;
+    font-size: 15px;
+  }
+
+  .hero-summary,
+  .match-penalty-note,
+  .home-featured-news p,
+  .association-summary-copy > span,
+  .functional-hero .detail-shell > p:last-child,
+  .functional-section-head > p,
+  .functional-notice p,
+  .functional-competition-list > article > p,
+  .functional-competition-list li,
+  .functional-file-groups header p,
+  .referee-center p,
+  .verified-team-groups p,
+  .verified-team-groups small,
+  .team-join-guide span,
+  .join-page p,
+  .template-intro-copy > p:not(.template-eyebrow),
+  .template-section-heading > span,
+  .template-notice,
+  .category-route-copy > span,
+  .detail-lead,
+  .index-notice,
+  .index-card-description,
+  .news-list-featured p,
+  .notice-list-panel article > p,
+  .cup-archive-page p,
+  .cup-archive-page li,
+  .cup-archive-page dd {
+    font-size: 15px;
+    line-height: 1.72;
+  }
+
+  .match-penalty-note {
+    font-size: 15px !important;
+  }
+
+  .functional-hero .detail-shell > p:first-child,
+  .functional-section-head span,
+  .functional-competition-list header span,
+  .functional-competition-list header > strong,
+  .functional-competition-facts dt,
+  .functional-competition-facts small,
+  .template-eyebrow,
+  .template-status,
+  .template-section-heading > div > p,
+  .category-route-copy > p,
+  .category-route-index,
+  .status-badge,
+  .index-eyebrow,
+  .index-card-meta,
+  .index-card-status,
+  .news-list-featured section > span,
+  .news-list-row section > span,
+  .news-list-row time,
+  .notice-list-panel time,
+  .cup-archive-page dt,
+  .cup-archive-page small,
+  .cup-archive-page time {
+    font-size: 15px;
+  }
+
+  .functional-schedule-mobile,
+  .functional-schedule-mobile p,
+  .functional-schedule-mobile small,
+  .cup-results-mobile,
+  .cup-results-mobile header,
+  .cup-results-mobile footer,
+  .cup-results-mobile strong,
+  .schedule-mobile-list,
+  .schedule-mobile-list p,
+  .schedule-mobile-list footer {
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .shared-news-image-featured {
+    aspect-ratio: 4 / 3;
+  }
+
+  .news-list-row > .shared-news-image {
+    height: auto;
+  }
+
+  .functional-competition-facts,
+  .core-competition-facts,
+  .current-team-directory article,
+  .current-team-directory dl {
+    grid-template-columns: 1fr;
+  }
+
+  .core-competition-pending > a,
+  .join-contact-panel a {
+    width: 100%;
+    justify-content: center;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .media-index-page .index-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .media-index-page .index-card {
+    height: auto;
+    min-height: 270px;
+  }
+}

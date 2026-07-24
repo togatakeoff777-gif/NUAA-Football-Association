@@ -1,0 +1,43 @@
+import { CompetitionArchiveLayout } from "@/components/competitions/archive/competition-archive-layout";
+import { womensIntercollegeCup2026 } from "@/data/womens-intercollege-cup-2026";
+
+import { WomensCompetitionOverview } from "./competition-overview";
+import {
+  WomensCompetitionOfficials,
+  WomensCompetitionSchedule,
+  WomensCompetitionStandings,
+} from "./competition-results";
+import { WomensCompetitionStories } from "./competition-stories";
+import { WomensCompetitionTeams } from "./competition-teams";
+
+export function WomensCompetitionArchivePage() {
+  const { competition, heroImage } = womensIntercollegeCup2026;
+
+  return (
+    <CompetitionArchiveLayout
+      className="cup-womens-page"
+      titleId="womens-cup-title"
+      title={competition.canonicalTitle}
+      eyebrow="COMPETITION ARCHIVE · WOMEN'S FOOTBALL · 2026"
+      status="已结束 / 来源已确认"
+      description="依据足球中国赛事截图、结构化数据、校级官方账号报道与协会原始照片整理。"
+      heroImage={heroImage}
+      heroAlt="2026天目湖校区女子足球院际杯赛事集体合影"
+      actions={[{ href: "#honours", label: "查看名次与奖项" }, { href: "#reports", label: "阅读赛事报道" }]}
+      summary={[
+        { label: "冠军", value: "人文外国语自动化联队" },
+        { label: "赛期", value: "2026.04.14—05.30" },
+        { label: "规模", value: `${competition.summary.teams}队 / ${competition.summary.matches}场` },
+        { label: "进球", value: `${competition.summary.goals}球` },
+      ]}
+      returnStatus="档案状态：已结束 / 来源已确认"
+    >
+      <WomensCompetitionOverview />
+      <WomensCompetitionSchedule />
+      <WomensCompetitionStandings />
+      <WomensCompetitionTeams />
+      <WomensCompetitionOfficials />
+      <WomensCompetitionStories />
+    </CompetitionArchiveLayout>
+  );
+}

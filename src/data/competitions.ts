@@ -2,7 +2,8 @@ import {
   ASSOCIATION_CONTENT_OWNER,
   ASSOCIATION_ORGANIZATION_ID,
 } from "@/data/association";
-import type { Competition, DemoMatch, DemoScorer, DemoStanding } from "@/types";
+import { coreCompetitionDirectory } from "@/data/competition-directory";
+import type { DemoMatch, DemoScorer, DemoStanding } from "@/types";
 
 export const competitionStatusLabels = {
   preparing: "筹备中",
@@ -17,111 +18,17 @@ const sharedMetadata = {
   dataSource: "local",
 } as const;
 
-export const coreCompetitions = [
-  {
-    ...sharedMetadata,
-    id: "freshman-cup",
-    slug: "freshman-cup",
-    campus: "cross-campus",
-    name: "南京航空航天大学新生杯足球赛事",
-    shortName: "新生杯足球赛事",
-    semester: "first",
-    semesterLabel: "上半学年",
-    format: "eleven-a-side",
-    formatLabel: "十一人制",
-    teamFormation: "院系组队",
-    eventType: "跨校区赛事",
-    organizerNote:
-      "由将军路校区与天目湖校区相关足球组织共同举办，天目湖方面主要承办；淘汰赛阶段进行跨校区主客场比赛。",
-    tags: ["跨校区赛事", "十一人制", "院系组队"],
-    recordStatus: "confirmed",
-    displayStatus: {
-      key: "preparing",
-      label: competitionStatusLabels.preparing,
-      dataStatus: "demo",
-      badge: "演示状态",
-    },
-    stageLabel: "年度筹备",
-    detailHref: "/competitions/current#freshman-cup",
+export const coreCompetitions = coreCompetitionDirectory.map((competition) => ({
+  ...competition,
+  organizerNote: competition.notice,
+  tags: [competition.eventType, competition.formatLabel, competition.teamFormation],
+  displayStatus: {
+    key: competition.status,
+    label: competitionStatusLabels[competition.status],
+    dataStatus: competition.dataStatus,
+    badge: competition.badge,
   },
-  {
-    ...sharedMetadata,
-    id: "tianmuhu-futsal-league",
-    slug: "tianmuhu-futsal-league",
-    campus: "tianmuhu",
-    name: "南京航空航天大学天目湖五人制联赛",
-    shortName: "天目湖五人制联赛",
-    semester: "first",
-    semesterLabel: "上半学年",
-    format: "futsal",
-    formatLabel: "五人制",
-    teamFormation: "自由组队",
-    eventType: "天目湖赛事",
-    organizerNote: "由南京航空航天大学天目湖足球协会独立组织。",
-    tags: ["天目湖赛事", "五人制", "自由组队"],
-    recordStatus: "confirmed",
-    displayStatus: {
-      key: "registration",
-      label: competitionStatusLabels.registration,
-      dataStatus: "demo",
-      badge: "演示状态",
-    },
-    stageLabel: "报名准备",
-    detailHref: "/competitions/current#tianmuhu-futsal-league",
-  },
-  {
-    ...sharedMetadata,
-    id: "mens-intercollege-cup",
-    slug: "mens-intercollege-cup",
-    campus: "tianmuhu",
-    name: "南京航空航天大学男子足球院际杯比赛",
-    shortName: "男子足球院际杯",
-    semester: "second",
-    semesterLabel: "下半学年",
-    format: "eleven-a-side",
-    formatLabel: "十一人制",
-    teamFormation: "院系组队",
-    group: "男子组",
-    eventType: "天目湖赛事",
-    organizerNote: "天目湖校区核心赛事。",
-    tags: ["天目湖赛事", "男子组", "十一人制", "院系组队"],
-    recordStatus: "confirmed",
-    displayStatus: {
-      key: "ongoing",
-      label: competitionStatusLabels.ongoing,
-      dataStatus: "demo",
-      badge: "演示状态",
-    },
-    stageLabel: "赛程演示阶段",
-    detailHref: "/competitions/current#mens-intercollege-cup",
-  },
-  {
-    ...sharedMetadata,
-    id: "womens-intercollege-cup",
-    slug: "womens-intercollege-cup",
-    campus: "tianmuhu",
-    name: "南京航空航天大学女子足球院际杯比赛",
-    shortName: "女子足球院际杯",
-    semester: "second",
-    semesterLabel: "下半学年",
-    format: "futsal",
-    formatLabel: "五人制",
-    teamFormation: "院系组队",
-    group: "女子组",
-    eventType: "天目湖赛事",
-    organizerNote: "天目湖校区核心赛事。",
-    tags: ["天目湖赛事", "女子组", "五人制", "院系组队"],
-    recordStatus: "confirmed",
-    displayStatus: {
-      key: "completed",
-      label: competitionStatusLabels.completed,
-      dataStatus: "demo",
-      badge: "演示状态",
-    },
-    stageLabel: "赛季归档演示",
-    detailHref: "/competitions/current#womens-intercollege-cup",
-  },
-] as const satisfies readonly Competition[];
+}));
 
 export const annualCompetitions = coreCompetitions;
 

@@ -149,6 +149,24 @@ export type TeamShowcaseItem = ContentOwnership & {
   competitiveDataAvailable: boolean;
 };
 
+export type CurrentTeamStatus = "recruiting" | "formed" | "paused" | "pending";
+
+export type CurrentTeamDirectoryEntry = {
+  id: string;
+  name: string;
+  schoolOrOrganization: string;
+  competitionId: string;
+  competitionName: string;
+  competitionHref: string;
+  status: CurrentTeamStatus;
+  statusLabel: string;
+  targetOrPositions: string;
+  confirmedLead?: string;
+  publicContact?: string;
+  publicQrImage?: string;
+  updatedAt: string;
+};
+
 export type PlatformItem = {
   id: "wechat" | "bilibili" | "douyin" | "football-china" | "email";
   kind: "wechat" | "bilibili" | "douyin" | "football-china" | "email";

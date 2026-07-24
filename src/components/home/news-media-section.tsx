@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 
+import { NewsImage } from "@/components/news/news-image";
 import { DemoLabel } from "@/components/ui/demo-label";
 import { homeNews } from "@/data/content";
 
@@ -14,7 +14,7 @@ export function NewsMediaSection() {
         </div>
         <div className="home-news-stream">
             <article className="home-featured-news" data-home-reveal data-home-delay="1">
-              <div className="home-featured-news-image"><Image src={featuredNews.image} alt={featuredNews.imageAlt} fill sizes="(max-width: 760px) 100vw, 48vw" /><DemoLabel>重点新闻 · 官方数据</DemoLabel></div>
+              <NewsImage className="home-featured-news-image" src={featuredNews.image} alt={featuredNews.imageAlt} variant="featured" sizes="(max-width: 760px) 100vw, 48vw"><DemoLabel>重点新闻 · 官方数据</DemoLabel></NewsImage>
               <div><span>{featuredNews.category} · {featuredNews.dateLabel}</span><h3>{featuredNews.title}</h3><p>{featuredNews.summary}</p><Link href={featuredNews.href}>阅读全文 <span aria-hidden="true">→</span></Link></div>
             </article>
             <div className="home-compact-news-list">

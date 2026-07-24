@@ -267,12 +267,6 @@ export const refereeSecondaryEntries = [
     description: "查看足球、五人制规则更新与裁判工作资料下载。",
     href: "#referee-rules",
   },
-  {
-    id: "training",
-    title: "培训材料",
-    description: "后续用于培训课件、规则讲解、典型判例、视频或图文资料。",
-    badge: "资料待协会确认",
-  },
 ] as const;
 
 export const rulesResourceEntries = [
@@ -301,14 +295,8 @@ export const rulesResourceEntries = [
     id: "referee-downloads",
     title: "裁判工作资料下载",
     description: "集中下载比赛成绩报告单与裁判报告模板。",
-    href: "#referee-downloads",
+    href: "/referees/resources/work-files",
     badge: "3份真实文件",
-  },
-  {
-    id: "training-materials",
-    title: "培训材料",
-    description: "培训课件、规则讲解、典型判例、视频或图文资料将在取得真实来源后发布。",
-    badge: "资料待协会确认",
   },
 ] as const;
 

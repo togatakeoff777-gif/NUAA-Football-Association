@@ -36,30 +36,6 @@ const items = [
     href: "/participation/team-manager-guide",
     actionLabel: "查看指南",
   },
-  {
-    title: "裁判员注册指南",
-    description: "说明裁判员加入、注册与后续执裁报名入口之间的区别。",
-    meta: "裁判事务",
-    status: "指南原型",
-    href: "/participation/referee-guide",
-    actionLabel: "查看指南",
-  },
-  {
-    title: "加入天目湖足协",
-    description: "了解协会工作方向与后续招募信息的发布方式。",
-    meta: "协会招募",
-    status: "说明原型",
-    href: "/participation/join-association",
-    actionLabel: "查看说明",
-  },
-  {
-    title: "加入摄影与宣传团队",
-    description: "了解赛事影像、内容编辑与宣传协作的后续招募入口。",
-    meta: "内容团队",
-    status: "说明原型",
-    href: "/participation/join-media",
-    actionLabel: "查看说明",
-  },
 ];
 
 export default function ParticipationPage() {
@@ -68,10 +44,10 @@ export default function ParticipationPage() {
       eyebrow="PARTICIPATION"
       title="参赛与报名"
       description="球员注册、球队组建、赛事报名及相关参赛资格管理统一通过足球中国平台完成。"
-      sectionTitle="报名与加入入口"
+      sectionTitle="参赛服务入口"
       sectionDescription="指南用于解释流程与分工，正式要求以各赛事最新竞赛规程和组织方通知为准。"
       notice="本站本轮不提供真实报名提交，也不收集身份证、学号、手机号等敏感个人信息。"
-      statusLabel="说明页原型 · 不会真实提交"
+      statusLabel="参赛说明 · 不会真实提交"
       items={items}
     />
   );

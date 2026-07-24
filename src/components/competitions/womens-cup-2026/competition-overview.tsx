@@ -1,4 +1,8 @@
 import { womensIntercollegeCup2026 } from "@/data/womens-intercollege-cup-2026";
+import {
+  MEN_AND_WOMEN_CUP_HOST,
+  MEN_AND_WOMEN_CUP_ORGANIZER,
+} from "@/data/competition-directory";
 
 function formatDateTime(value: string) {
   const [date, time] = value.split(" ");
@@ -38,6 +42,8 @@ export function WomensCompetitionOverview() {
             <div><dt>比赛场地</dt><dd>{competition.venue}</dd></div>
             <div><dt>报名时间</dt><dd>{formatDateTime(registration.start)} - {formatDateTime(registration.end)}</dd></div>
             <div><dt>报名费用</dt><dd>报名费{registration.feePerTeam}元 / 保证金{registration.depositPerTeam}元</dd></div>
+            <div><dt>主办单位</dt><dd>{MEN_AND_WOMEN_CUP_HOST}</dd></div>
+            <div><dt>承办单位</dt><dd>{MEN_AND_WOMEN_CUP_ORGANIZER}</dd></div>
           </dl>
         </div>
 

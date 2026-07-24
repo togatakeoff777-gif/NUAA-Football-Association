@@ -21,7 +21,6 @@ export const competitionNavigation = [
   { label: "积分榜", href: "/competitions/standings" },
   { label: "射手榜", href: "/competitions/scorers" },
   { label: "历届赛事", href: "/competitions/history" },
-  { label: "跨校区赛事", href: "/competitions/cross-campus" },
   { label: "仲裁与申诉", href: "/competitions/arbitration" },
 ] as const;
 

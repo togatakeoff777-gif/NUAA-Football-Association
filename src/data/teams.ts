@@ -2,7 +2,7 @@ import {
   ASSOCIATION_CONTENT_OWNER,
   ASSOCIATION_ORGANIZATION_ID,
 } from "@/data/association";
-import type { TeamShowcaseItem } from "@/types";
+import type { CurrentTeamDirectoryEntry, TeamShowcaseItem } from "@/types";
 import { mensIntercollegeCup2026 } from "@/data/mens-intercollege-cup-2026";
 import { womensIntercollegeCup2026 } from "@/data/womens-intercollege-cup-2026";
 
@@ -34,6 +34,10 @@ export const verifiedCompetitionTeams = [
     })),
   },
 ] as const;
+
+export const currentTeamDirectory: readonly CurrentTeamDirectoryEntry[] = [];
+
+export const teamContactPendingLabel = "联系方式待球队负责人确认";
 
 export const teamDemoNotice =
   "以下球队名称、简介和编号均为演示数据，仅用于展示球队卡片布局，不代表真实天目湖参赛球队。真实球队资料待协会确认后更新。";

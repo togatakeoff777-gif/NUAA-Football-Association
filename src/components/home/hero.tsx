@@ -27,14 +27,13 @@ export function Hero() {
       </div>
 
       <div className="page-shell hero-content">
-        <p className="hero-university" data-home-reveal data-home-delay="0">
+        <h1 id="hero-title" data-home-reveal data-home-delay="0">
           <span>南京航空航天大学</span>
+          <strong>天目湖足球协会</strong>
+        </h1>
+        <p className="hero-university" data-home-reveal data-home-delay="1">
           <small>NANJING UNIVERSITY OF AERONAUTICS AND ASTRONAUTICS</small>
         </p>
-        <h1 id="hero-title" data-home-reveal data-home-delay="1">
-          <span>天目湖</span>
-          <strong>足球协会</strong>
-        </h1>
         <div className="hero-motto" data-home-reveal data-home-delay="2">
           <p>{associationIdentity.slogan}</p>
           <span>{associationIdentity.establishedLabel}</span>

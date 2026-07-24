@@ -33,7 +33,7 @@ export function CurrentCompetitions() {
             {secondary.map((competition, index) => (
               <Link href={competition.detailHref} id={competition.slug} key={competition.id}>
                 <span>{String(index + 2).padStart(2, "0")}</span>
-                <div><small>{competition.semesterLabel} · {competition.formatLabel}</small><h3>{competition.shortName}</h3><p>{competition.stageLabel}</p></div>
+                <div><small>{competition.semesterLabel} · {competition.formatLabel}</small><h3>{competition.name}</h3><p>{competition.stageLabel}</p></div>
                 <div><StatusBadge tone={competition.displayStatus.dataStatus === "confirmed" ? "success" : "neutral"}>{competition.displayStatus.label} · {competition.displayStatus.badge}</StatusBadge><b aria-hidden="true">→</b></div>
               </Link>
             ))}

@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
+import { NewsImage } from "@/components/news/news-image";
 import { DemoLabel } from "@/components/ui/demo-label";
 import { StatusBadge } from "@/components/ui/status-badge";
 import type { NewsItem, NoticeItem } from "@/types";
@@ -35,11 +35,11 @@ export function PublicNewsBoard({ news, notices }: { news: readonly NewsItem[]; 
           <div className="news-list-stream" id="news">
             {featured ? (
               <article className="news-list-featured">
-                <div><Image src={featured.image} alt={featured.imageAlt} fill sizes="(max-width: 720px) 100vw, 48vw" /><DemoLabel>重点新闻 · {featured.badge}</DemoLabel></div>
+                <NewsImage src={featured.image} alt={featured.imageAlt} variant="featured" sizes="(max-width: 720px) 100vw, 48vw"><DemoLabel>重点新闻 · {featured.badge}</DemoLabel></NewsImage>
                 <section><span>{featured.category} · {featured.dateLabel}</span><h2>{featured.title}</h2><p>{featured.summary}</p><Link href={featured.href}>阅读全文 →</Link></section>
               </article>
             ) : null}
-            {remainingNews.map((item) => <article className="news-list-row" key={item.id}><div><Image src={item.image} alt={item.imageAlt} fill sizes="150px" /></div><time>{item.dateLabel}</time><section><span>{item.category} · {item.badge}</span><h2>{item.title}</h2><p>{item.summary}</p></section><Link href={item.href} aria-label={`查看：${item.title}`}>→</Link></article>)}
+            {remainingNews.map((item) => <article className="news-list-row" key={item.id}><NewsImage src={item.image} alt={item.imageAlt} variant="list" sizes="150px" /><time>{item.dateLabel}</time><section><span>{item.category} · {item.badge}</span><h2>{item.title}</h2><p>{item.summary}</p></section><Link href={item.href} aria-label={`查看：${item.title}`}>→</Link></article>)}
           </div>
         ) : null}
         {showNotices ? (

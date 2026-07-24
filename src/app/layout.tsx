@@ -8,6 +8,7 @@ import "@/styles/home-v21.css";
 import "@/styles/home-v22.css";
 import "@/styles/competition-archive.css";
 import "@/styles/functional-pages.css";
+import "@/styles/acceptance-upgrade.css";
 
 export const metadata: Metadata = {
   title: {

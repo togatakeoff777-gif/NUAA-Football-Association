@@ -4,7 +4,6 @@ import { RefereeContactCard } from "@/components/referees/referee-contact-card";
 import {
   refereePrimaryEntries,
   refereeSecondaryEntries,
-  refereeWorkFiles,
   rulesResourceEntries,
 } from "@/data/referees";
 
@@ -72,7 +71,7 @@ export function RefereeHub() {
           <div className="functional-section-head">
             <div>
               <span>RESOURCES & RECORDS</span>
-              <h2>资料、培训与历史</h2>
+              <h2>资料与历史</h2>
             </div>
             <p>第二层入口承载规则学习、历史公示与经授权的人物内容，不与比赛申请入口重复。</p>
           </div>
@@ -105,7 +104,7 @@ export function RefereeHub() {
               <span>LAWS & RESOURCES</span>
               <h2>规则与资料</h2>
             </div>
-            <p>按足球、五人制、规则更新、工作资料和培训材料五类组织，不生成无真实来源的下载链接。</p>
+            <p>按足球规则、五人制规则、规则更新和裁判工作资料四类组织，不生成无真实来源的下载链接。</p>
           </div>
           <div className="referee-rule-directory">
             {rulesResourceEntries.map((entry, index) => {
@@ -119,41 +118,8 @@ export function RefereeHub() {
                   <strong>{entry.badge}</strong>
                 </>
               );
-              return "href" in entry ? (
-                <Link href={entry.href} key={entry.id}>{content}</Link>
-              ) : (
-                <article key={entry.id}>{content}</article>
-              );
+              return <Link href={entry.href} key={entry.id}>{content}</Link>;
             })}
-          </div>
-        </div>
-      </section>
-
-      <section className="functional-section" id="referee-downloads">
-        <div className="detail-shell">
-          <div className="functional-section-head">
-            <div>
-              <span>OFFICIALS&apos; WORK FILES</span>
-              <h2>裁判工作资料下载</h2>
-            </div>
-            <p>以下真实文件已从赛事文件中心归入裁判中心，仅用于裁判组或比赛官员工作。</p>
-          </div>
-          <div className="referee-work-file-list">
-            {refereeWorkFiles.map((file) => (
-              <article key={file.id}>
-                <span>{file.fileType}</span>
-                <div>
-                  <h3>{file.title}</h3>
-                  <p>{file.scope}</p>
-                </div>
-                <dl>
-                  <div><dt>版本</dt><dd>{file.version}</dd></div>
-                  <div><dt>发布日期</dt><dd>{file.publishedAt}</dd></div>
-                  <div><dt>来源</dt><dd>{file.source}</dd></div>
-                </dl>
-                <a download href={file.href}>下载原文件</a>
-              </article>
-            ))}
           </div>
         </div>
       </section>

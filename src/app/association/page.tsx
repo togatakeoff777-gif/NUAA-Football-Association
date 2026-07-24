@@ -17,7 +17,12 @@ import { ASSOCIATION_EMAIL, bilibiliPlatform, douyinPlatform, wechatPlatform } f
 export const metadata: Metadata = { title: "协会", description: "南京航空航天大学天目湖足球协会公开档案。" };
 
 export default function AssociationPage() {
-  const identity = <div className="archive-identity-card"><BrandMark /><div><span>公开档案编号</span><strong>NUAA-TMH-FA / 2021</strong><small>南京航空航天大学天目湖足球协会</small></div></div>;
+  const identity = (
+    <div className="association-identity-aside">
+      <div className="archive-identity-card"><BrandMark /><div><span>公开档案编号</span><strong>NUAA-TMH-FA / 2021</strong><small>南京航空航天大学天目湖足球协会</small></div></div>
+      <Link className="association-join-button" href="/join">加入我们 <span aria-hidden="true">→</span></Link>
+    </div>
+  );
   return (
     <ArchivePageLayout eyebrow="ASSOCIATION ARCHIVE" title={<><span className="association-title-line">南京航空航天大学</span><span className="association-title-line">天目湖足球协会</span></>} description="因热爱，奔赴绿茵。以档案式结构呈现协会身份、工作范围与经核验的发展记录。" identity={identity}>
       <div className="archive-overview-grid">
@@ -51,7 +56,7 @@ export default function AssociationPage() {
           <div><dt>新闻投稿与纠错</dt><dd><a href={`mailto:${ASSOCIATION_EMAIL}`}>{ASSOCIATION_EMAIL}</a></dd></div>
         </dl>
       </section>
-      <section className="archive-scope-record" aria-labelledby="archive-scope-title"><div><p>PUBLIC SCOPE</p><h2 id="archive-scope-title">公开范围记录</h2></div><div><strong>{associationScope.summary}</strong><ul>{associationScope.permittedContent.map((item) => <li key={item}>{item}</li>)}</ul><p>不包含：{associationScope.excludedContent.join("、")}。</p><Link href="/competitions/cross-campus">查看跨校区内容边界 →</Link></div></section>
+      <section className="archive-scope-record" aria-labelledby="archive-scope-title"><div><p>PUBLIC SCOPE</p><h2 id="archive-scope-title">公开范围记录</h2></div><div><strong>{associationScope.summary}</strong><ul>{associationScope.permittedContent.map((item) => <li key={item}>{item}</li>)}</ul><p>不包含：{associationScope.excludedContent.join("、")}。</p><Link href="/competitions/freshman-cup">查看新生杯跨校区内容边界 →</Link></div></section>
     </ArchivePageLayout>
   );
 }

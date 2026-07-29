@@ -14,7 +14,7 @@ export function ArbitrationPrototype() {
   return (
     <main className="functional-page" id="main-content">
       <section className="functional-hero">
-        <div className="detail-shell"><p>ARBITRATION & APPEALS</p><h1>仲裁与申诉</h1><p>公开申请范围、主体、材料、处理步骤和真实文件入口；本轮不收集个人信息，也不开放在线提交。</p></div>
+        <div className="detail-shell"><p>ARBITRATION & APPEALS</p><h1>仲裁与申诉</h1><p>公开申请范围、主体、材料、处理步骤和正式文件入口；本站不收集个人信息，也不开放在线提交。</p></div>
       </section>
 
       <section className="functional-section">
@@ -32,7 +32,7 @@ export function ArbitrationPrototype() {
 
       <section className="functional-section functional-section-tint" aria-labelledby="arbitration-process-title">
         <div className="detail-shell">
-          <div className="functional-section-head"><div><span>PUBLIC PROCESS</span><h2 id="arbitration-process-title">处理流程</h2></div><p>提交方式未确认前，不使用虚构联系人或无持久化能力的假表单。</p></div>
+          <div className="functional-section-head"><div><span>PUBLIC PROCESS</span><h2 id="arbitration-process-title">处理流程</h2></div><p>正式受理方式公布前，本站不开放在线提交；具体渠道以赛事通知为准。</p></div>
           <ol className="arbitration-process-list">{arbitrationGuide.process.map((step, index) => <li key={step.id}><span>{String(index + 1).padStart(2, "0")}</span><div><h3>{step.title}</h3><p>{step.description}</p></div></li>)}</ol>
           <div className="arbitration-contact-state"><span>{arbitrationGuide.submission.status}</span><p>{arbitrationGuide.submission.contact}</p></div>
         </div>
@@ -40,7 +40,7 @@ export function ArbitrationPrototype() {
 
       <section className="functional-section" aria-labelledby="arbitration-resources-title">
         <div className="detail-shell">
-          <div className="functional-section-head"><div><span>FILES & DECISIONS</span><h2 id="arbitration-resources-title">材料与决定</h2></div><p>只提供任务包内存在的真实文件；缺失模板保持正式空状态。</p></div>
+          <div className="functional-section-head"><div><span>FILES & DECISIONS</span><h2 id="arbitration-resources-title">材料与决定</h2></div><p>只提供协会已公开并完成核验的真实文件；缺失模板保持正式空状态。</p></div>
           <div className="arbitration-resource-list">{arbitrationResources.map((resource) => <article key={resource.title}><span>{resource.status}</span><h3>{resource.title}</h3><p>{resource.description}</p>{"href" in resource ? <Link href={resource.href}>查看文件 →</Link> : null}</article>)}</div>
         </div>
       </section>

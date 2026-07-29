@@ -10,7 +10,7 @@ export function WomensCompetitionStories() {
     <>
       <section className="cup-archive-section cup-final-section" id="honours" aria-labelledby="womens-honours-title">
         <div className="page-shell">
-          <div className="cup-section-heading cup-section-heading-light"><div><p>FINAL PLACINGS & AWARDS</p><h2 id="womens-honours-title">名次与奖项</h2></div><span>以下结果来自本轮提供的校级官方账号报道。</span></div>
+          <div className="cup-section-heading cup-section-heading-light"><div><p>FINAL PLACINGS & AWARDS</p><h2 id="womens-honours-title">名次与奖项</h2></div><span>以下结果来自已核验的校级官方账号报道。</span></div>
           <div className="cup-womens-podium" aria-label="女子足球院际杯最终名次">{podium.map((item) => <article key={item.rank}><span>{String(item.rank).padStart(2, "0")}</span><p>{item.rank === 1 ? "冠军" : item.rank === 2 ? "亚军" : "季军"}</p><h3>{item.team}</h3>{"note" in item ? <small>{item.note}</small> : null}</article>)}</div>
           <div className="cup-womens-awards" aria-label="女子足球院际杯个人奖项">{awardList.map((award, index) => <article key={award.award}><span>AWARD {String(index + 1).padStart(2, "0")}</span><h3>{award.award}</h3><strong>{award.recipient}</strong></article>)}</div>
         </div>

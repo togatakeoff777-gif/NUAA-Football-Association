@@ -50,9 +50,12 @@
 .functional-score small { display: block; margin-top: 3px; color: var(--muted); font-size: 8px; white-space: nowrap; }
 .functional-schedule-mobile { display: none; }
 .functional-empty { padding: 28px; border: 1px dashed #aecae8; background: #f1f7fd; }
-.functional-empty strong { color: var(--nuaa-blue); font-size: 14px; }
-.functional-empty p { margin-top: 5px; color: var(--muted); font-size: 10px; }
+.functional-empty strong { color: var(--nuaa-blue); font-size: 16px; }
+.functional-empty p { margin-top: 7px; color: var(--muted); font-size: 13px; line-height: 1.65; }
 .functional-empty-compact { padding: 20px; }
+.functional-empty-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.functional-empty-actions a { display: inline-flex; min-height: 42px; align-items: center; padding: 0 17px; border: 1px solid var(--aviation-blue); color: var(--aviation-blue); font-size: 12px; font-weight: 800; }
+.functional-empty-actions a:first-child { background: var(--aviation-blue); color: white; }
 
 .functional-file-groups { display: grid; gap: 48px; }
 .functional-file-groups > section { scroll-margin-top: calc(var(--header-height) + 20px); }

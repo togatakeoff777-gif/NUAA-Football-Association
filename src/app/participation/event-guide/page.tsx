@@ -4,8 +4,9 @@ import { SectionIndexPage } from "@/components/pages/section-index-page";
 import { FOOTBALL_CHINA_URL } from "@/data/platforms";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/participation/event-guide" },
   title: "赛事报名指南",
-  description: "天目湖校园足球赛事报名说明原型。",
+  description: "天目湖校园足球赛事报名入口、办理流程与核验原则。",
 };
 
 const items = [
@@ -42,10 +43,10 @@ export default function EventGuidePage() {
       eyebrow="PARTICIPATION GUIDE"
       title="赛事报名指南"
       description="说明天目湖校园足球赛事报名的一般入口与核验原则。"
-      sectionTitle="报名流程原型"
+      sectionTitle="报名流程"
       sectionDescription="具体时间、材料和资格要求将在赛事资料确认后更新。"
       notice="本页不会提交报名，也不会要求填写身份证、学号或手机号。"
-      statusLabel="指南原型 · 具体资料待更新"
+      statusLabel="具体资料待更新"
       items={items}
     />
   );

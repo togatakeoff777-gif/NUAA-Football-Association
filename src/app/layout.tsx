@@ -9,14 +9,23 @@ import "@/styles/home-v22.css";
 import "@/styles/competition-archive.css";
 import "@/styles/functional-pages.css";
 import "@/styles/acceptance-upgrade.css";
+import {
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_ORIGIN,
+} from "@/lib/site-metadata";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_ORIGIN),
   title: {
-    default: "南京航空航天大学天目湖足球协会",
+    default: SITE_NAME,
     template: "%s | 南航天目湖足协",
   },
-  description:
-    "南京航空航天大学天目湖足球协会网站，发布天目湖校区足球赛事、新闻公告、裁判规则与参赛信息。",
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  alternates: {
+    canonical: "/",
+  },
   keywords: [
     "南京航空航天大学",
     "天目湖足球协会",
@@ -28,8 +37,25 @@ export const metadata: Metadata = {
     type: "website",
     locale: "zh_CN",
     siteName: "南航天目湖足协",
-    title: "南京航空航天大学天目湖足球协会",
-    description: "因热爱，奔赴绿茵。服务天目湖校园足球，EST. 2021。",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    url: "/",
+  },
+  twitter: {
+    card: "summary",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
 };
 

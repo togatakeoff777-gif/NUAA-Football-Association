@@ -27,7 +27,7 @@ export function CompetitionFileCenter({ files }: { files: readonly PublicCompeti
                   </article>
                 ))}
               </div>
-            ) : <div className="functional-empty functional-empty-compact"><strong>暂无公开文件</strong><p>不会创建无来源的下载链接。</p></div>}
+            ) : <div className="functional-empty functional-empty-compact"><strong>暂无公开文件</strong><p>文件完成来源核验并正式发布后更新。</p></div>}
           </section>
         );
       })}

@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function RefereeMemberLoginForm({ configurationIssue }: { configurationIssue: string | null }) {
+export function RefereeMemberLoginForm() {
   const router = useRouter();
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -38,7 +38,6 @@ export function RefereeMemberLoginForm({ configurationIssue }: { configurationIs
         <span>裁判员编号</span>
         <input
           autoComplete="username"
-          disabled={Boolean(configurationIssue)}
           maxLength={32}
           name="publicCode"
           placeholder="例如 NUAA-R001"
@@ -49,7 +48,6 @@ export function RefereeMemberLoginForm({ configurationIssue }: { configurationIs
         <span>访问码</span>
         <input
           autoComplete="current-password"
-          disabled={Boolean(configurationIssue)}
           maxLength={256}
           name="accessCode"
           required
@@ -59,11 +57,11 @@ export function RefereeMemberLoginForm({ configurationIssue }: { configurationIs
       <p className="referee-form-note">
         本入口仅面向已登记裁判员。访问码由协会管理员线下发放，网站不收集手机号等个人敏感信息。
       </p>
-      <button disabled={submitting || Boolean(configurationIssue)} type="submit">
+      <button disabled={submitting} type="submit">
         {submitting ? "登录中…" : "进入裁判员工作区"}
       </button>
       <p aria-live="polite" className="referee-form-message">
-        {configurationIssue ?? message}
+        {message}
       </p>
     </form>
   );

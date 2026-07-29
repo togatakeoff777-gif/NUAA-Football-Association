@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { publicCompetitions } from "@/data/competition-center";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/competitions/current" },
   title: "当前赛事",
   description: "南航天目湖足协四项核心赛事的公开状态、时间、场地和赛事入口。",
 };
@@ -24,7 +25,7 @@ export default function CurrentCompetitionsPage() {
         </section>
         <section className="functional-section">
           <div className="detail-shell">
-            <div className="functional-section-head"><div><span>FOUR CORE COMPETITIONS</span><h2>四项年度核心赛事</h2></div><p>已结束赛事进入完整归档；未来赛事仍使用同一数据结构，无需另建展示组件。</p></div>
+            <div className="functional-section-head"><div><span>FOUR CORE COMPETITIONS</span><h2>四项年度核心赛事</h2></div><p>已结束赛事进入完整归档；后续赛季继续沿用统一的赛事类别与归档入口。</p></div>
             <CompetitionCatalog competitions={publicCompetitions} />
           </div>
         </section>

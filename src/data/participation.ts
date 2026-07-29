@@ -23,7 +23,7 @@ export const participationEntries = [
     href: "/participation/event-guide",
     external: false,
     status: "placeholder",
-    badge: "说明页原型",
+    badge: "参赛指南",
   },
   {
     id: "team-manager-guide",
@@ -32,14 +32,14 @@ export const participationEntries = [
     href: "/participation/team-manager-guide",
     external: false,
     status: "placeholder",
-    badge: "说明页原型",
+    badge: "参赛指南",
   },
 ] as const satisfies readonly ParticipationEntry[];
 
 export const participationDataPolicy = {
   mode: "information-only",
   statement:
-    "本轮仅提供说明卡片和占位入口，不在本站收集或提交个人报名资料。",
+    "本站仅提供参赛说明，不直接办理报名，也不收集或提交个人报名资料。",
   prohibitedFields: ["身份证号", "学号", "手机号"],
   collectedFields: [],
 } as const;

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { SectionIndexPage } from "@/components/pages/section-index-page";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/competitions/history" },
   title: "历届赛事",
   description: "天目湖校园足球历届赛事资料预留入口。",
 };

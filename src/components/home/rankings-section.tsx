@@ -50,7 +50,7 @@ export function RankingsSection() {
         <SectionHeading
           eyebrow="DATA CONTROL / 赛事数据中心"
           title="积分与射手，一屏掌握"
-          description="本轮仅展示数据结构和界面能力；正式榜单须待赛事确认并接入真实数据后发布。"
+          description="当前暂无经赛事方确认可公开的完整榜单；完成数据核验后发布。"
           id="rankings-title"
           inverted
           action={<Link className="text-link rankings-link" href="/competitions">前往赛事中心 <span aria-hidden="true">↗</span></Link>}

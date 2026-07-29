@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { refereeWorkFiles } from "@/data/referees";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/referees/resources/work-files" },
   title: "裁判工作资料",
   description: "裁判组与比赛官员使用的真实工作文件下载。",
 };

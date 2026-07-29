@@ -44,12 +44,12 @@ export const arbitrationResources = [
   {
     title: "仲裁 / 申诉申请模板",
     status: "暂无公开文件",
-    description: "任务包未提供正式申请模板，因此不生成无业务效力的文件。",
+    description: "协会尚未发布正式申请模板，当前保持正式空状态。",
   },
   {
     title: "赛事纪律决定",
     status: "4份公开原件",
-    description: "查看本轮提供的球员与裁判员纪律决定原文件。",
+    description: "查看协会已公开的球员与裁判员纪律决定原文件。",
     href: "/competitions/files#discipline",
   },
   {

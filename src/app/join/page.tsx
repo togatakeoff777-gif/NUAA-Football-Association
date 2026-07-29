@@ -7,6 +7,7 @@ import { ASSOCIATION_EMAIL } from "@/data/platforms";
 import { refereeRecruitment } from "@/data/referee-recruitment";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/join" },
   title: "加入我们",
   description: "天目湖足球协会运营、裁判与摄影宣传方向的公开招新说明。",
 };

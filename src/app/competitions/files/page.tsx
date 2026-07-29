@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { publicCompetitionFiles } from "@/data/competition-center";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/competitions/files" },
   title: "赛事文件中心",
   description: "面向赛事组织、参赛球队和公众的竞赛规则、秩序册与纪律决定下载。",
 };

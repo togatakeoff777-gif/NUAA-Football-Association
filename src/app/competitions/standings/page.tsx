@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { SectionIndexPage } from "@/components/pages/section-index-page";
 import { coreCompetitionDirectory } from "@/data/competition-directory";
 
-export const metadata: Metadata = { title: "积分榜", description: "已核验赛事积分榜入口。" };
+export const metadata: Metadata = {
+  alternates: { canonical: "/competitions/standings" }, title: "积分榜", description: "已核验赛事积分榜入口。" };
 
 export default function CompetitionStandingsPage() {
   return (

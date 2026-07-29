@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   }
   const configurationIssue = getRefereeMemberConfigurationIssue();
   if (configurationIssue) {
-    return NextResponse.json({ error: configurationIssue }, { status: 503 });
+    return NextResponse.json({ error: "裁判员工作区暂未开放。" }, { status: 503 });
   }
   try {
     const body: unknown = await request.json();

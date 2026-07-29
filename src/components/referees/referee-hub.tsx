@@ -17,10 +17,6 @@ export function RefereeHub() {
           <p>
             公开裁判名录、场次、选派与历史记录；已登记裁判员和管理员分别进入受保护的工作入口。
           </p>
-          <div className="referee-hero-actions">
-            <Link href="/referees/login">裁判员登录</Link>
-            <Link href="/referees/admin/login">管理员登录</Link>
-          </div>
         </div>
       </section>
 
@@ -46,7 +42,7 @@ export function RefereeHub() {
               <span>PUBLIC INFORMATION</span>
               <h2>公开信息对所有访客开放</h2>
               <p>
-                公开名录只展示经确认可公开的信息；开放场次可直接浏览。正式提交执裁意向、查看个人审核状态与任务，需要裁判员登录。
+                公开名录只展示经确认可公开的信息；开放场次可直接浏览。裁判工作区正式启用后，完成协会登记的裁判员可提交执裁意向并查看个人任务。
               </p>
             </div>
             <Link href="/referees/open-matches">查看公开场次 →</Link>
@@ -128,14 +124,13 @@ export function RefereeHub() {
         <div className="detail-shell referee-secure-access">
           <div>
             <span>SECURE WORK AREAS</span>
-            <h2>受保护的工作入口</h2>
+            <h2>裁判员工作区</h2>
             <p>
-              裁判员可提交执裁意向并查看个人申请、正式任务和培训状态；管理员保留审核、选派、发布与撤回的完整持久化闭环。
+              工作区暂未开放。完成协会登记的裁判员将在正式启用后获得登录信息；现有审核、选派和公示功能继续由协会保留。
             </p>
           </div>
           <div>
-            <Link href="/referees/login">裁判员登录</Link>
-            <Link href="/referees/admin/login">管理员登录</Link>
+            <Link href="/referees/login">查看开放说明</Link>
           </div>
         </div>
       </section>

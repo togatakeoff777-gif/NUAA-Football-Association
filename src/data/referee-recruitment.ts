@@ -10,7 +10,7 @@ export const refereeRecruitment: RefereeRecruitmentConfig = {
   qrImage: undefined,
   qrAlt: "裁判员招新群二维码尚未开放",
   fallbackContact: ASSOCIATION_EMAIL,
-  notice: "当前没有可用的真实招新群二维码。开放后将由协会更新本配置；请勿向非官方入口提交个人信息。",
+  notice: "当前招新群尚未开放。官方群二维码发布后将在此更新；请勿向非官方入口提交个人信息。",
   steps: [
     { id: "join-group", title: "扫码进入招新群", description: "招募开放后，通过本页公布的官方群二维码加入招新群。" },
     { id: "submit-form", title: "查看要求并提交报名表", description: "在群内阅读招募要求，并按正式通知提供报名表；本站不收集报名信息。" },

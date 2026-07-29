@@ -10,8 +10,10 @@ import { getRefereeMemberSession } from "@/lib/referee-member-auth";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/referees/workspace" },
   title: "裁判员工作区",
   description: "查看个人执裁意向、审核状态和已发布任务。",
+  robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic";
 
@@ -68,7 +70,7 @@ export default async function RefereeWorkspacePage() {
             <RefereeMemberLogoutButton />
           </div>
         </section>
-        <RefereeSubnav />
+        <RefereeSubnav showWorkspace />
         <section className="functional-section">
           <div className="detail-shell referee-workspace-grid">
             <section>

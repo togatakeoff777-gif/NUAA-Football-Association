@@ -9,7 +9,8 @@ import { applicationStatusLabels, appointmentStatusLabels, formatRefereeDateTime
 import { getPositionTemplate } from "@/lib/referee-roles";
 import { prisma } from "@/lib/prisma";
 
-export const metadata: Metadata = { title: "裁判管理后台", robots: { index: false, follow: false } };
+export const metadata: Metadata = {
+  alternates: { canonical: "/referees/admin" }, title: "裁判管理后台", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
 const allowedStatuses = ["PENDING", "APPROVED", "REJECTED", "WITHDRAWN"] as const;

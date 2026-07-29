@@ -3,9 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function AdminLoginForm({ configurationIssue }: { configurationIssue: string | null }) {
+export function AdminLoginForm() {
   const router = useRouter();
-  const [message, setMessage] = useState(configurationIssue ?? "");
+  const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -26,8 +26,8 @@ export function AdminLoginForm({ configurationIssue }: { configurationIssue: str
 
   return (
     <form className="referee-form referee-login-form" onSubmit={submit}>
-      <label><span>管理员密码</span><input autoComplete="current-password" disabled={Boolean(configurationIssue)} maxLength={256} name="password" required type="password" /></label>
-      <button disabled={Boolean(configurationIssue) || submitting} type="submit">{submitting ? "验证中…" : "登录裁判管理后台"}</button>
+      <label><span>管理员密码</span><input autoComplete="current-password" maxLength={256} name="password" required type="password" /></label>
+      <button disabled={submitting} type="submit">{submitting ? "验证中…" : "登录裁判管理后台"}</button>
       <p aria-live="polite" className="referee-form-message">{message}</p>
     </form>
   );

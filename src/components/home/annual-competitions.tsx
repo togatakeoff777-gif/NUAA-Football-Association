@@ -9,7 +9,7 @@ export function AnnualCompetitions() {
         <SectionHeading
           eyebrow="SEASON FLIGHT PLAN / 年度赛事体系"
           title="四项赛事，两段赛季航程"
-          description="围绕天目湖校园足球建立清晰的年度赛事节奏；赛事状态仅作本轮界面演示。"
+          description="围绕天目湖校园足球建立清晰的年度赛事节奏；赛事状态以协会已公开信息为准。"
           id="competitions-title"
           action={<Link className="text-link" href="/competitions">查看赛事入口 <span aria-hidden="true">→</span></Link>}
         />

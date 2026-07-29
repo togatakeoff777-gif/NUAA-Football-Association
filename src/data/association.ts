@@ -96,7 +96,7 @@ export const associationTerms = [
     academicYear: "2022-2023",
     positions: [],
     unassignedMembers: ["程涛", "米尔", "阿里木", "周浩楠", "朱润涛"],
-    roleNote: "任务包未明确成员与具体岗位的对应关系。",
+    roleNote: "现有公开资料未明确成员与具体岗位的对应关系。",
   },
   {
     term: "第三届",
@@ -110,7 +110,7 @@ export const associationTerms = [
       { role: "宣传部部长", name: "努尔江·阿依肯" },
     ],
     unassignedMembers: [],
-    roleNote: "成员与岗位依据本轮协会确认资料公开。",
+    roleNote: "成员与岗位依据协会已确认资料公开。",
   },
   {
     term: "第四届",
@@ -126,7 +126,7 @@ export const associationTerms = [
       { role: "竞赛部副部长", name: "黄泽鑫" },
     ],
     unassignedMembers: [],
-    roleNote: "成员与岗位依据本轮协会确认资料公开，两名副部长继续保留。",
+    roleNote: "成员与岗位依据协会已确认资料公开，两名副部长继续保留。",
   },
 ] as const;
 

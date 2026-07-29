@@ -28,16 +28,16 @@ export const footerNavigation = [
   {
     label: "赛事服务",
     items: [
-      { label: "天目湖赛事", href: "/competitions" },
+      { label: "赛事中心", href: "/competitions" },
       { label: "仲裁与申诉", href: "/competitions/arbitration" },
-      { label: "参赛与报名", href: "/participation" },
+      { label: "参赛指南", href: "/participation" },
     ],
   },
   {
     label: "协会信息",
     items: [
-      { label: "新闻与公告", href: "/news" },
-      { label: "裁判与规则", href: "/referees" },
+      { label: "新闻公告", href: "/news" },
+      { label: "裁判中心", href: "/referees" },
       { label: "关于协会", href: "/association" },
     ],
   },

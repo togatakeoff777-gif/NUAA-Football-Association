@@ -5,11 +5,12 @@ import { PublicAppointmentList, RefereeSubnav, type PublicAppointment } from "@/
 import { formatRefereeDateTime } from "@/lib/referee-presenters";
 import { prisma } from "@/lib/prisma";
 
-export const metadata: Metadata = { title: "历史选派记录", description: "查看已结束比赛中公开发布的裁判组选派记录。" };
+export const metadata: Metadata = {
+  alternates: { canonical: "/referees/history" }, title: "历史选派记录", description: "查看已结束比赛中公开发布的裁判组选派记录。" };
 export const dynamic = "force-dynamic";
 
 export default async function RefereeHistoryPage() {
-  const appointments = await prisma.refereeAppointment.findMany({ where: { status: "PUBLISHED", match: { kickoff: { lte: new Date() } } }, include: { match: { include: { competition: true, homeTeam: true, awayTeam: true } }, positions: { include: { referee: true }, orderBy: { sortOrder: "asc" } } }, orderBy: { match: { kickoff: "desc" } } });
+  const appointments = await prisma.refereeAppointment.findMany({ where: { status: "PUBLISHED", match: { kickoff: { lte: new Date() }, isTestData: false, competition: { isTestData: false } } }, include: { match: { include: { competition: true, homeTeam: true, awayTeam: true } }, positions: { include: { referee: true }, orderBy: { sortOrder: "asc" } } }, orderBy: { match: { kickoff: "desc" } } });
   const items: PublicAppointment[] = appointments.map((item) => ({ id: item.id, competition: item.match.competition.name, match: `${item.match.homeTeam.name} vs ${item.match.awayTeam.name}`, stage: item.match.stage, kickoff: formatRefereeDateTime(item.match.kickoff), venue: item.match.venue, publishedAt: item.publishedAt ? formatRefereeDateTime(item.publishedAt) : "—", note: item.publicationNote, positions: item.positions.flatMap((position) => position.referee ? [{ key: position.key, label: position.label, referee: position.referee.name }] : []) }));
-  return <><SiteHeader /><main className="functional-page" id="main-content"><section className="functional-hero"><div className="detail-shell"><p>APPOINTMENT ARCHIVE</p><h1>历史选派记录</h1><p>保留已结束比赛的公开选派档案；撤回记录只在管理员历史中保留，不对外展示。</p></div></section><RefereeSubnav /><section className="functional-section"><div className="detail-shell"><PublicAppointmentList emptyTitle="当前暂无已公开的历史选派" items={items} /></div></section></main><SiteFooter /></>;
+  return <><SiteHeader /><main className="functional-page" id="main-content"><section className="functional-hero"><div className="detail-shell"><p>APPOINTMENT ARCHIVE</p><h1>历史选派记录</h1><p>保留已结束比赛中经协会正式发布的裁判组选派档案。</p></div></section><RefereeSubnav /><section className="functional-section"><div className="detail-shell"><PublicAppointmentList emptyTitle="当前暂无已公开的历史选派" items={items} /></div></section></main><SiteFooter /></>;
 }

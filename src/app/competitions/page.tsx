@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { CategoryEntryLayout, type CategoryEntry } from "@/components/templates/category-entry-layout";
 
 export const metadata: Metadata = {
-  title: "天目湖赛事",
+  alternates: { canonical: "/competitions" },
+  title: "赛事中心",
   description: "南航天目湖足协赛事体系与相关信息入口。",
 };
 
@@ -17,5 +18,5 @@ const entries = [
 ] as const satisfies readonly CategoryEntry[];
 
 export default function CompetitionsPage() {
-  return <CategoryEntryLayout eyebrow="TIANMUHU COMPETITIONS" title="天目湖赛事" description="聚焦比赛、赛程与赛事服务，以清晰主次连接年度赛事体系及经确认的跨校区赛事。" sectionTitle="赛事服务航线" sectionDescription="入口按比赛信息、数据、文件与治理分组，已接入男女足真实赛事归档。" notice="公开赛程、比分、球队与赛事状态均来自已核验资料；尚未公布的信息统一标注为待确认。" entries={entries} />;
+  return <CategoryEntryLayout eyebrow="TIANMUHU COMPETITIONS" title="赛事中心" description="聚焦比赛、赛程与赛事服务，以清晰主次连接年度赛事体系及经确认的跨校区赛事。" sectionTitle="赛事服务航线" sectionDescription="入口按比赛信息、数据、文件与治理分组，已接入男女足真实赛事归档。" notice="公开赛程、比分、球队与赛事状态均来自已核验资料；尚未公布的信息统一标注为待确认。" entries={entries} />;
 }

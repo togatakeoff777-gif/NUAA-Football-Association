@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 
 import { SectionIndexPage } from "@/components/pages/section-index-page";
 
-export const metadata: Metadata = { title: "射手记录", description: "已核验赛事射手与奖项记录入口。" };
+export const metadata: Metadata = {
+  alternates: { canonical: "/competitions/scorers" }, title: "射手记录", description: "已核验赛事射手与奖项记录入口。" };
 
 export default function CompetitionScorersPage() {
   return (

@@ -69,7 +69,7 @@ export function AssignmentPublication() {
             <div>
               <p className="detail-kicker">选派状态 / ASSIGNMENT STATUS</p>
               <h2 className="detail-section-title" id="publication-title">
-                场次岗位配置原型
+                场次岗位配置说明
               </h2>
             </div>
             <div className="detail-status-legend" aria-label="选派状态说明">

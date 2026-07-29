@@ -8,7 +8,7 @@ export function WomensCompetitionTeams() {
       <div className="page-shell">
         <div className="cup-section-heading">
           <div><p>TEAMS & RECORDS</p><h2 id="womens-teams-title">球队名单与赛事记录</h2></div>
-          <span>24名球员为赛事汇总数量；公开姓名严格以任务包截图可核验内容为限。</span>
+          <span>24名球员为赛事汇总数量；公开姓名严格以现有赛事资料可核验内容为限。</span>
         </div>
         <div className="cup-team-list cup-womens-roster-list">
           {rosters.map((roster, index) => (

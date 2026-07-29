@@ -7,7 +7,7 @@ export function FeaturedVideos() {
   return (
     <section className="section section-space section-grid videos-section" id="media" aria-labelledby="videos-title">
       <div className="page-shell">
-        <SectionHeading eyebrow="SHARED VIDEO CHANNEL / 精选视频" title="用影像保存校园足球" description="“南航大足球协会”为南航校园足球共享视频平台，账号由相关校区足球组织共同使用。" id="videos-title" inverted action={<Link className="text-link rankings-link" href="/media">进入影像栏目 <span aria-hidden="true">→</span></Link>} />
+        <SectionHeading eyebrow="SHARED VIDEO CHANNEL / 精选视频" title="用影像保存校园足球" description="“南航大足球协会”为南航校园足球共享视频平台，账号由相关校区足球组织共同使用。" id="videos-title" inverted action={<Link className="text-link rankings-link" href="/media">进入影像资料 <span aria-hidden="true">→</span></Link>} />
         <p className="videos-notice">{featuredVideoNotice}</p>
         <div className="videos-grid">
           {featuredVideos.map((video) => (

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { SectionIndexPage } from "@/components/pages/section-index-page";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/competitions/cross-campus" },
   title: "跨校区赛事",
   description: "经确认的南京航空航天大学跨校区足球赛事信息入口。",
 };

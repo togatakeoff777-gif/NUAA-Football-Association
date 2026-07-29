@@ -13,7 +13,7 @@ export function CurrentCompetitions() {
     <section className="home-current-competitions home-screen" data-home-screen="competitions" id="home-competitions" aria-labelledby="home-competitions-title">
       <div className="page-shell">
         <div className="home-section-bar" data-home-reveal data-home-delay="0">
-          <div><p>ACTIVE COMPETITIONS / 当前赛事</p><h2 id="home-competitions-title">一项主赛，三条赛季航线</h2></div>
+          <div><p>ACTIVE COMPETITIONS / 当前赛事</p><h2 id="home-competitions-title">四项核心赛事，贯穿两个学期</h2></div>
           <Link className="text-link" href="/competitions/current">查看全部赛事 →</Link>
         </div>
         <div className="current-competition-layout">

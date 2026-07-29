@@ -11,6 +11,7 @@ import {
 } from "@/data/teams";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/teams" },
   title: "球队信息",
   description: "当前招募与组队信息，以及2026男、女子足球院际杯真实参赛队伍档案。",
 };

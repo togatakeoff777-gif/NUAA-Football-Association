@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { publicMatchRecords } from "@/data/competition-center";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/competitions/schedule" },
   title: "赛程与赛果",
   description: "按赛事、阶段和球队筛选已核验的校园足球赛程与赛果。",
 };

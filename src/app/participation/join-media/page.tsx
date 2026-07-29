@@ -3,8 +3,9 @@ import type { Metadata } from "next";
 import { SectionIndexPage } from "@/components/pages/section-index-page";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/participation/join-media" },
   title: "加入摄影与宣传团队",
-  description: "天目湖足协摄影与宣传团队加入说明原型。",
+  description: "天目湖足协摄影与宣传团队加入说明。",
 };
 
 const items = [
@@ -41,9 +42,9 @@ export default function JoinMediaPage() {
       title="加入摄影与宣传团队"
       description="共同记录天目湖校园足球，但不在资料未确认时冒用人物影像或赛事档案。"
       sectionTitle="团队方向"
-      sectionDescription="本轮仅展示说明结构，不开放文件上传、作品提交或在线招募。"
+      sectionDescription="本站提供团队方向说明，不开放文件上传、作品提交或在线招募。"
       notice="正式招募岗位、授权要求与提交方式将在协会确认后发布。"
-      statusLabel="说明原型 · 招募资料待更新"
+      statusLabel="招募资料待更新"
       items={items}
     />
   );

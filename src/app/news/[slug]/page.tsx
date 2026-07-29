@@ -29,8 +29,28 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: NewsDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
   const story = getMensCupNewsItem(slug) ?? getWomensCupNewsItem(slug);
-  if (!story) return {};
-  return { title: story.title, description: story.summary };
+  if (!story) return { robots: { index: false, follow: false } };
+  const canonicalPath = `/news/${slug}`;
+  return {
+    title: story.title,
+    description: story.summary,
+    alternates: { canonical: canonicalPath },
+    openGraph: {
+      type: "article",
+      locale: "zh_CN",
+      siteName: "南航天目湖足协",
+      title: story.title,
+      description: story.summary,
+      url: canonicalPath,
+      images: [{ url: story.image, alt: story.imageAlt }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: story.title,
+      description: story.summary,
+      images: [story.image],
+    },
+  };
 }
 
 export default async function NewsDetailPage({ params }: NewsDetailPageProps) {

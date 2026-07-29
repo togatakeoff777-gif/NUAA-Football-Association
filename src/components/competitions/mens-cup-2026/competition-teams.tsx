@@ -8,7 +8,7 @@ export function CompetitionTeams() {
       <div className="page-shell">
         <div className="cup-section-heading">
           <div><p>TEAMS & PUBLIC ROSTERS</p><h2 id="cup-teams-title">参赛球队及公开名单</h2></div>
-          <span>赛事汇总记录169名注册球员；下方按迁移包公开名单展示姓名与号码。</span>
+          <span>赛事汇总记录169名注册球员；下方按已核验的公开名单展示姓名与号码。</span>
         </div>
         <div className="cup-team-list">
           {teams.map((team, index) => (

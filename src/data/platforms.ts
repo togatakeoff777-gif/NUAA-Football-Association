@@ -6,6 +6,7 @@ export const BILIBILI_PROFILE_URL =
 export const FOOTBALL_CHINA_URL = "http://www.lyzg90.com/";
 export const ASSOCIATION_EMAIL = "nuaafootball@163.com";
 export const DOUYIN_ID = "nuaafa";
+export const DOUYIN_QR_IMAGE = "/images/media/nuaafa-douyin-qr.jpg";
 
 export const wechatPlatform = {
   id: "wechat",
@@ -40,7 +41,12 @@ export const douyinPlatform = {
   name: "南航足协",
   label: `抖音号：${DOUYIN_ID}`,
   description: "南京航空航天大学天目湖足球协会独立官方抖音账号。",
-  qrStatus: "二维码待协会提供",
+  qrImage: DOUYIN_QR_IMAGE,
+  qrAlt: "南航足协抖音号 nuaafa 官方二维码",
+  interactionLabel: "点击放大二维码",
+  qrStatus: "官方二维码",
+  href: "/media#douyin",
+  linkLabel: "查看抖音二维码",
   external: false,
 } as const;
 

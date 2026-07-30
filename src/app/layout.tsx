@@ -9,6 +9,7 @@ import "@/styles/home-v22.css";
 import "@/styles/competition-archive.css";
 import "@/styles/functional-pages.css";
 import "@/styles/acceptance-upgrade.css";
+import "@/styles/v24.css";
 import {
   SITE_DESCRIPTION,
   SITE_NAME,
@@ -25,6 +26,9 @@ export const metadata: Metadata = {
   applicationName: SITE_NAME,
   alternates: {
     canonical: "/",
+    types: {
+      "application/rss+xml": "/rss.xml",
+    },
   },
   keywords: [
     "南京航空航天大学",
@@ -42,7 +46,7 @@ export const metadata: Metadata = {
     url: "/",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
   },

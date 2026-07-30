@@ -6,6 +6,10 @@ import { BILIBILI_PROFILE_URL } from "@/data/platforms";
 import { officialMensCupNews } from "@/data/mens-intercollege-cup-2026";
 import { officialWomensCupNews } from "@/data/womens-intercollege-cup-2026";
 import { disciplineDecisions } from "@/data/public-information";
+import {
+  freshmanCupPreparationNews,
+  freshmanCupPreparationNotice,
+} from "@/data/freshman-cup-2026";
 import type { NewsCategory, NewsItem, NoticeCategory, NoticeItem } from "@/types";
 
 const sharedMetadata = {
@@ -16,6 +20,7 @@ const sharedMetadata = {
 } as const;
 
 export const newsCategoryOptions = [
+  "赛事新闻",
   "比赛战报",
   "协会动态",
   "人物专访",
@@ -24,6 +29,7 @@ export const newsCategoryOptions = [
 ] as const satisfies readonly NewsCategory[];
 
 export const announcementCategoryOptions = [
+  "通知公告",
   "报名通知",
   "赛程调整",
   "竞赛规程",
@@ -76,7 +82,7 @@ export const demoNews = [
   },
 ] as const satisfies readonly NewsItem[];
 
-export const publishedNews = [...officialMensCupNews, ...officialWomensCupNews].sort((left, right) =>
+export const publishedNews = [freshmanCupPreparationNews, ...officialMensCupNews, ...officialWomensCupNews].sort((left, right) =>
   right.dateLabel.localeCompare(left.dateLabel),
 );
 
@@ -89,9 +95,9 @@ function requirePublishedNews(id: string) {
 }
 
 export const homeNews = [
+  requirePublishedNews("2026-freshman-cup-preparation-started"),
   requirePublishedNews("2026-mens-cup-final-report"),
   requirePublishedNews("2026-mens-cup-closing"),
-  requirePublishedNews("2026-mens-cup-final-preview"),
 ] as const;
 
 export const demoAnnouncements = [
@@ -135,7 +141,7 @@ export const demoAnnouncements = [
 
 export const demoNotices = demoAnnouncements;
 
-export const publicAnnouncements = disciplineDecisions;
+export const publicAnnouncements = [freshmanCupPreparationNotice, ...disciplineDecisions];
 
 export const featuredVideoNotice =
   "精选视频资料仍待确认；当前卡片仅链接至南航校园足球共享视频平台主页。";

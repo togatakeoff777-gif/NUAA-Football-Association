@@ -83,6 +83,23 @@ export const associationRoleFramework = [
   "宣传负责人",
 ] as const;
 
+export const currentAssociationTeam = {
+  label: "现任成员",
+  termNote: "任期年份待协会补充",
+  positions: [
+    { role: "主席", name: "胡兵" },
+    { role: "副主席（主管财务）", name: "马俊" },
+    { role: "副主席", name: "吴佳宇" },
+    { role: "副主席", name: "郭原序" },
+    { role: "竞赛部部长", name: "颜铭宣" },
+    { role: "后勤部部长", name: "陈梓豪" },
+    { role: "宣传部部长", name: "高羽建" },
+    { role: "宣传部副部长", name: "魏宇轩" },
+    { role: "外联部部长", name: "涂文乐" },
+  ],
+  note: "现任工作班子依据协会确认名单公开；未推定裁判事务负责人。",
+} as const;
+
 export const associationTerms = [
   {
     term: "第一届",

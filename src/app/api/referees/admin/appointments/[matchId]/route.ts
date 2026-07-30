@@ -25,6 +25,7 @@ export async function PUT(request: Request, context: { params: Promise<{ matchId
       matchId,
       positions: readPositionAssignments(body.positions),
       publicationNote: readShortText(body.publicationNote, "公示备注", 240, false),
+      changeReason: readShortText(body.changeReason, "改派原因", 240, false),
     });
     return NextResponse.json({ ok: true });
   } catch (error) {
@@ -41,8 +42,9 @@ export async function POST(request: Request, context: { params: Promise<{ matchI
     if (!isRecord(body)) throw new Error("操作内容格式不正确。" );
     const action = readEnum(body.action, ["publish", "withdraw"] as const, "操作" );
     const { matchId } = await context.params;
-    if (action === "publish") await publishAppointment(matchId);
-    else await withdrawAppointment(matchId);
+    const reason = readShortText(body.reason, "操作原因", 240, false);
+    if (action === "publish") await publishAppointment(matchId, reason);
+    else await withdrawAppointment(matchId, reason);
     return NextResponse.json({ ok: true });
   } catch (error) {
     const status = error instanceof RefereeServiceError ? error.status : 400;

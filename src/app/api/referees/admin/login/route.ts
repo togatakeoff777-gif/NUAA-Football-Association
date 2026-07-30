@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { createAdminSession, getAdminConfigurationIssue, isSameOrigin } from "@/lib/referee-auth";
 import { isRecord, readShortText } from "@/lib/referee-validation";
+import {
+  assertLoginAllowed,
+  clearLoginFailures,
+  getLoginKey,
+  recordLoginFailure,
+} from "@/lib/referee-security";
 
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) return NextResponse.json({ error: "请求来源无效。" }, { status: 403 });
@@ -10,11 +16,18 @@ export async function POST(request: Request) {
     const body: unknown = await request.json();
     if (!isRecord(body)) throw new Error("登录信息格式不正确。" );
     const password = readShortText(body.password, "管理员密码", 256);
+    const loginKey = getLoginKey(request, "administrator");
+    await assertLoginAllowed("admin", loginKey);
     if (!(await createAdminSession(password))) {
-      return NextResponse.json({ error: "管理员密码不正确。" }, { status: 401 });
+      await recordLoginFailure("admin", loginKey);
+      return NextResponse.json({ error: "登录信息不正确或后台当前不可用。" }, { status: 401 });
     }
+    await clearLoginFailures("admin", loginKey);
     return NextResponse.json({ ok: true });
   } catch (error) {
+    if (error instanceof Error && error.message.includes("过于频繁")) {
+      return NextResponse.json({ error: error.message }, { status: 429 });
+    }
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "登录失败。" },
       { status: 400 },

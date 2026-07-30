@@ -39,7 +39,7 @@ export function RefereeApplicationForm({
       return;
     }
     formElement.reset();
-    setMessage("执裁意向已提交并写入本地数据库，请等待管理员审核。" );
+    setMessage("执裁意向已提交，请等待管理员审核。" );
   }
 
   return (

@@ -19,7 +19,7 @@ export function NewsImage({
   children,
 }: NewsImageProps) {
   return (
-    <div className={`shared-news-image shared-news-image-${variant}${className ? ` ${className}` : ""}`}>
+    <div className={`shared-news-image shared-news-image-${variant}${src.startsWith("/brand/") ? " shared-news-image-brand" : ""}${className ? ` ${className}` : ""}`}>
       <Image src={src} alt={alt} fill sizes={sizes} />
       {children}
     </div>

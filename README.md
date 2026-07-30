@@ -1,68 +1,74 @@
 # 南京航空航天大学天目湖足球协会网站
 
-南航天目湖足协官网。项目使用 Next.js 16、TypeScript、React 19、Tailwind CSS 4，以及 Prisma 7 + SQLite，当前聚焦天目湖校区校园足球的信息展示与裁判事务，不代表南京航空航天大学三个校区的统一足球组织。
+南京航空航天大学天目湖足球协会官网，服务天目湖校区校园足球。项目使用 Next.js 16、React 19、TypeScript、Tailwind CSS 4、Prisma 7 与 SQLite，不代表南京航空航天大学三个校区的统一足球组织。
 
-## 本轮已完成
+## 当前能力
 
-- 蓝色航空科技风全局设计系统、响应式导航与页脚
-- 组件化首页 V2.1：精简 Hero、比赛信息中心、公告与快捷入口、“一大三小”当前赛事、新闻与影像、协会摘要
-- 栏目入口、列表、数据、详情、档案与流程六类可复用视觉模板
-- 桌面表格与移动分组列表两套赛事数据呈现
-- 赛事中心统一目录、真实赛程筛选、赛事文件中心及 2026 男、女子院际杯公开归档
-- 裁判中心真实闭环：公开名录、待选派比赛、执裁意向、管理员审核、选派草稿、发布、撤回与历史记录
-- 裁判员公开招募流程原型与独立二维码配置（当前尚未开放）
-- 仲裁与申诉静态原型
-- 赛事、球队、新闻、影像、协会、参赛指南与赛事子栏目占位路由
-- 集中的类型与演示数据层，为后续后台、跨校区内容和外部数据接入预留字段
+- 蓝色航空科技风响应式官网、六屏首页和完整二级栏目体系
+- 2026 男、女子足球院际杯真实赛事归档
+- 新生杯、天目湖五人制联赛等核心赛事入口
+- 新闻公告、正式文件、球队、影像资料和协会档案
+- 裁判员账号、开放场次、执裁意向、管理员审核、选派草稿、发布、撤回、重新发布和历史版本
+- 经授权公开的裁判员名录、CSV 导出、打印选派单和管理员审计日志
+- 独立管理员与裁判员 Session、scrypt 密码哈希、首次登录改密、账号停用和登录限速
+- canonical、Open Graph、RSS、sitemap、robots 与结构化数据
 
-四项核心赛事名称来自项目任务书；比分、日期、队伍、球员、榜单、新闻、公告和赛事状态均为明确标注的演示数据，不代表真实历史记录。
+未确认的比赛日期、场地、人员岗位和其他资料保持正式待确认状态，不作推测。
 
 ## 本地运行
 
 需要 Node.js 20.9 或更高版本。
 
-```bash
+```powershell
 npm install
-copy .env.example .env.local
-npm run db:migrate
-npm run db:seed
+Copy-Item .env.example .env.local
+npx prisma migrate deploy
 npm run dev
 ```
 
-请在 `.env.local` 中设置强管理员密码及至少 32 个字符的 Session secret；真实值不得提交到 Git。SQLite 文件位于 `prisma/dev.db`，已被 Git 忽略。生产环境应在备份后使用 `npx prisma migrate deploy`，不要使用开发迁移命令。
+在 `.env.local` 中配置独立开发数据库和本地认证值。仓库不提供默认管理员密码、裁判员账号或任何可用 Secret；不要把真实 `.env`、SQLite 数据库、密码或 Token 提交到 Git。
 
-浏览器访问 [http://localhost:3000](http://localhost:3000)。
+管理员密码哈希可在当前终端临时设置 `PASSWORD_TO_HASH` 后生成：
 
-## 质量检查与生产构建
-
-```bash
-npm run lint
-npm run build
-npm run start
+```powershell
+npm run security:hash-password
 ```
 
-`npm run start` 需要先成功执行 `npm run build`。
+输出仅写入本地或生产环境配置，不写入仓库。裁判员账号由授权管理员在后台创建，并要求首次登录修改初始密码。
+
+## 检查
+
+```powershell
+npm run check:unicode
+npx tsc --noEmit
+npm run lint
+npm run build
+npm run test:referee-flow
+```
+
+`test:referee-flow` 使用独立临时 SQLite 数据库，结束后自动删除，不读写生产数据库。
 
 ## 主要路由
 
-- `/`：首页 V2
-- `/competitions`：栏目入口模板的天目湖赛事中心
-- `/competitions/current`、`schedule`、`standings`、`scorers`、`history`、`cross-campus`：赛事子栏目原型
-- `/competitions/arbitration`：仲裁与申诉原型
-- `/competitions/files`：真实赛事规则、纪律文件与工作表下载
-- `/referees`：裁判中心功能入口
-- `/referees/directory`：注册裁判员公开名录
-- `/referees/open-matches`、`/referees/open-matches/[slug]`：待选派比赛、岗位需求与真实执裁意向提交
-- `/referees/assignments`：已发布且未撤回的未来比赛选派公告
-- `/referees/history`：已发布的历史选派记录
-- `/referees/admin/login`、`/referees/admin`：环境变量保护的裁判管理后台
-- `/referees/recruitment`：裁判员公开招募流程原型
-- `/participation`：参赛与报名入口及指南路由
-- `/news`：新闻与公告列表模板
-- `/news/demo-detail`：详情模板演示页
-- `/association`：协会档案模板
-- `/teams`、`/media`：保留现有栏目入口页
+- `/`：首页
+- `/competitions`：赛事中心
+- `/competitions/freshman-cup`：2026 新生杯筹备信息
+- `/competitions/2026-mens-intercollege-cup`、`/competitions/2026-womens-intercollege-cup`：赛事归档
+- `/news`、`/news/[slug]`：新闻公告与详情
+- `/teams`：球队信息
+- `/media`：影像资料与官方抖音二维码
+- `/association`：协会档案与现任工作班子
+- `/referees`：裁判中心
+- `/referees/directory`：经授权公开名录
+- `/referees/open-matches`：已发布开放场次
+- `/referees/assignments`、`/referees/history`：有效公示与历史选派
+- `/referees/login`、`/referees/workspace`：裁判员受保护工作区
+- `/referees/admin/login`、`/referees/admin`：授权管理后台
+- `/api/health`：最小只读健康检查
+- `/rss.xml`、`/robots.txt`、`/sitemap.xml`：内容订阅与搜索引擎入口
 
-## 当前边界
+## 生产发布
 
-裁判中心使用基础单管理员 Session，不是完整账号系统，也不包含支付、短信、多角色权限或个人资料管理。项目没有足球中国 API、爬虫或实时同步；足球中国按钮仅指向平台入口。正式开放场次、裁判员资格、联系人与尚未核验的赛事数据仍须由协会确认。Seed 中 2099 年比赛明确标注为本地功能测试数据，不代表真实赛程。
+生产发布前必须暂停写入并备份 SQLite 数据库，再配置四个环境变量、执行向前迁移、构建和健康检查。完整步骤见 [v2.4 生产发布检查清单](docs/V2.4_RELEASE_CHECKLIST.md)。
+
+本项目不自动修改 Nginx、PM2、服务器账号或生产数据库内容。

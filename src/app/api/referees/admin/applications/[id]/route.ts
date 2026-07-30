@@ -15,7 +15,11 @@ export async function PATCH(
     const { id } = await context.params;
     await reviewApplication(
       id,
-      readEnum(body.status, ["PENDING", "APPROVED", "REJECTED"] as const, "审核状态"),
+      readEnum(
+        body.status,
+        ["PENDING", "REVIEWING", "APPROVED", "REJECTED", "NOT_SELECTED", "APPOINTED"] as const,
+        "审核状态",
+      ),
       readShortText(body.reviewNote, "审核备注", 240, false),
     );
     return NextResponse.json({ ok: true });

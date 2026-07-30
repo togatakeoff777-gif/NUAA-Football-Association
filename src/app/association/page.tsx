@@ -11,11 +11,23 @@ import {
   associationRoleFramework,
   associationScope,
   associationTerms,
+  currentAssociationTeam,
 } from "@/data/association";
+import { JsonLd } from "@/components/seo/json-ld";
+import { ShareActions } from "@/components/share/share-actions";
+import { organizationJsonLd } from "@/lib/structured-data";
 import { ASSOCIATION_EMAIL, bilibiliPlatform, douyinPlatform, wechatPlatform } from "@/data/platforms";
 
 export const metadata: Metadata = {
-  alternates: { canonical: "/association" }, title: "协会", description: "南京航空航天大学天目湖足球协会公开档案。" };
+  alternates: { canonical: "/association" },
+  title: "协会",
+  description: "南京航空航天大学天目湖足球协会公开档案。",
+  openGraph: {
+    title: "关于南京航空航天大学天目湖足球协会",
+    description: "协会身份、现任工作班子、历届成员、服务范围与公开联系方式。",
+    url: "/association",
+  },
+};
 
 export default function AssociationPage() {
   const identity = (
@@ -31,6 +43,17 @@ export default function AssociationPage() {
         <section className="archive-stats" aria-labelledby="archive-stats-title"><p>VERIFIED DATA</p><h2 id="archive-stats-title">已确认数据</h2><div>{associationDevelopmentFacts.map((fact) => <article key={fact.id}><strong>{fact.value}</strong><span>{fact.label}</span><small>{fact.note}</small></article>)}</div></section>
       </div>
       <section className="archive-timeline" aria-labelledby="archive-timeline-title"><div><p>TIMELINE</p><h2 id="archive-timeline-title">发展记录</h2><span>只记录经协会核验的事实，不补写未经确认的年份和事件。</span></div><ol><li><time>2021</time><section><span>协会成立</span><h3>南京航空航天大学天目湖足球协会成立</h3><p>成立年份已确认，进一步历史资料将在完成档案核验后补充。</p></section></li><li className="archive-timeline-pending"><time>持续更新</time><section><span>资料整理中</span><h3>岗位对应与详细发展记录待核验</h3><p>已确认的历届成员列于下方；没有明确来源的具体岗位不会推测，也不会公开报名资料中的个人敏感信息。</p></section></li></ol></section>
+      <JsonLd data={organizationJsonLd()} />
+      <ShareActions title="南京航空航天大学天目湖足球协会" />
+      <section className="association-current-team" aria-labelledby="association-current-team-title">
+        <div><p>CURRENT TEAM</p><h2 id="association-current-team-title">现任工作班子</h2><span>{currentAssociationTeam.termNote}</span></div>
+        <dl>
+          {currentAssociationTeam.positions.map((item, index) => (
+            <div key={`${item.role}-${item.name}-${index}`}><dt>{item.role}</dt><dd>{item.name}</dd></div>
+          ))}
+        </dl>
+        <small>{currentAssociationTeam.note}</small>
+      </section>
       <section className="association-structure" aria-labelledby="association-structure-title">
         <div><p>ORGANIZATION</p><h2 id="association-structure-title">组织架构与历届成员</h2><span>岗位框架与成员名单分开呈现；没有来源的岗位对应关系不会推测。</span></div>
         <div className="association-role-strip" aria-label="协会岗位框架">{associationRoleFramework.map((role) => <span key={role}>{role}</span>)}</div>

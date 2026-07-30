@@ -14,7 +14,7 @@ export function NewsMediaSection() {
         </div>
         <div className="home-news-stream">
             <article className="home-featured-news" data-home-reveal data-home-delay="1">
-              <NewsImage className="home-featured-news-image" src={featuredNews.image} alt={featuredNews.imageAlt} variant="featured" sizes="(max-width: 760px) 100vw, 48vw"><DemoLabel>重点新闻 · 官方数据</DemoLabel></NewsImage>
+              <NewsImage className="home-featured-news-image" src={featuredNews.image} alt={featuredNews.imageAlt} variant="featured" sizes="(max-width: 760px) 100vw, 48vw"><DemoLabel>重点新闻 · {featuredNews.badge}</DemoLabel></NewsImage>
               <div><span>{featuredNews.category} · {featuredNews.dateLabel}</span><h3>{featuredNews.title}</h3><p>{featuredNews.summary}</p><Link href={featuredNews.href}>阅读全文 <span aria-hidden="true">→</span></Link></div>
             </article>
             <div className="home-compact-news-list">

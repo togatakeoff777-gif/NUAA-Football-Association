@@ -37,6 +37,11 @@ yarn-error.log*
 # local Prisma artifacts
 /prisma/*.db
 /prisma/*.db-journal
+/prisma/*.db-wal
+/prisma/*.db-shm
+/backups/
+/prisma/backups/
+/prisma/test-*.db*
 /src/generated/prisma/
 
 # vercel

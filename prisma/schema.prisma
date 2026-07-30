@@ -31,14 +31,25 @@ enum ApplicationWindowStatus {
 }
 
 enum RefereeStatus {
+  PENDING
   ACTIVE
   INACTIVE
+  ARCHIVED
+}
+
+enum TrainingStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
 }
 
 enum ApplicationStatus {
   PENDING
+  REVIEWING
   APPROVED
   REJECTED
+  NOT_SELECTED
+  APPOINTED
   WITHDRAWN
 }
 
@@ -88,8 +99,8 @@ model Team {
 }
 
 model Match {
-  id                      String                  @id @default(cuid())
-  slug                    String                  @unique
+  id                      String                     @id @default(cuid())
+  slug                    String                     @unique
   competitionId           String
   stage                   String
   kickoff                 DateTime
@@ -99,34 +110,63 @@ model Match {
   homeScore               Int?
   awayScore               Int?
   status                  MatchStatus
-  applicationWindowStatus ApplicationWindowStatus @default(CLOSED)
+  applicationWindowStatus ApplicationWindowStatus    @default(CLOSED)
   applicationDeadline     DateTime?
-  isTestData              Boolean                 @default(false)
-  createdAt               DateTime                @default(now())
-  updatedAt               DateTime                @updatedAt
-  competition             Competition             @relation(fields: [competitionId], references: [id], onDelete: Cascade)
-  homeTeam                Team                    @relation("HomeTeam", fields: [homeTeamId], references: [id])
-  awayTeam                Team                    @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  publicNote              String?
+  internalNote            String?
+  cancelledAt             DateTime?
+  cancellationReason      String?
+  isTestData              Boolean                    @default(false)
+  createdAt               DateTime                   @default(now())
+  updatedAt               DateTime                   @updatedAt
+  competition             Competition                @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  homeTeam                Team                       @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam                Team                       @relation("AwayTeam", fields: [awayTeamId], references: [id])
   applications            RefereeApplication[]
   appointment             RefereeAppointment?
+  positionRequirements    MatchPositionRequirement[]
 
   @@index([competitionId, kickoff])
   @@index([applicationWindowStatus, applicationDeadline])
 }
 
 model Referee {
-  id           String                @id @default(cuid())
-  publicCode   String                @unique
-  name         String
-  status       RefereeStatus         @default(ACTIVE)
-  elevenASide  Boolean               @default(false)
-  futsal       Boolean               @default(false)
-  sourceNote   String?
-  createdAt    DateTime              @default(now())
-  updatedAt    DateTime              @updatedAt
-  applications RefereeApplication[]
-  positions    AppointmentPosition[]
-  sessions     RefereeSession[]
+  id                     String                @id @default(cuid())
+  publicCode             String                @unique
+  name                   String
+  status                 RefereeStatus         @default(ACTIVE)
+  elevenASide            Boolean               @default(false)
+  futsal                 Boolean               @default(false)
+  sourceNote             String?
+  passwordHash           String?
+  mustChangePassword     Boolean               @default(true)
+  certificateNote        String?
+  trainingStatus         TrainingStatus        @default(NOT_STARTED)
+  publicDirectoryEnabled Boolean               @default(false)
+  publicBio              String?
+  internalNote           String?
+  failedLoginCount       Int                   @default(0)
+  lockedUntil            DateTime?
+  lastLoginAt            DateTime?
+  passwordChangedAt      DateTime?
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+  applications           RefereeApplication[]
+  positions              AppointmentPosition[]
+  sessions               RefereeSession[]
+}
+
+model MatchPositionRequirement {
+  id        String                 @id @default(cuid())
+  matchId   String
+  key       AppointmentPositionKey
+  label     String
+  count     Int                    @default(1)
+  sortOrder Int
+  match     Match                  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, key])
+  @@index([matchId, sortOrder])
 }
 
 model RefereeApplication {
@@ -148,16 +188,19 @@ model RefereeApplication {
 }
 
 model RefereeAppointment {
-  id              String                @id @default(cuid())
-  matchId         String                @unique
-  status          AppointmentStatus     @default(DRAFT)
-  publicationNote String?
-  publishedAt     DateTime?
-  withdrawnAt     DateTime?
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
-  match           Match                 @relation(fields: [matchId], references: [id], onDelete: Cascade)
-  positions       AppointmentPosition[]
+  id               String                @id @default(cuid())
+  matchId          String                @unique
+  status           AppointmentStatus     @default(DRAFT)
+  publicationNote  String?
+  publishedAt      DateTime?
+  withdrawnAt      DateTime?
+  revision         Int                   @default(0)
+  lastChangeReason String?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  match            Match                 @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  positions        AppointmentPosition[]
+  versions         AppointmentVersion[]
 
   @@index([status, publishedAt])
 }
@@ -169,11 +212,53 @@ model AppointmentPosition {
   key           AppointmentPositionKey
   label         String
   sortOrder     Int
+  slot          Int                    @default(1)
   appointment   RefereeAppointment     @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
   referee       Referee?               @relation(fields: [refereeId], references: [id], onDelete: SetNull)
 
-  @@unique([appointmentId, key])
+  @@unique([appointmentId, key, slot])
   @@index([refereeId])
+}
+
+model AppointmentVersion {
+  id            String             @id @default(cuid())
+  appointmentId String
+  revision      Int
+  status        AppointmentStatus
+  snapshot      String
+  reason        String?
+  createdAt     DateTime           @default(now())
+  appointment   RefereeAppointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@unique([appointmentId, revision])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorType  String
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String?
+  summary    String
+  metadata   String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+}
+
+model LoginAttempt {
+  id           String    @id @default(cuid())
+  scope        String
+  keyHash      String
+  failures     Int       @default(0)
+  blockedUntil DateTime?
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([scope, keyHash])
+  @@index([blockedUntil])
 }
 
 model AdminSession {

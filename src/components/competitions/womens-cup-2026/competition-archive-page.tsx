@@ -1,4 +1,5 @@
 import { CompetitionArchiveLayout } from "@/components/competitions/archive/competition-archive-layout";
+import { ShareActions } from "@/components/share/share-actions";
 import { womensIntercollegeCup2026 } from "@/data/womens-intercollege-cup-2026";
 
 import { WomensCompetitionOverview } from "./competition-overview";
@@ -32,6 +33,7 @@ export function WomensCompetitionArchivePage() {
       ]}
       returnStatus="档案状态：已结束 / 来源已确认"
     >
+      <ShareActions title={competition.canonicalTitle} text="2026女子足球院际杯（天目湖校区）赛事档案" />
       <WomensCompetitionOverview />
       <WomensCompetitionSchedule />
       <WomensCompetitionStandings />

@@ -10,7 +10,13 @@ export function formatRefereeDateTime(value: Date) {
 }
 
 export const applicationStatusLabels: Record<ApplicationStatus, string> = {
-  PENDING: "待审核", APPROVED: "已通过", REJECTED: "未通过", WITHDRAWN: "已撤回",
+  PENDING: "已提交",
+  REVIEWING: "审核中",
+  APPROVED: "已通过",
+  REJECTED: "未通过",
+  NOT_SELECTED: "未入选",
+  APPOINTED: "已选派",
+  WITHDRAWN: "已撤回",
 };
 
 export const appointmentStatusLabels: Record<AppointmentStatus, string> = {

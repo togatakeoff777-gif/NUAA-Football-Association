@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import { CompetitionArchiveLayout } from "@/components/competitions/archive/competition-archive-layout";
+import { ShareActions } from "@/components/share/share-actions";
+import { freshmanCupReports } from "@/data/freshman-cup-2026";
 import type { CoreCompetitionDirectoryEntry } from "@/types/competition-center";
 
 type CoreCompetitionPreviewPageProps = {
@@ -12,6 +14,7 @@ const pendingMessage = "当前暂无已公布信息，请关注赛事公告。";
 export function CoreCompetitionPreviewPage({
   competition,
 }: CoreCompetitionPreviewPageProps) {
+  const reports = competition.id === "freshman-cup" ? freshmanCupReports : [];
   return (
     <CompetitionArchiveLayout
       className="core-competition-preview-page"
@@ -34,6 +37,7 @@ export function CoreCompetitionPreviewPage({
       ]}
       returnStatus={`赛事状态：${competition.statusLabel} / ${competition.badge}`}
     >
+      <div className="page-shell"><ShareActions title={competition.name} text={competition.summary} /></div>
       <section
         className="cup-archive-section core-competition-overview"
         id="overview"
@@ -129,7 +133,17 @@ export function CoreCompetitionPreviewPage({
             <p>REPORTS</p>
             <h2 id={`${competition.id}-reports-title`}>赛事报道</h2>
           </div>
-          <p>当前暂无已核验的本届赛事报道。</p>
+          {reports.length ? (
+            <div className="core-competition-report-list">
+              {reports.map((report) => (
+                <Link href={report.href} key={report.id}>
+                  <time>{report.dateLabel}</time>
+                  <span>{report.category}</span>
+                  <strong>{report.title}</strong>
+                </Link>
+              ))}
+            </div>
+          ) : <p>当前暂无已核验的本届赛事报道。</p>}
           <Link href="/news">进入新闻公告 →</Link>
         </div>
       </section>

@@ -80,8 +80,8 @@ export type DemoScorer = {
   badge: string;
 };
 
-export type NewsCategory = "比赛战报" | "协会动态" | "人物专访" | "校园足球文化" | "裁判内容";
-export type NoticeCategory = "报名通知" | "赛程调整" | "竞赛规程" | "招募通知" | "赛事纪律通知" | "纪律决定";
+export type NewsCategory = "赛事新闻" | "比赛战报" | "协会动态" | "人物专访" | "校园足球文化" | "裁判内容";
+export type NoticeCategory = "通知公告" | "报名通知" | "赛程调整" | "竞赛规程" | "招募通知" | "赛事纪律通知" | "纪律决定";
 
 export type NewsItem = ContentOwnership & {
   id: string;
@@ -95,6 +95,8 @@ export type NewsItem = ContentOwnership & {
   dataStatus: "demo" | "confirmed";
   badge: string;
   source?: string;
+  publishedAt?: string;
+  updatedAt?: string;
 };
 
 export type ArchiveGalleryImage = {
@@ -114,6 +116,9 @@ export type NoticeItem = ContentOwnership & {
   publicationStatus: "置顶" | "最新";
   dataStatus: "demo" | "confirmed";
   badge: string;
+  source?: string;
+  publishedAt?: string;
+  updatedAt?: string;
 };
 
 export type RecruitmentStatus = "not-open" | "open" | "closed";

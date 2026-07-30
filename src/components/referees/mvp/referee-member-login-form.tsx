@@ -19,16 +19,16 @@ export function RefereeMemberLoginForm() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         publicCode: form.get("publicCode"),
-        accessCode: form.get("accessCode"),
+        password: form.get("password"),
       }),
     });
-    const result = (await response.json()) as { error?: string };
+    const result = (await response.json()) as { error?: string; mustChangePassword?: boolean };
     setSubmitting(false);
     if (!response.ok) {
       setMessage(result.error ?? "登录失败，请稍后重试。");
       return;
     }
-    router.replace("/referees/workspace");
+    router.replace(result.mustChangePassword ? "/referees/workspace/account" : "/referees/workspace");
     router.refresh();
   }
 
@@ -45,17 +45,17 @@ export function RefereeMemberLoginForm() {
         />
       </label>
       <label>
-        <span>访问码</span>
+        <span>密码</span>
         <input
           autoComplete="current-password"
           maxLength={256}
-          name="accessCode"
+          name="password"
           required
           type="password"
         />
       </label>
       <p className="referee-form-note">
-        本入口仅面向已登记裁判员。访问码由协会管理员线下发放，网站不收集手机号等个人敏感信息。
+        本入口仅面向已登记裁判员。初始登录信息由协会管理员线下发放，网站不收集手机号等个人敏感信息。
       </p>
       <button disabled={submitting} type="submit">
         {submitting ? "登录中…" : "进入裁判员工作区"}

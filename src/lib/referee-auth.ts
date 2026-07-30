@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { verifyAdminCredentials } from "@/lib/referee-credentials";
 import { isSessionFresh } from "@/lib/referee-security";
+import { SITE_ORIGIN } from "@/lib/site-metadata";
 
 const sessionCookieName = "nuaa_referee_admin";
 const sessionDurationMs = 12 * 60 * 60 * 1000;
@@ -73,5 +74,26 @@ export async function destroyAdminSession() {
 export function isSameOrigin(request: Request) {
   const origin = request.headers.get("origin");
   if (!origin) return process.env.NODE_ENV !== "production";
-  return origin === new URL(request.url).origin;
+
+  try {
+    const parsedOrigin = new URL(origin);
+    if (
+      parsedOrigin.origin === "null" ||
+      parsedOrigin.username ||
+      parsedOrigin.password ||
+      parsedOrigin.pathname !== "/" ||
+      parsedOrigin.search ||
+      parsedOrigin.hash
+    ) {
+      return false;
+    }
+
+    const normalizedOrigin = parsedOrigin.origin;
+    if (process.env.NODE_ENV === "production") {
+      return normalizedOrigin === new URL(SITE_ORIGIN).origin;
+    }
+    return normalizedOrigin === new URL(request.url).origin;
+  } catch {
+    return false;
+  }
 }

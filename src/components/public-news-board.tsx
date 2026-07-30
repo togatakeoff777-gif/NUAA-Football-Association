@@ -19,7 +19,7 @@ const filters: readonly { id: NewsFilter; label: string }[] = [
 
 export function PublicNewsBoard({ news, notices }: { news: readonly NewsItem[]; notices: readonly NoticeItem[] }) {
   const [filter, setFilter] = useState<NewsFilter>("all");
-  const visibleNews = filter === "events" ? news.filter((item) => item.category === "比赛战报") : news;
+  const visibleNews = filter === "events" ? news.filter((item) => item.category === "比赛战报" || item.category === "赛事新闻") : news;
   const showNews = filter !== "notices";
   const showNotices = filter === "all" || filter === "notices";
   const [featured, ...remainingNews] = visibleNews;
@@ -28,7 +28,7 @@ export function PublicNewsBoard({ news, notices }: { news: readonly NewsItem[]; 
     <>
       <div className="list-filter-bar" aria-label="内容分类">
         {filters.map((item) => <button aria-pressed={filter === item.id} key={item.id} onClick={() => setFilter(item.id)} type="button">{item.label}</button>)}
-        <small>仅展示已核验的正式报道与公开决定</small>
+        <small>仅展示已核验的正式报道、公告与公开决定</small>
       </div>
       <div className={`news-list-layout${showNews && showNotices ? "" : " is-single"}`}>
         {showNews ? (
@@ -45,8 +45,8 @@ export function PublicNewsBoard({ news, notices }: { news: readonly NewsItem[]; 
         {showNotices ? (
           <aside className="notice-list-panel" id="notices" aria-labelledby="notice-list-title">
             <div><p>OFFICIAL NOTICES</p><h2 id="notice-list-title">通知公告</h2></div>
-            {notices.map((item) => <article key={item.id}><div><time>{item.dateLabel}</time><StatusBadge tone="neutral">{item.badge}</StatusBadge></div><span>{item.category}</span><h3>{item.title}</h3><p>{item.summary}</p><Link href={item.href}>查看决定原件 →</Link></article>)}
-            <small>发布日期按公开决定原件核验；决定内容以原 PDF 为准。</small>
+            {notices.map((item) => <article key={item.id}><div><time>{item.dateLabel}</time><StatusBadge tone="neutral">{item.badge}</StatusBadge></div><span>{item.category}</span><h3>{item.title}</h3><p>{item.summary}</p><Link href={item.href}>{item.category === "纪律决定" ? "查看决定原件" : "阅读全文"} →</Link></article>)}
+            <small>公告发布日期按协会正式发布信息核验；纪律决定内容以原 PDF 为准。</small>
           </aside>
         ) : null}
       </div>

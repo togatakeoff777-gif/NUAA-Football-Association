@@ -1,0 +1,65 @@
+import { NextResponse } from "next/server";
+
+import { getAdminSession, isSameOrigin } from "@/lib/referee-auth";
+import { createMatch, RefereeServiceError } from "@/lib/referee-service";
+import {
+  isRecord,
+  positionKeys,
+  readDate,
+  readEnum,
+  readInteger,
+  readShortText,
+} from "@/lib/referee-validation";
+
+function readPositionCounts(value: unknown) {
+  if (!isRecord(value)) throw new Error("岗位人数格式不正确。");
+  return Object.fromEntries(
+    positionKeys.map((key) => [
+      key,
+      readInteger(value[key] ?? 0, `${key} 人数`, 0, 5),
+    ]),
+  );
+}
+
+export async function POST(request: Request) {
+  if (!isSameOrigin(request)) {
+    return NextResponse.json({ error: "请求来源无效。" }, { status: 403 });
+  }
+  if (!(await getAdminSession())) {
+    return NextResponse.json({ error: "请先登录管理员后台。" }, { status: 401 });
+  }
+  try {
+    const body: unknown = await request.json();
+    if (!isRecord(body)) throw new Error("场次内容格式不正确。");
+    const match = await createMatch({
+      slug: readShortText(body.slug, "页面标识", 80),
+      competitionId: readShortText(body.competitionId, "赛事", 64),
+      stage: readShortText(body.stage, "比赛名称或轮次", 80),
+      kickoff: readDate(body.kickoff, "比赛时间")!,
+      venue: readShortText(body.venue, "比赛场地", 120),
+      homeTeamId: readShortText(body.homeTeamId, "主队", 64),
+      awayTeamId: readShortText(body.awayTeamId, "客队", 64),
+      status: readEnum(
+        body.status,
+        ["SCHEDULED", "COMPLETED", "CANCELLED"] as const,
+        "比赛状态",
+      ),
+      applicationWindowStatus: readEnum(
+        body.applicationWindowStatus,
+        ["OPEN", "CLOSED"] as const,
+        "报名窗口",
+      ),
+      applicationDeadline: readDate(body.applicationDeadline, "报名截止时间", false),
+      publicNote: readShortText(body.publicNote, "公开说明", 500, false),
+      internalNote: readShortText(body.internalNote, "内部备注", 500, false),
+      positionCounts: readPositionCounts(body.positionCounts),
+    });
+    return NextResponse.json({ ok: true, matchId: match.id }, { status: 201 });
+  } catch (error) {
+    const status = error instanceof RefereeServiceError ? error.status : 400;
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "场次创建失败。" },
+      { status },
+    );
+  }
+}

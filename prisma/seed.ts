@@ -41,20 +41,19 @@ const publicReferees = [
 ] as const;
 
 async function main() {
-  await prisma.referee.updateMany({ data: { status: RefereeStatus.INACTIVE } });
   for (const referee of publicReferees) {
     await prisma.referee.upsert({
       where: { publicCode: referee.code },
       update: {
         name: referee.name,
-        status: RefereeStatus.ACTIVE,
         elevenASide: referee.eleven,
         futsal: referee.futsal,
+        sourceNote: "赛制标记仅依据男子杯注册裁判员名单或女足实际执裁岗位；不含联系方式。",
       },
       create: {
         publicCode: referee.code,
         name: referee.name,
-        status: RefereeStatus.ACTIVE,
+        status: RefereeStatus.PENDING,
         elevenASide: referee.eleven,
         futsal: referee.futsal,
         sourceNote: "赛制标记仅依据男子杯注册裁判员名单或女足实际执裁岗位；不含联系方式。",
@@ -110,9 +109,9 @@ async function main() {
   for (const [key, label, sortOrder, publicCode] of finalOfficials) {
     const referee = await prisma.referee.findUniqueOrThrow({ where: { publicCode } });
     await prisma.appointmentPosition.upsert({
-      where: { appointmentId_key: { appointmentId: historical.id, key } },
+      where: { appointmentId_key_slot: { appointmentId: historical.id, key, slot: 1 } },
       update: { refereeId: referee.id, label, sortOrder },
-      create: { appointmentId: historical.id, refereeId: referee.id, key, label, sortOrder },
+      create: { appointmentId: historical.id, refereeId: referee.id, key, label, sortOrder, slot: 1 },
     });
   }
 
@@ -133,7 +132,7 @@ async function main() {
     where: { competitionId_name: { competitionId: testCompetition.id, name: "功能测试乙队" } },
     update: {}, create: { competitionId: testCompetition.id, name: "功能测试乙队" },
   });
-  await prisma.match.upsert({
+  const testMatch = await prisma.match.upsert({
     where: { slug: "local-referee-mvp-open-match" },
     update: {
       applicationWindowStatus: ApplicationWindowStatus.OPEN,
@@ -147,6 +146,19 @@ async function main() {
       applicationDeadline: new Date("2099-09-28T20:00:00+08:00"), isTestData: true,
     },
   });
+  const testPositions = [
+    ["REFEREE", "裁判员", 1],
+    ["ASSISTANT_REFEREE_1", "第一助理裁判员", 2],
+    ["ASSISTANT_REFEREE_2", "第二助理裁判员", 3],
+    ["FOURTH_OFFICIAL", "第四官员", 4],
+  ] as const;
+  for (const [key, label, sortOrder] of testPositions) {
+    await prisma.matchPositionRequirement.upsert({
+      where: { matchId_key: { matchId: testMatch.id, key } },
+      update: { label, count: 1, sortOrder },
+      create: { matchId: testMatch.id, key, label, count: 1, sortOrder },
+    });
+  }
 }
 
 main()

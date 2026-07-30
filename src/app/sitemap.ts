@@ -1,7 +1,6 @@
 import type { MetadataRoute } from "next";
 
-import { officialMensCupNews } from "@/data/mens-intercollege-cup-2026";
-import { officialWomensCupNews } from "@/data/womens-intercollege-cup-2026";
+import { publishedNews, publicAnnouncements } from "@/data/content";
 import { absoluteSiteUrl } from "@/lib/site-metadata";
 
 const publicRoutes = [
@@ -46,8 +45,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
 
   const newsEntries: MetadataRoute.Sitemap = [
-    ...officialMensCupNews,
-    ...officialWomensCupNews,
+    ...publishedNews,
+    ...publicAnnouncements.filter((item) => item.href.startsWith("/news/")),
   ].map((story) => ({
     url: absoluteSiteUrl(story.href),
     changeFrequency: "yearly",

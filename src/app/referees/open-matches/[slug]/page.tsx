@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { RefereeApplicationForm } from "@/components/referees/mvp/referee-application-form";
+import { JsonLd } from "@/components/seo/json-ld";
+import { ShareActions } from "@/components/share/share-actions";
 import { RefereeSubnav } from "@/components/referees/mvp/public-appointment-list";
 import { ASSOCIATION_EMAIL } from "@/data/platforms";
 import {
@@ -14,6 +16,7 @@ import {
 import { formatRefereeDateTime } from "@/lib/referee-presenters";
 import { formatLabels, getPositionTemplate } from "@/lib/referee-roles";
 import { prisma } from "@/lib/prisma";
+import { sportsEventJsonLd } from "@/lib/structured-data";
 
 type OpenMatchDetailPageProps = {
   params: Promise<{ slug: string }>;
@@ -43,7 +46,7 @@ export default async function OpenMatchDetailPage({
       isTestData: false,
       competition: { isTestData: false },
     },
-    include: { competition: true, homeTeam: true, awayTeam: true },
+    include: { competition: true, homeTeam: true, awayTeam: true, positionRequirements: { orderBy: { sortOrder: "asc" } } },
   });
   if (!match) notFound();
 
@@ -55,9 +58,13 @@ export default async function OpenMatchDetailPage({
     );
   const workspaceAvailable = !getRefereeMemberConfigurationIssue();
   const session = await getRefereeMemberSession();
-  const positions = getPositionTemplate(match.competition.format);
+  const fallbackPositions = getPositionTemplate(match.competition.format).map((item) => ({ key: item.key, label: item.label, count: 1, order: item.order }));
+  const positions = match.positionRequirements.length
+    ? match.positionRequirements.map((item) => ({ key: item.key, label: item.label, count: item.count, order: item.sortOrder }))
+    : fallbackPositions;
   const eligible =
     session &&
+    !session.referee.mustChangePassword &&
     (match.competition.format === "ELEVEN_A_SIDE"
       ? session.referee.elevenASide
       : session.referee.futsal);
@@ -98,8 +105,8 @@ export default async function OpenMatchDetailPage({
   } else if (accepting && !eligible) {
     applicationPanel = (
       <div className="functional-empty functional-empty-compact">
-        <strong>当前账号不适用该赛制</strong>
-        <p>如需更新可执裁赛制，请联系协会管理员核验名录信息。</p>
+        <strong>{session?.referee.mustChangePassword ? "请先修改初始密码" : "当前账号不适用该赛制"}</strong>
+        <p>{session?.referee.mustChangePassword ? <Link href="/referees/workspace/account">前往账号与密码设置 →</Link> : "如需更新可执裁赛制，请联系协会管理员核验名录信息。"}</p>
       </div>
     );
   }
@@ -107,6 +114,7 @@ export default async function OpenMatchDetailPage({
   return (
     <>
       <SiteHeader />
+      <JsonLd data={sportsEventJsonLd({ name: `${match.homeTeam.name} vs ${match.awayTeam.name}`, description: `${match.competition.name} · ${match.stage}`, path: `/referees/open-matches/${match.slug}`, status: match.status === "CANCELLED" ? "EventCancelled" : match.status === "COMPLETED" ? "EventCompleted" : "EventScheduled", startDate: match.kickoff.toISOString(), location: match.venue })} />
       <main className="functional-page" id="main-content">
         <section className="functional-hero">
           <div className="detail-shell">
@@ -154,10 +162,12 @@ export default async function OpenMatchDetailPage({
                 {positions.map((position) => (
                   <li key={position.key}>
                     <span>{String(position.order).padStart(2, "0")}</span>
-                    {position.label}
+                    {position.label} · {position.count} 人
                   </li>
                 ))}
               </ol>
+              {match.publicNote ? <p className="referee-public-note">{match.publicNote}</p> : null}
+              <ShareActions title={`${match.homeTeam.name} vs ${match.awayTeam.name}`} text={`${match.competition.name} · ${match.stage}`} />
             </article>
             <aside>
               <h2>提交执裁意向</h2>

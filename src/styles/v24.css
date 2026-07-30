@@ -1,0 +1,212 @@
+.share-actions {
+  width: min(1180px, calc(100% - 64px));
+  margin: 20px auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.share-actions button,
+.media-douyin-card button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid #a9caee;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--nuaa-blue);
+  font-weight: 750;
+}
+.share-actions span { color: var(--muted); font-size: 12px; }
+.detail-prose > .share-actions { width: 100%; margin: 0 0 20px; }
+.detail-story-figure-brand img { object-fit: contain !important; background: #fff; }
+.shared-news-image-brand img { object-fit: contain; padding: 8%; background: #fff; }
+
+.media-platform-section { padding: 72px 0 88px; background: var(--paper); }
+.media-platform-section .page-shell { display: grid; grid-template-columns: 1.35fr .65fr; gap: 22px; }
+.media-douyin-card {
+  grid-row: span 2;
+  display: grid;
+  grid-template-columns: minmax(260px, .9fr) 1.1fr;
+  gap: 34px;
+  align-items: center;
+  padding: 34px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+.media-douyin-image { position: relative; min-height: 430px; overflow: hidden; padding: 0 !important; }
+.media-douyin-image img { object-fit: contain; }
+.media-douyin-card h2 { margin-top: 12px; font-size: clamp(34px, 4vw, 54px); }
+.media-douyin-card strong { display: block; margin-top: 10px; color: var(--aviation-blue); }
+.media-douyin-card p { margin: 18px 0; color: var(--muted); line-height: 1.8; }
+.media-shared-platform,
+.media-archive-note { padding: 28px; border: 1px solid var(--line); background: #fff; }
+.media-shared-platform span,
+.media-douyin-card > div > span { color: var(--aviation-blue); font-size: 11px; font-weight: 800; letter-spacing: .12em; }
+.media-shared-platform h2,
+.media-archive-note h2 { margin-top: 13px; font-size: 24px; }
+.media-shared-platform p,
+.media-archive-note p { margin: 14px 0; color: var(--muted); line-height: 1.75; }
+.media-shared-platform a,
+.media-archive-note a { color: var(--aviation-blue); font-weight: 750; }
+.qr-modal {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(3, 14, 36, .82);
+}
+.qr-modal > div {
+  position: relative;
+  width: min(520px, 100%);
+  max-height: calc(100dvh - 48px);
+  overflow: auto;
+  padding: 20px;
+  border-radius: 12px;
+  background: #fff;
+}
+.qr-modal img { width: 100%; height: auto; }
+.qr-modal button { display: block; margin: 0 0 12px auto; }
+.qr-modal p { margin-top: 12px; color: var(--muted); line-height: 1.7; }
+.footer-douyin { display: flex !important; align-items: center; gap: 11px; }
+.footer-douyin img { object-fit: contain; background: #fff; }
+.footer-douyin span { display: grid; }
+.footer-douyin small { color: rgba(255,255,255,.55); }
+
+.association-current-team {
+  margin-top: 34px;
+  padding: 34px;
+  border-left: 5px solid var(--aviation-blue);
+  background: linear-gradient(130deg, #edf6ff, #fff);
+}
+.association-current-team > div { display: flex; align-items: baseline; justify-content: space-between; gap: 24px; }
+.association-current-team > div p { color: var(--aviation-blue); font-size: 11px; font-weight: 800; letter-spacing: .12em; }
+.association-current-team h2 { font-size: clamp(30px, 4vw, 46px); }
+.association-current-team > div span { color: var(--muted); }
+.association-current-team dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: 26px; background: var(--line); }
+.association-current-team dl div { padding: 16px 18px; background: #fff; }
+.association-current-team dt { color: var(--muted); font-size: 12px; }
+.association-current-team dd { margin-top: 7px; font-size: 18px; font-weight: 750; }
+.association-current-team > small { display: block; margin-top: 18px; color: var(--muted); }
+
+.referee-admin-section-title { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.referee-admin-section-title a { color: var(--aviation-blue); font-weight: 750; }
+.referee-operations-form,
+.referee-account-editor,
+.referee-match-manager {
+  margin-top: 20px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+.referee-operations-form > h3 { margin-bottom: 20px; font-size: 22px; }
+.referee-form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.referee-operations-form label,
+.referee-account-editor label,
+.referee-match-manager label { display: grid; gap: 7px; color: var(--muted); font-size: 12px; }
+.referee-operations-form input,
+.referee-operations-form select,
+.referee-operations-form textarea,
+.referee-account-editor input,
+.referee-account-editor select,
+.referee-account-editor textarea,
+.referee-match-manager input,
+.referee-match-manager select,
+.referee-match-manager textarea {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid #cbd9e8;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+}
+.referee-operations-form textarea,
+.referee-account-editor textarea,
+.referee-match-manager textarea { min-height: 88px; resize: vertical; }
+.referee-operations-form > label,
+.referee-account-editor form > label,
+.referee-match-manager form > label { margin-top: 14px; }
+.referee-checkbox-row { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 15px; }
+.referee-checkbox-row label { display: flex; align-items: center; gap: 7px; }
+.referee-checkbox-row input { width: 18px; min-height: 18px; }
+.referee-operations-form > button,
+.referee-account-editor button,
+.referee-match-manager button {
+  min-height: 42px;
+  margin-top: 15px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--aviation-blue);
+  color: #fff;
+  font-weight: 750;
+}
+.referee-account-editor summary,
+.referee-match-manager summary { display: flex; justify-content: space-between; gap: 18px; cursor: pointer; }
+.referee-account-editor form,
+.referee-match-manager form { margin-top: 22px; }
+.referee-position-counts,
+.referee-copy-fields { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 18px; padding: 16px; border: 1px solid var(--line); }
+.referee-position-counts legend,
+.referee-copy-fields legend { padding: 0 8px; color: var(--nuaa-blue); font-weight: 750; }
+.referee-password-reset { display: flex; gap: 10px; align-items: flex-end; }
+.referee-password-reset input { max-width: 360px; }
+.referee-account-settings { display: grid; grid-template-columns: .7fr 1.3fr; gap: 24px; }
+.referee-account-settings > article { padding: 28px; border: 1px solid var(--line); background: #fff; }
+.referee-account-settings dl { display: grid; gap: 12px; margin-top: 18px; }
+.referee-account-settings dl div { display: flex; justify-content: space-between; gap: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.referee-required-change { padding: 14px; border-left: 4px solid #d69528; background: #fff8e8; }
+.application-withdraw-action { grid-column: 1 / -1; }
+.application-withdraw-action button { min-height: 36px; padding: 0 12px; border: 1px solid #d7b8b8; background: #fff; color: #943a3a; }
+.functional-updated-at { margin-bottom: 18px; color: var(--muted); font-size: 12px; }
+.referee-print-link { display: inline-flex; margin-top: 16px; color: var(--aviation-blue); font-weight: 750; }
+.referee-export-links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
+.referee-export-links a { color: var(--aviation-blue); font-size: 12px; font-weight: 750; }
+.referee-print-sheet { width: min(860px, calc(100% - 48px)); margin: 40px auto; color: #111; }
+.referee-print-sheet header { padding-bottom: 24px; border-bottom: 2px solid #174b88; }
+.referee-print-sheet h1 { margin-top: 8px; font-size: 36px; }
+.referee-print-sheet dl { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 28px 0; }
+.referee-print-sheet dl div { padding: 12px; border: 1px solid #ccc; }
+.referee-print-sheet dt { color: #666; font-size: 12px; }
+.referee-print-sheet dd { margin-top: 5px; font-weight: 700; }
+.referee-print-sheet table { width: 100%; border-collapse: collapse; }
+.referee-print-sheet th,
+.referee-print-sheet td { padding: 13px; border: 1px solid #bbb; text-align: left; }
+.referee-print-sheet footer { display: flex; justify-content: space-between; margin-top: 26px; color: #555; font-size: 12px; }
+.core-competition-report-list { display: grid; gap: 1px; background: var(--line); }
+.core-competition-report-list a { display: grid; grid-template-columns: 100px 90px 1fr; gap: 14px; padding: 16px; background: #fff; }
+
+@media print {
+  .referee-print-sheet { width: 100%; margin: 0; }
+}
+
+@media (max-width: 900px) {
+  .media-platform-section .page-shell,
+  .media-douyin-card,
+  .referee-account-settings { grid-template-columns: 1fr; }
+  .media-douyin-card { grid-row: auto; }
+  .referee-form-grid { grid-template-columns: repeat(2, 1fr); }
+  .referee-position-counts,
+  .referee-copy-fields { grid-template-columns: repeat(2, 1fr); }
+  .association-current-team dl { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .share-actions { width: calc(100% - 32px); align-items: flex-start; flex-direction: column; }
+  .media-platform-section { padding: 48px 0; }
+  .media-douyin-card { padding: 20px; }
+  .media-douyin-image { min-height: 380px; }
+  .association-current-team { padding: 22px; }
+  .association-current-team > div { align-items: flex-start; flex-direction: column; }
+  .association-current-team dl,
+  .referee-form-grid,
+  .referee-position-counts,
+  .referee-copy-fields { grid-template-columns: 1fr; }
+  .referee-account-editor summary,
+  .referee-match-manager summary,
+  .referee-print-sheet footer,
+  .referee-password-reset { align-items: flex-start; flex-direction: column; }
+  .core-competition-report-list a { grid-template-columns: 1fr; }
+  .referee-print-sheet dl { grid-template-columns: 1fr; }
+}

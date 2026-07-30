@@ -4,8 +4,9 @@ import { redirect } from "next/navigation";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { RefereeMemberLogoutButton } from "@/components/referees/mvp/referee-member-logout-button";
+import { ApplicationWithdrawButton } from "@/components/referees/mvp/application-withdraw-button";
 import { RefereeSubnav } from "@/components/referees/mvp/public-appointment-list";
-import { formatRefereeDateTime } from "@/lib/referee-presenters";
+import { applicationStatusLabels, formatRefereeDateTime } from "@/lib/referee-presenters";
 import { getRefereeMemberSession } from "@/lib/referee-member-auth";
 import { prisma } from "@/lib/prisma";
 
@@ -17,16 +18,10 @@ export const metadata: Metadata = {
 };
 export const dynamic = "force-dynamic";
 
-const applicationStatusLabels = {
-  PENDING: "待审核",
-  APPROVED: "已通过",
-  REJECTED: "未通过",
-  WITHDRAWN: "已撤回",
-} as const;
-
 export default async function RefereeWorkspacePage() {
   const session = await getRefereeMemberSession();
   if (!session) redirect("/referees/login");
+  if (session.referee.mustChangePassword) redirect("/referees/workspace/account");
 
   const [applications, assignedPositions] = await Promise.all([
     prisma.refereeApplication.findMany({
@@ -56,6 +51,9 @@ export default async function RefereeWorkspacePage() {
     }),
   ]);
 
+  const now = new Date();
+  const upcomingPositions = assignedPositions.filter((item) => item.appointment.match.kickoff > now);
+  const historicalPositions = assignedPositions.filter((item) => item.appointment.match.kickoff <= now);
   return (
     <>
       <SiteHeader />
@@ -68,6 +66,7 @@ export default async function RefereeWorkspacePage() {
               {session.referee.publicCode} · 可查看个人申请、审核状态与正式发布的选派结果。
             </p>
             <RefereeMemberLogoutButton />
+            <Link href="/referees/workspace/account">账号与密码设置 →</Link>
           </div>
         </section>
         <RefereeSubnav showWorkspace />
@@ -95,6 +94,11 @@ export default async function RefereeWorkspacePage() {
                       <strong data-status={application.status}>
                         {applicationStatusLabels[application.status]}
                       </strong>
+                      {application.match.applicationDeadline &&
+                      application.match.applicationDeadline > now &&
+                      !["APPOINTED", "WITHDRAWN"].includes(application.status) ? (
+                        <ApplicationWithdrawButton applicationId={application.id} />
+                      ) : null}
                     </article>
                   ))}
                 </div>
@@ -134,6 +138,14 @@ export default async function RefereeWorkspacePage() {
                   <p>只有管理员正式发布且未撤回的选派会显示在这里。</p>
                 </div>
               )}
+            </section>
+            <section>
+              <header className="functional-section-heading"><div><p>UPCOMING</p><h2>即将进行的任务</h2></div></header>
+              {upcomingPositions.length ? <div className="referee-personal-list">{upcomingPositions.map((position) => <article key={`upcoming-${position.id}`}><div><span>{position.appointment.match.competition.name}</span><h3>{position.appointment.match.homeTeam.name} vs {position.appointment.match.awayTeam.name}</h3><p>{formatRefereeDateTime(position.appointment.match.kickoff)}</p></div><strong>{position.label}</strong></article>)}</div> : <div className="functional-empty functional-empty-compact"><strong>暂无即将进行的任务</strong><p>新任务将在正式发布后显示。</p></div>}
+            </section>
+            <section>
+              <header className="functional-section-heading"><div><p>HISTORY</p><h2>历史任务</h2></div></header>
+              {historicalPositions.length ? <div className="referee-personal-list">{historicalPositions.map((position) => <article key={`history-${position.id}`}><div><span>{position.appointment.match.competition.name}</span><h3>{position.appointment.match.homeTeam.name} vs {position.appointment.match.awayTeam.name}</h3><p>{formatRefereeDateTime(position.appointment.match.kickoff)}</p></div><strong>{position.label}</strong></article>)}</div> : <div className="functional-empty functional-empty-compact"><strong>暂无历史任务</strong><p>已完成的正式任务会保留在这里。</p></div>}
             </section>
             <section className="referee-training-panel">
               <p>TRAINING & DEVELOPMENT</p>

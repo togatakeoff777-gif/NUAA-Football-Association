@@ -26,10 +26,10 @@ export const coreCompetitionDirectory = [
     formatLabel: "十一人制",
     teamFormation: "院系组队",
     status: "preparing",
-    statusLabel: "筹备中",
+    statusLabel: "筹备工作已启动",
     dataStatus: "confirmed",
-    badge: "安排待公布",
-    stageLabel: "2026届赛事筹备",
+    badge: "后续安排待确认",
+    stageLabel: "赛事筹备已启动",
     registrationWindow: "待赛事通知确认",
     matchWindow: "日期待定",
     venue: "待赛事通知确认",
@@ -39,7 +39,7 @@ export const coreCompetitionDirectory = [
     summary:
       "面向新生的院系足球赛事。天目湖校区与将军路校区相关足球组织分别开展工作，淘汰赛阶段的跨校区主客场安排以赛事组织方最终通知为准。",
     requirements: ["面向新生", "院系组队", "淘汰赛阶段包含经确认的跨校区主客场安排"],
-    notice: "2026届报名日期、比赛日期、场地、主办与承办信息尚未公布。",
+    notice: "竞赛规程、报名安排与赛程信息将在确认后发布；报名日期、比赛日期、场地、主办与承办信息尚未公布。",
     detailHref: "/competitions/freshman-cup",
     filesHref: "/competitions/files#notices",
     links: {

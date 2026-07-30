@@ -1,4 +1,5 @@
 import { CompetitionArchiveLayout } from "@/components/competitions/archive/competition-archive-layout";
+import { ShareActions } from "@/components/share/share-actions";
 import { mensIntercollegeCup2026 } from "@/data/mens-intercollege-cup-2026";
 
 import { CompetitionFinal } from "./competition-final";
@@ -31,6 +32,7 @@ export function CompetitionArchivePage() {
       ]}
       returnStatus="档案状态：已结束 / 官方数据"
     >
+      <ShareActions title={competition.name} text="2026男子足球院际杯（天目湖校区）赛事档案" />
       <CompetitionOverview />
       <CompetitionResults />
       <CompetitionStandings />

@@ -6,6 +6,7 @@ import {
   bilibiliPlatform,
   emailPlatform,
   footballChinaPlatform,
+  douyinPlatform,
   wechatPlatform,
 } from "@/data/platforms";
 
@@ -47,6 +48,10 @@ export function SiteFooter({ homeCompact = false }: SiteFooterProps) {
             <a href={bilibiliPlatform.href} target="_blank" rel="noopener noreferrer" aria-label="前往南航校园足球共享视频平台，将在新标签页打开">
               哔哩哔哩 · {bilibiliPlatform.name} ↗
             </a>
+            <Link className="footer-douyin" href="/media#douyin">
+              <Image src={douyinPlatform.qrImage} alt={douyinPlatform.qrAlt} width={54} height={72} />
+              <span>抖音 · {douyinPlatform.name}<small>{douyinPlatform.label} · 查看二维码</small></span>
+            </Link>
             <a href={footballChinaPlatform.href} target="_blank" rel="noopener noreferrer" aria-label="前往足球中国，将在新标签页打开">
               足球中国 · 注册报名平台 ↗
             </a>

@@ -44,9 +44,69 @@ async function main() {
   const security = await import("../src/lib/referee-security");
   const credentials = await import("../src/lib/referee-credentials");
   const publicQueries = await import("../src/lib/referee-public");
+  const auth = await import("../src/lib/referee-auth");
   const { prisma } = await import("../src/lib/prisma");
 
   try {
+    const mutableEnvironment = process.env as Record<string, string | undefined>;
+    const originalNodeEnvironment = mutableEnvironment.NODE_ENV;
+    const originRequest = (url: string, origin?: string) =>
+      new Request(url, {
+        method: "POST",
+        headers: origin === undefined ? undefined : { origin },
+      });
+    try {
+      mutableEnvironment.NODE_ENV = "production";
+      assert(
+        auth.isSameOrigin(originRequest("https://nuaafa.cn/api/referees/login", "https://nuaafa.cn")),
+        "生产环境规范 Origin 被错误拒绝。",
+      );
+      assert(
+        auth.isSameOrigin(originRequest("http://nuaafa.cn/api/referees/login", "https://nuaafa.cn")) &&
+          auth.isSameOrigin(
+            originRequest("http://127.0.0.1:3000/api/referees/login", "https://nuaafa.cn"),
+          ),
+        "反向代理内部 HTTP request.url 导致规范 Origin 被错误拒绝。",
+      );
+      assert(
+        !auth.isSameOrigin(originRequest("http://nuaafa.cn/api/referees/login", "http://nuaafa.cn")),
+        "生产环境错误接受了 HTTP 官网 Origin。",
+      );
+      assert(
+        !auth.isSameOrigin(
+          originRequest("http://127.0.0.1:3000/api/referees/login", "https://www.nuaafa.cn"),
+        ),
+        "生产环境错误接受了 www Origin。",
+      );
+      assert(
+        !auth.isSameOrigin(
+          originRequest("http://127.0.0.1:3000/api/referees/login", "https://evil.example"),
+        ),
+        "生产环境错误接受了外部 Origin。",
+      );
+      assert(
+        !auth.isSameOrigin(originRequest("http://127.0.0.1:3000/api/referees/login")),
+        "生产环境错误接受了缺少 Origin 的写请求。",
+      );
+      assert(
+        !auth.isSameOrigin(
+          originRequest("http://127.0.0.1:3000/api/referees/login", "not-a-valid-origin"),
+        ),
+        "格式错误 Origin 未被拒绝。",
+      );
+
+      mutableEnvironment.NODE_ENV = "development";
+      assert(
+        auth.isSameOrigin(
+          originRequest("http://localhost:3000/api/referees/login", "http://localhost:3000"),
+        ),
+        "开发环境本地同源请求被错误拒绝。",
+      );
+    } finally {
+      if (originalNodeEnvironment === undefined) delete mutableEnvironment.NODE_ENV;
+      else mutableEnvironment.NODE_ENV = originalNodeEnvironment;
+    }
+
     const initialPassword = randomBytes(24).toString("base64url");
     const replacementPassword = randomBytes(24).toString("base64url");
     const initialHash = await security.hashPassword(initialPassword);
@@ -414,6 +474,7 @@ async function main() {
     await sourceContains("src/app/api/referees/admin/login/route.ts", ["登录信息不正确或后台当前不可用"]);
     await sourceContains("src/app/api/referees/login/route.ts", ["登录信息不正确或账号当前不可用"]);
     await sourceContains("src/lib/referee-auth.ts", ["REFEREE_ADMIN_SESSION_SECRET"]);
+    await sourceContains("src/lib/referee-auth.ts", ["SITE_ORIGIN"]);
     await sourceContains("src/lib/referee-member-auth.ts", ["REFEREE_MEMBER_SESSION_SECRET"]);
 
     const content = await import("../src/data/freshman-cup-2026");
@@ -472,6 +533,7 @@ async function main() {
       isolatedDatabase: true,
       passwordHashing: true,
       authBoundaries: true,
+      originValidation: true,
       loginSuccessAndFailure: true,
       sessionExpiryRule: true,
       firstLoginPasswordChange: true,

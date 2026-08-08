@@ -123,6 +123,9 @@ export const publicCompetitionFiles: readonly PublicCompetitionFile[] = [
     scope: "五人制足球赛事",
     href: "/documents/rules/futsal/2025-26-fifa-futsal-laws-zh.pdf",
     source: "国际足联 / 中国足球协会审定",
+    versionStatus: "historical",
+    versionStatusLabel: "历史参考",
+    versionNote: "适用于 2025/2026 版本查阅，使用前请核对具体赛事规程。",
   },
   {
     id: "football-laws-2025-26",
@@ -135,6 +138,9 @@ export const publicCompetitionFiles: readonly PublicCompetitionFile[] = [
     scope: "十一人制足球赛事",
     href: "/documents/rules/football/2025-26-laws-of-the-game-zh.pdf",
     source: "国际足球协会理事会 / 中文版本",
+    versionStatus: "historical",
+    versionStatusLabel: "历史参考",
+    versionNote: "适用于 2025/2026 版本查阅，使用前请核对具体赛事规程。",
   },
   {
     id: "football-laws-changes-2026-27",
@@ -147,6 +153,9 @@ export const publicCompetitionFiles: readonly PublicCompetitionFile[] = [
     scope: "十一人制足球赛事",
     href: "/documents/rules/football/2026-27-changes-explained-zh.pdf",
     source: "中国足球协会裁判委员会",
+    versionStatus: "changes",
+    versionStatusLabel: "变更说明",
+    versionNote: "当前文件为 2026/2027 规则变更及详解，不替代完整竞赛规则文本。",
   },
   {
     id: "mens-2026-guidebook",
@@ -159,6 +168,9 @@ export const publicCompetitionFiles: readonly PublicCompetitionFile[] = [
     scope: "2026男子足球院际杯",
     href: "/documents/competitions/2026-mens-intercollege-cup/guidebook.pdf",
     source: "南京航空航天大学天目湖学生足球协会",
+    versionStatus: "historical",
+    versionStatusLabel: "历史参考",
+    versionNote: "已结束赛事原始秩序册，仅用于 2026 男子足球院际杯档案查阅。",
   },
   ...disciplineDecisions.map((decision) => ({
     id: decision.id,
@@ -171,5 +183,8 @@ export const publicCompetitionFiles: readonly PublicCompetitionFile[] = [
     scope: decision.scope,
     href: decision.href,
     source: decision.source,
+    versionStatus: "current" as const,
+    versionStatusLabel: "当前适用" as const,
+    versionNote: "已发布纪律决定原件，适用范围以文件正文为准。",
   })),
 ] as const;

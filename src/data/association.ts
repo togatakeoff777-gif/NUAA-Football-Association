@@ -84,8 +84,8 @@ export const associationRoleFramework = [
 ] as const;
 
 export const currentAssociationTeam = {
-  label: "现任成员",
-  termNote: "任期年份待协会补充",
+  label: "现任足协成员",
+  termNote: "第五届南京航空航天大学天目湖足球协会 · 任期：2026—2027",
   positions: [
     { role: "主席", name: "胡兵" },
     { role: "副主席（主管财务）", name: "马俊" },
@@ -97,7 +97,7 @@ export const currentAssociationTeam = {
     { role: "宣传部副部长", name: "魏宇轩" },
     { role: "外联部部长", name: "涂文乐" },
   ],
-  note: "现任工作班子依据协会确认名单公开；未推定裁判事务负责人。",
+  note: "现任足协成员依据协会确认名单公开。",
 } as const;
 
 export const associationTerms = [

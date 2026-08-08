@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import {
   currentTeamDirectory,
+  currentTeamDirectoryStatuses,
   teamContactPendingLabel,
   verifiedCompetitionTeams,
 } from "@/data/teams";
@@ -28,13 +29,13 @@ export default function TeamsPage() {
             <ol>
               <li><strong>01</strong><span>先查看下方“当前招募与组队目录”，确认对应赛事与队伍状态。</span></li>
               <li><strong>02</strong><span>仅使用球队负责人已经确认可公开的联系方式；未确认时不展示私人账号。</span></li>
-              <li><strong>03</strong><span>如暂未公布联系人，可通过协会公开邮箱咨询，不提交手机号等敏感信息。</span></li>
+              <li><strong>03</strong><span>如暂未公布联系人，请持续关注学院组队信息、赛事公告与官网更新。</span></li>
             </ol>
             <a href="mailto:nuaafootball@163.com">nuaafootball@163.com</a>
           </section>
         </div></section>
         <section className="functional-section functional-section-tint"><div className="detail-shell">
-          <div className="functional-section-head"><div><span>CURRENT RECRUITING & FORMING</span><h2>当前招募与组队目录</h2></div><p>目录支持招募中、已成队、暂停与待确认四种状态；只有经负责人确认的公开联系方式才会展示。</p></div>
+          <div className="functional-section-head"><div><span>2026 FRESHMAN CUP DIRECTORY</span><h2>2026 新生杯组队目录</h2></div><p>目录支持{Object.values(currentTeamDirectoryStatuses).join("、")}四种状态；只有经负责人确认可公开的联系方式才会展示。</p></div>
           {currentTeamDirectory.length ? (
             <div className="current-team-directory">
               {currentTeamDirectory.map((team) => (
@@ -44,16 +45,17 @@ export default function TeamsPage() {
                     <div><dt>对应赛事</dt><dd><Link href={team.competitionHref}>{team.competitionName}</Link></dd></div>
                     <div><dt>招募对象 / 位置</dt><dd>{team.targetOrPositions}</dd></div>
                     <div><dt>负责人</dt><dd>{team.confirmedLead ?? "待球队负责人确认"}</dd></div>
-                    <div><dt>联系方式</dt><dd>{team.publicContact ?? teamContactPendingLabel}</dd></div>
+                    <div><dt>联系方式</dt><dd>{team.contactIsPublic ? team.publicContact ?? teamContactPendingLabel : teamContactPendingLabel}</dd></div>
                     <div><dt>更新时间</dt><dd>{team.updatedAt}</dd></div>
+                    <div><dt>备注</dt><dd>{team.note}</dd></div>
                   </dl>
                 </article>
               ))}
             </div>
           ) : (
             <EmptyState
-              title="当前暂无已确认公开的招募或组队信息"
-              description={`新赛季队伍名称、状态和联系人待各球队负责人确认。${teamContactPendingLabel}。`}
+              title="当前暂无经协会确认的 2026 新生杯组队信息"
+              description="学院或队伍名称、组队状态与联系人将在获得公开授权并完成核验后更新，请勿依据非正式渠道信息报名。"
               href="/participation"
               actionLabel="查看参赛指南"
             />

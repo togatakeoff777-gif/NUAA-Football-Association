@@ -40,7 +40,7 @@ export function SiteHeader({ fixed = false, overlay = false }: SiteHeaderProps) 
             ))}
           </nav>
           <Link aria-current={isCurrent(registrationCta.href) ? "page" : undefined} className="header-cta" href={registrationCta.href}>
-            {registrationCta.label} <span aria-hidden="true">↗</span>
+            {registrationCta.label} <span aria-hidden="true">→</span>
           </Link>
           <details className="mobile-menu">
             <summary aria-label="切换主导航"><span /><span /></summary>
@@ -48,7 +48,7 @@ export function SiteHeader({ fixed = false, overlay = false }: SiteHeaderProps) 
               {navigationItems.map((item) => (
                 <Link aria-current={isCurrent(item.href) ? "page" : undefined} key={item.href} href={item.href}>{item.label}<span aria-hidden="true">›</span></Link>
               ))}
-              <Link aria-current={isCurrent(registrationCta.href) ? "page" : undefined} href={registrationCta.href}>{registrationCta.label} <span aria-hidden="true">↗</span></Link>
+              <Link aria-current={isCurrent(registrationCta.href) ? "page" : undefined} href={registrationCta.href}>{registrationCta.label} <span aria-hidden="true">→</span></Link>
             </nav>
           </details>
         </div>

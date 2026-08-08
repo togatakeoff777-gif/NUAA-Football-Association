@@ -21,7 +21,7 @@ export function CompetitionFileCenter({ files }: { files: readonly PublicCompeti
               <div className="functional-file-list">
                 {categoryFiles.map((file) => (
                   <article key={file.id}>
-                    <div><span>{file.fileType}</span><strong>{file.title}</strong><small>{file.scope} · {file.source}</small></div>
+                    <div><span>{file.fileType}</span><strong>{file.title}</strong><small>{file.scope} · {file.source}</small><em data-version-status={file.versionStatus}>{file.versionStatusLabel}</em><p>{file.versionNote}</p></div>
                     <dl><div><dt>版本</dt><dd>{file.version}</dd></div><div><dt>发布日期</dt><dd>{file.publishedAt}</dd></div></dl>
                     <a href={file.href} download>下载原文件</a>
                   </article>

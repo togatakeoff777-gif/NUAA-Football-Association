@@ -119,4 +119,7 @@ export type PublicCompetitionFile = {
   scope: string;
   href: string;
   source: string;
+  versionStatus: "current" | "latest" | "changes" | "historical";
+  versionStatusLabel: "当前适用" | "最新版本" | "变更说明" | "历史参考";
+  versionNote: string;
 };

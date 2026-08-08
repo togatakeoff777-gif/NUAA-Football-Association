@@ -1,0 +1,132 @@
+/* V2.5 public season services — targeted additions only. */
+
+.home-freshman-service {
+  background:
+    linear-gradient(90deg, rgba(28, 31, 136, .025) 1px, transparent 1px),
+    linear-gradient(rgba(28, 31, 136, .025) 1px, transparent 1px),
+    var(--paper);
+  background-size: 54px 54px;
+}
+.freshman-service-grid { display: grid; grid-template-columns: 1.08fr .92fr; gap: 18px; }
+.freshman-service-primary { display: flex; min-width: 0; flex-direction: column; justify-content: space-between; padding: clamp(22px, 2.5vw, 32px); border-top: 4px solid var(--aviation-blue); background: #fff; box-shadow: 0 20px 54px rgba(16, 43, 78, .08); }
+.freshman-service-status { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); }
+.freshman-service-status > div { min-width: 0; padding: 15px 16px; background: #f7f9fc; }
+.freshman-service-status > div:first-child { grid-column: 1 / -1; background: linear-gradient(120deg, #eaf4ff, #f7fbff); }
+.freshman-service-status span { display: block; color: var(--muted); font-size: 11px; font-weight: 700; }
+.freshman-service-status strong { display: block; margin-top: 7px; color: var(--ink); font-size: clamp(14px, 1.2vw, 17px); }
+.freshman-service-status [data-confirmed] strong { color: var(--aviation-blue); font-size: clamp(19px, 1.8vw, 25px); }
+.freshman-service-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.freshman-service-actions .button { min-height: 44px; }
+.freshman-service-side { display: grid; min-width: 0; gap: 14px; }
+.freshman-service-updates,
+.freshman-season-review { min-width: 0; padding: clamp(18px, 2vw, 24px); border: 1px solid var(--line); background: #fff; }
+.freshman-service-updates > div > span,
+.freshman-season-review > div > span { color: var(--aviation-blue); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+.freshman-service-updates h3,
+.freshman-season-review h3 { margin-top: 5px; font-size: 21px; }
+.freshman-service-updates > a { position: relative; display: grid; gap: 5px; padding: 13px 28px 13px 0; border-top: 1px solid var(--line); }
+.freshman-service-updates > div + a { margin-top: 12px; }
+.freshman-service-updates a small { color: var(--muted); }
+.freshman-service-updates a strong { font-size: 14px; line-height: 1.45; }
+.freshman-service-updates a > span { position: absolute; right: 0; top: 50%; color: var(--aviation-blue); }
+.freshman-season-review { background: var(--space-blue); color: #fff; }
+.freshman-season-review > div > span { color: #7dbdf8; }
+.freshman-season-review > a { display: grid; grid-template-columns: minmax(100px, .65fr) minmax(0, 1.35fr); gap: 5px 14px; padding: 11px 0; border-top: 1px solid rgba(255,255,255,.14); }
+.freshman-season-review > div + a { margin-top: 10px; }
+.freshman-season-review a span { color: rgba(255,255,255,.65); font-size: 11px; }
+.freshman-season-review a strong { min-width: 0; font-size: 13px; overflow-wrap: anywhere; }
+.freshman-season-review a small { grid-column: 2; color: #9fd0ff; }
+
+.v25-section-heading { display: grid; grid-template-columns: 1fr minmax(280px, .72fr); gap: 36px; align-items: end; margin-bottom: 26px; }
+.v25-section-heading > div > p { color: var(--aviation-blue); font-size: 11px; font-weight: 800; letter-spacing: .12em; }
+.v25-section-heading h2 { margin-top: 7px; font-size: clamp(28px, 3vw, 42px); }
+.v25-section-heading > p { color: var(--muted); line-height: 1.75; }
+.participation-path-section,
+.participation-faq-section { padding: 72px 0; }
+.participation-path { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); list-style: none; counter-reset: path; }
+.participation-path li { position: relative; min-width: 0; padding: 22px 18px; border-top: 3px solid var(--aviation-blue); border-right: 1px solid var(--line); background: #fff; }
+.participation-path li:last-child { border-right: 0; }
+.participation-path li > strong { color: #9bb8d7; font-size: 13px; }
+.participation-path h3 { margin-top: 18px; font-size: 17px; }
+.participation-path p { margin-top: 10px; color: var(--muted); font-size: 13px; line-height: 1.7; }
+.participation-services { padding-top: 72px; background: #f3f7fb; }
+.participation-faq-section { background: #fff; }
+.participation-faq-list { border-top: 1px solid var(--line); }
+.participation-faq-list details { border-bottom: 1px solid var(--line); }
+.participation-faq-list summary { min-height: 62px; display: flex; align-items: center; justify-content: space-between; gap: 18px; cursor: pointer; font-weight: 750; }
+.participation-faq-list summary::after { content: "+"; color: var(--aviation-blue); font-size: 22px; }
+.participation-faq-list details[open] summary::after { content: "−"; }
+.participation-faq-list details p { max-width: 880px; padding: 0 36px 20px 0; color: var(--muted); line-height: 1.75; }
+
+.history-year-node { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 28px; }
+.history-year-marker { display: flex; min-height: 190px; flex-direction: column; justify-content: space-between; padding: 24px; background: var(--space-blue); color: #fff; }
+.history-year-marker strong { font-size: 48px; letter-spacing: -.05em; }
+.history-year-marker span { color: rgba(255,255,255,.64); font-size: 12px; }
+.history-archive-list { display: grid; gap: 1px; background: var(--line); }
+.history-archive-list article { display: grid; grid-template-columns: minmax(0, 1.35fr) .7fr auto; gap: 24px; align-items: center; padding: 24px; background: #fff; }
+.history-archive-list article > div > span { color: var(--aviation-blue); font-size: 11px; font-weight: 750; }
+.history-archive-list h3 { margin-top: 7px; font-size: 22px; }
+.history-archive-list p { margin-top: 8px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.history-archive-list dl { display: grid; gap: 10px; }
+.history-archive-list dt { color: var(--muted); font-size: 10px; }
+.history-archive-list dd { margin-top: 3px; font-size: 12px; font-weight: 700; }
+.history-archive-list a { color: var(--aviation-blue); font-size: 13px; font-weight: 750; white-space: nowrap; }
+.history-pending { max-width: 760px; padding-left: 24px; border-left: 4px solid #9db3cc; }
+.history-pending span { color: var(--aviation-blue); font-size: 11px; font-weight: 800; letter-spacing: .12em; }
+.history-pending h2 { margin-top: 8px; font-size: 30px; }
+.history-pending p { margin-top: 12px; color: var(--muted); line-height: 1.75; }
+
+.competition-pending-notice { display: grid; grid-template-columns: .65fr 1.35fr; gap: 34px; margin-top: 24px; padding: 25px 28px; border-left: 5px solid #d89b31; background: #fff8eb; }
+.competition-pending-notice span { color: #9a620c; font-size: 10px; font-weight: 800; letter-spacing: .1em; }
+.competition-pending-notice h2 { margin-top: 6px; font-size: 22px; }
+.competition-pending-notice > p { color: #675943; line-height: 1.75; }
+.schedule-more-button { display: flex; min-height: 46px; align-items: center; justify-content: center; margin: 18px auto 0; padding: 0 22px; border: 1px solid #a9c8e8; background: #fff; color: var(--aviation-blue); font-weight: 750; cursor: pointer; }
+.functional-file-list article > div:first-child { grid-template-rows: auto auto auto; }
+.functional-file-list article > div:first-child > em { grid-column: 2; width: fit-content; padding: 4px 7px; border: 1px solid #c8d8e9; color: var(--aviation-blue); font-size: 10px; font-style: normal; font-weight: 750; }
+.functional-file-list article > div:first-child > em[data-version-status="current"] { border-color: #acd8ca; background: #edf9f5; color: #146b54; }
+.functional-file-list article > div:first-child > em[data-version-status="changes"] { border-color: #ead19f; background: #fff8e9; color: #8b5d0c; }
+.functional-file-list article > div:first-child > em[data-version-status="historical"] { background: #f3f5f8; color: #617187; }
+.functional-file-list article > div:first-child > p { grid-column: 2; color: var(--muted); font-size: 11px; line-height: 1.55; }
+
+@media (min-width: 1024px) and (max-height: 820px) {
+  .home-freshman-service .freshman-service-primary { padding: 18px 20px; }
+  .home-freshman-service .freshman-service-status > div { padding: 10px 12px; }
+  .home-freshman-service .freshman-service-actions { margin-top: 12px; }
+  .home-freshman-service .freshman-service-updates,
+  .home-freshman-service .freshman-season-review { padding: 14px 17px; }
+  .home-freshman-service .freshman-service-updates > a { padding-top: 9px; padding-bottom: 9px; }
+  .home-freshman-service .freshman-season-review > a { padding: 8px 0; }
+}
+
+@media (max-width: 900px) {
+  .freshman-service-grid,
+  .v25-section-heading,
+  .history-year-node,
+  .competition-pending-notice { grid-template-columns: 1fr; }
+  .participation-path { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); }
+  .participation-path li { border-right: 0; }
+  .history-archive-list article { grid-template-columns: 1fr; }
+  .history-year-marker { min-height: 130px; }
+}
+
+@media (max-width: 600px) {
+  .freshman-service-status { grid-template-columns: 1fr; }
+  .freshman-service-status > div:first-child { grid-column: auto; }
+  .freshman-service-actions { display: grid; }
+  .freshman-service-actions .button { width: 100%; }
+  .freshman-service-updates,
+  .freshman-season-review { padding: 18px 16px; }
+  .freshman-season-review > a { grid-template-columns: 1fr; }
+  .freshman-season-review a small { grid-column: auto; }
+  .participation-path-section,
+  .participation-faq-section { padding: 48px 0; }
+  .participation-path { grid-template-columns: 1fr; }
+  .participation-path li { display: grid; grid-template-columns: 38px 1fr; gap: 0 8px; padding: 17px 15px; }
+  .participation-path h3 { margin-top: 0; }
+  .participation-path p { grid-column: 2; }
+  .history-year-marker strong { font-size: 42px; }
+  .history-archive-list article { padding: 19px 16px; }
+  .competition-pending-notice { gap: 12px; padding: 20px 18px; }
+  .functional-file-list article > div:first-child > p,
+  .functional-file-list article > div:first-child > em { grid-column: 2; }
+}

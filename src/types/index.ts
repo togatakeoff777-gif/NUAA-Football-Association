@@ -166,10 +166,12 @@ export type CurrentTeamDirectoryEntry = {
   status: CurrentTeamStatus;
   statusLabel: string;
   targetOrPositions: string;
+  contactIsPublic: boolean;
   confirmedLead?: string;
   publicContact?: string;
   publicQrImage?: string;
   updatedAt: string;
+  note: string;
 };
 
 export type PlatformItem = {

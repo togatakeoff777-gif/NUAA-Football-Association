@@ -10,6 +10,7 @@ import "@/styles/competition-archive.css";
 import "@/styles/functional-pages.css";
 import "@/styles/acceptance-upgrade.css";
 import "@/styles/v24.css";
+import "@/styles/v25.css";
 import {
   SITE_DESCRIPTION,
   SITE_NAME,

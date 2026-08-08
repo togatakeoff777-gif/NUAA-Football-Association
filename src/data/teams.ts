@@ -35,6 +35,17 @@ export const verifiedCompetitionTeams = [
   },
 ] as const;
 
+export const currentTeamDirectoryStatuses = {
+  pending: "待确认",
+  recruiting: "招募中",
+  formed: "已成队",
+  paused: "暂停",
+} as const satisfies Record<CurrentTeamDirectoryEntry["status"], string>;
+
+/**
+ * 新生杯组队信息仅在学院或球队负责人确认公开范围后录入。
+ * 联系方式须同时满足 contactIsPublic=true 才能在前台展示。
+ */
 export const currentTeamDirectory: readonly CurrentTeamDirectoryEntry[] = [];
 
 export const teamContactPendingLabel = "联系方式待球队负责人确认";

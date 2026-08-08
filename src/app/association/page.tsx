@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   description: "南京航空航天大学天目湖足球协会公开档案。",
   openGraph: {
     title: "关于南京航空航天大学天目湖足球协会",
-    description: "协会身份、现任工作班子、历届成员、服务范围与公开联系方式。",
+    description: "协会身份、现任足协成员、历届成员、服务范围与公开联系方式。",
     url: "/association",
   },
 };
@@ -46,7 +46,7 @@ export default function AssociationPage() {
       <JsonLd data={organizationJsonLd()} />
       <ShareActions title="南京航空航天大学天目湖足球协会" />
       <section className="association-current-team" aria-labelledby="association-current-team-title">
-        <div><p>CURRENT TEAM</p><h2 id="association-current-team-title">现任工作班子</h2><span>{currentAssociationTeam.termNote}</span></div>
+        <div><p>CURRENT TEAM</p><h2 id="association-current-team-title">现任足协成员</h2><span>{currentAssociationTeam.termNote}</span></div>
         <dl>
           {currentAssociationTeam.positions.map((item, index) => (
             <div key={`${item.role}-${item.name}-${index}`}><dt>{item.role}</dt><dd>{item.name}</dd></div>

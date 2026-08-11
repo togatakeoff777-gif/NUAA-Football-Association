@@ -100,7 +100,7 @@ export function RefereeHub() {
               <span>LAWS & RESOURCES</span>
               <h2>规则与资料</h2>
             </div>
-            <p>按足球规则、五人制规则、规则更新和裁判工作资料四类组织，不生成无真实来源的下载链接。</p>
+            <p>按足球规则、五人制规则、规则更新和裁判工作资料四类查看已发布文件。</p>
           </div>
           <div className="referee-rule-directory">
             {rulesResourceEntries.map((entry, index) => {

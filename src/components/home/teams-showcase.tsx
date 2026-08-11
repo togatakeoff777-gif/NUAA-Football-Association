@@ -10,7 +10,7 @@ export function TeamsShowcase() {
         <SectionHeading
           eyebrow="TIANMUHU SQUADS / 天目湖球队"
           title="球队资料，等待真实赛季更新"
-          description="不展示未经确认的球队名称、队员信息或人物照片；球队资料完成核验后更新。"
+          description="当前暂无公开球队资料，请关注球队信息页后续更新。"
           id="teams-title"
           action={<Link className="text-link" href="/teams">进入球队栏目 <span aria-hidden="true">→</span></Link>}
         />

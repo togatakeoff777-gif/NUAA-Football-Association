@@ -6,7 +6,7 @@ export const BILIBILI_PROFILE_URL =
 export const FOOTBALL_CHINA_URL = "http://www.lyzg90.com/";
 export const ASSOCIATION_EMAIL = "nuaafootball@163.com";
 export const DOUYIN_ID = "nuaafa";
-export const DOUYIN_QR_IMAGE = "/images/media/nuaafa-douyin-qr.jpg";
+export const DOUYIN_QR_IMAGE = "/images/media/nuaafa-douyin-qr-cropped.png";
 
 export const wechatPlatform = {
   id: "wechat",

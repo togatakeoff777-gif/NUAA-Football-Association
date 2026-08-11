@@ -69,7 +69,7 @@ export default function ParticipationPage() {
         <section className="index-section participation-services" aria-labelledby="participation-services-title">
           <div className="page-shell index-shell">
             <div className="index-heading"><div><p className="index-eyebrow">SERVICE ENTRANCES</p><h2 id="participation-services-title">参赛服务入口</h2></div><p>正式要求以各赛事最新竞赛规程和赛事组委会通知为准。</p></div>
-            <p className="index-notice" role="note">本站仅提供参赛说明，不直接办理报名，也不收集身份证、学号、手机号等敏感个人信息。</p>
+            <p className="index-notice" role="note">参赛报名与材料提交请按赛事通知及足球中国平台要求办理。</p>
             <div className="index-grid">
               {items.map((item) => item.external ? <a className="index-card index-card-link" href={item.href} key={item.title} rel="noopener noreferrer" target="_blank"><div className="index-card-topline"><span className="index-card-meta">{item.meta}</span><span className="index-card-status">{item.status}</span></div><h3 className="index-card-title">{item.title}</h3><p className="index-card-description">{item.description}</p><span className="index-card-action">{item.actionLabel}（新窗口）<span aria-hidden="true">→</span></span></a> : <Link className="index-card index-card-link" href={item.href} key={item.title}><div className="index-card-topline"><span className="index-card-meta">{item.meta}</span><span className="index-card-status">{item.status}</span></div><h3 className="index-card-title">{item.title}</h3><p className="index-card-description">{item.description}</p><span className="index-card-action">{item.actionLabel}<span aria-hidden="true">→</span></span></Link>)}
             </div>

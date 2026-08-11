@@ -17,7 +17,7 @@ export function ProcessPageLayout({ eyebrow, title, description, statusPanel, ch
     <>
       <SiteHeader />
       <main className="template-page template-process-page" id="main-content">
-        <PageIntro eyebrow={eyebrow} title={title} description={description} statusLabel="公开流程 · 不收集个人信息" variant="process" aside={statusPanel} />
+        <PageIntro eyebrow={eyebrow} title={title} description={description} statusLabel="公开流程 · 招募安排" variant="process" aside={statusPanel} />
         <section className="template-section process-body">
           <div className="page-shell">{children}<Link className="template-back-link" href="/referees">← 返回裁判中心</Link></div>
         </section>

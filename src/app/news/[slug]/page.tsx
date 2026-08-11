@@ -23,6 +23,11 @@ import {
   officialWomensCupNews,
   womensCupGallery,
 } from "@/data/womens-intercollege-cup-2026";
+import {
+  disciplineDecisions,
+  getDisciplineDecision,
+  getDisciplineDecisionArticle,
+} from "@/data/public-information";
 import { newsArticleJsonLd } from "@/lib/structured-data";
 
 type NewsDetailPageProps = {
@@ -37,6 +42,7 @@ export function generateStaticParams() {
     freshmanCupPreparationNotice,
     ...officialMensCupNews,
     ...officialWomensCupNews,
+    ...disciplineDecisions,
   ].map((story) => ({ slug: story.id }));
 }
 
@@ -49,7 +55,8 @@ export async function generateMetadata({ params }: NewsDetailPageProps): Promise
   const story =
     getFreshmanCupContentItem(slug) ??
     getMensCupNewsItem(slug) ??
-    getWomensCupNewsItem(slug);
+    getWomensCupNewsItem(slug) ??
+    getDisciplineDecision(slug);
   if (!story) return { robots: { index: false, follow: false } };
   const canonicalPath = `/news/${slug}`;
   const image = "image" in story ? story.image : "/brand/nuaa-fa-logo.jpg";
@@ -84,14 +91,18 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
   const { slug } = await params;
   const isWomensCupStory = Boolean(getWomensCupNewsItem(slug));
   const isFreshmanCupStory = Boolean(getFreshmanCupContentItem(slug));
+  const disciplineDecision = getDisciplineDecision(slug);
+  const isDisciplineDecision = Boolean(disciplineDecision);
   const story =
     getFreshmanCupContentItem(slug) ??
     getMensCupNewsItem(slug) ??
-    getWomensCupNewsItem(slug);
+    getWomensCupNewsItem(slug) ??
+    disciplineDecision;
   const article =
     getFreshmanCupArticle(slug) ??
     getMensCupArticle(slug) ??
-    getWomensCupArticle(slug);
+    getWomensCupArticle(slug) ??
+    getDisciplineDecisionArticle(slug);
   if (!story || !article) notFound();
 
   const related = [
@@ -99,6 +110,7 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
     freshmanCupPreparationNotice,
     ...officialWomensCupNews,
     ...officialMensCupNews,
+    ...disciplineDecisions,
   ]
     .filter((item) => item.id !== story.id)
     .slice(0, 3)
@@ -118,7 +130,9 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
   return (
     <DetailPageLayout
       eyebrow={
-        isFreshmanCupStory
+        isDisciplineDecision
+          ? "DISCIPLINARY DECISION / 纪律决定"
+          : isFreshmanCupStory
           ? "2026 FRESHMAN CUP / OFFICIAL UPDATE"
           : isWomensCupStory
             ? "OFFICIAL NEWS / 2026 WOMEN'S CUP"
@@ -127,24 +141,29 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
       title={story.title}
       description={story.summary}
       statusLabel={
-        isFreshmanCupStory
+        isDisciplineDecision
+          ? "纪律决定 · 正式发布"
+          : isFreshmanCupStory
           ? `${story.category} · 正式发布`
-          : isWomensCupStory
-            ? "正式报道 · 来源已确认"
-            : "正式报道 · 官方数据"
+          : "正式报道 · 2026赛季已归档"
       }
       meta={{
         source: story.source ?? "湖区FA公众号",
         published: story.dateLabel,
         updated: story.dateLabel,
+        sourceLabel: isDisciplineDecision ? "发布单位" : "来源",
       }}
       attachments={[{
-        label: isFreshmanCupStory
+        label: isDisciplineDecision
+          ? "查看 / 下载处罚决定原件（PDF）"
+          : isFreshmanCupStory
           ? "2026新生杯赛事详情"
           : isWomensCupStory
             ? "2026女子足球院际杯赛事档案"
             : "2026男子足球院际杯完整赛事档案",
-        href: isFreshmanCupStory
+        href: isDisciplineDecision && disciplineDecision
+          ? disciplineDecision.pdfHref
+          : isFreshmanCupStory
           ? "/competitions/freshman-cup"
           : isWomensCupStory
             ? "/competitions/2026-womens-intercollege-cup"
@@ -163,9 +182,11 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
         })}
       />
       <ShareActions title={story.title} text={story.summary} />
-      <figure className={`detail-story-figure${isFreshmanCupStory ? " detail-story-figure-brand" : ""}`}>
-        <Image src={image} alt={imageAlt} fill sizes="(max-width: 720px) 100vw, 780px" />
-      </figure>
+      {!isDisciplineDecision ? (
+        <figure className={`detail-story-figure${isFreshmanCupStory ? " detail-story-figure-brand" : ""}`}>
+          <Image src={image} alt={imageAlt} fill sizes="(max-width: 720px) 100vw, 780px" />
+        </figure>
+      ) : null}
       <p className="detail-article-lead">{story.summary}</p>
       {article.blocks.map((block, index) =>
         block.type === "paragraph" ? (
@@ -178,7 +199,12 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
           </ul>
         ),
       )}
-      {isFreshmanCupStory ? (
+      {isDisciplineDecision && disciplineDecision ? (
+        <section className="detail-inline-attachment" aria-labelledby="discipline-attachment-title">
+          <h2 id="discipline-attachment-title">附件</h2>
+          <a href={disciplineDecision.pdfHref} rel="noopener noreferrer" target="_blank">查看 / 下载处罚决定原件（PDF）</a>
+        </section>
+      ) : isFreshmanCupStory ? (
         <blockquote>报名时间、比赛日期、比赛场地、参赛资格和竞赛规程以协会后续正式公告为准。</blockquote>
       ) : isWomensCupStory ? (
         <>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { AppointmentPositionKey } from "@/generated/prisma/browser";
+import type { AppointmentPositionKey } from "@/generated/prisma";
 
 type PositionOption = { key: AppointmentPositionKey; label: string };
 

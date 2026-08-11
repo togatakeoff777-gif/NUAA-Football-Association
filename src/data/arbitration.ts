@@ -6,7 +6,7 @@ const arbitrationOwnership = {
 };
 
 export const arbitrationPublicNotice =
-  "申诉应在比赛结束后48小时内提出；足协确认受理后，将在48小时内召开听证会。官网不开放在线提交，具体渠道、材料要求和受理主体以对应赛事规程、纪律决定或赛事通知为准。";
+  "申诉应在比赛结束后48小时内提出；足协确认受理后，将在48小时内召开听证会。提交渠道、材料要求和受理主体以对应赛事规程、纪律决定或赛事通知为准。";
 
 export const arbitrationGuide = {
   ...arbitrationOwnership,
@@ -29,14 +29,14 @@ export const arbitrationGuide = {
   ],
   process: [
     { id: "prepare", title: "准备材料", description: "比赛结束后48小时内，核对适用范围、申请主体与必要材料。" },
-    { id: "submit", title: "按通知提交", description: "按赛事规程、纪律决定或赛事通知指定渠道提交，官网不设置在线表单。" },
+    { id: "submit", title: "按通知提交", description: "按赛事规程、纪律决定或赛事通知指定渠道提交。" },
     { id: "review", title: "确认受理", description: "赛事组织方核验申请主体、时限、事项与材料完整性，并确认是否受理。" },
     { id: "hearing", title: "召开听证会", description: "足协确认受理后48小时内召开听证会，依对应规则审议处理。" },
-    { id: "publish", title: "决定公示", description: "仅公开经审核且适合公开的正式决定。" },
+    { id: "publish", title: "决定公示", description: "处理完成后按赛事规定发布正式决定。" },
   ],
   submission: {
     status: "按赛事通知指定方式提交",
-    contact: "提交渠道、材料要求和受理主体以对应赛事规程、纪律决定或赛事通知为准；官网不收集身份证号、手机号等敏感信息。",
+    contact: "提交渠道、材料要求和受理主体以对应赛事规程、纪律决定或赛事通知为准。",
   },
 } as const;
 
@@ -44,17 +44,17 @@ export const arbitrationResources = [
   {
     title: "仲裁 / 申诉申请模板",
     status: "暂无公开文件",
-    description: "协会尚未发布正式申请模板，当前保持正式空状态。",
+    description: "正式申请模板尚未发布，具体材料要求以对应赛事通知为准。",
   },
   {
     title: "赛事纪律决定",
     status: "4份公开原件",
-    description: "查看协会已公开的球员与裁判员纪律决定原文件。",
+    description: "查看球员与裁判员纪律决定网页及 PDF 原件。",
     href: "/competitions/files#discipline",
   },
   {
     title: "竞赛规则与工作资料",
-    status: "真实文件已接入",
+    status: "文件中心",
     description: "竞赛规则位于赛事文件中心，裁判组工作表单位于裁判中心。",
     href: "/referees#referee-downloads",
   },

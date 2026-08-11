@@ -495,9 +495,10 @@ async function main() {
       "现任工作班子名单未正确渲染来源数据。",
     );
     assert(
-      platforms.douyinPlatform.qrImage === "/images/media/nuaafa-douyin-qr.jpg",
-      "抖音二维码配置未指向真实文件。",
+      platforms.douyinPlatform.qrImage === "/images/media/nuaafa-douyin-qr-cropped.png",
+      "抖音二维码配置未指向专用裁剪文件。",
     );
+    await stat(path.resolve("public/images/media/nuaafa-douyin-qr-cropped.png"));
     await stat(path.resolve("public/images/media/nuaafa-douyin-qr.jpg"));
     const qrHash = createHash("sha256")
       .update(await readFile(path.resolve("public/images/media/nuaafa-douyin-qr.jpg")))

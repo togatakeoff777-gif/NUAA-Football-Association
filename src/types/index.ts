@@ -25,7 +25,7 @@ export type Competition = ContentOwnership & {
   name: string;
   shortName: string;
   semester: "first" | "second";
-  semesterLabel: "上半学年" | "下半学年";
+  semesterLabel: "上半学期" | "下半学期";
   format: CompetitionFormat;
   formatLabel: "十一人制" | "五人制";
   teamFormation: "院系组队" | "自由组队";

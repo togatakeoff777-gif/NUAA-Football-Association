@@ -167,7 +167,7 @@ export const publicCompetitionFiles: readonly PublicCompetitionFile[] = [
     publishedAt: "2026.03",
     scope: "2026男子足球院际杯",
     href: "/documents/competitions/2026-mens-intercollege-cup/guidebook.pdf",
-    source: "南京航空航天大学天目湖学生足球协会",
+    source: "南京航空航天大学天目湖足球协会",
     versionStatus: "historical",
     versionStatusLabel: "历史参考",
     versionNote: "已结束赛事原始秩序册，仅用于 2026 男子足球院际杯档案查阅。",

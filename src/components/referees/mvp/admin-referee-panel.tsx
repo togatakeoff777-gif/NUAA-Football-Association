@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
-import type { AppointmentPositionKey } from "@/generated/prisma/browser";
+import type { AppointmentPositionKey } from "@/generated/prisma";
 
 type RefereeOption = { id: string; label: string; elevenASide: boolean; futsal: boolean };
 type ApplicationRow = {

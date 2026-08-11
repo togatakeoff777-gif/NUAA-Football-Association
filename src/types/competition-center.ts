@@ -52,7 +52,7 @@ export type CoreCompetitionDirectoryEntry = {
   year: number;
   season: string;
   semester: "first" | "second";
-  semesterLabel: "上半学年" | "下半学年";
+  semesterLabel: "上半学期" | "下半学期";
   campus: "天目湖校区" | "天目湖校区 / 将军路校区";
   eventType: "天目湖赛事" | "跨校区赛事";
   format: "eleven-a-side" | "futsal";

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { BrandMark } from "@/components/ui/brand-mark";
-import { associationIdentity, footerScopeStatements } from "@/data/association";
+import { associationIdentity } from "@/data/association";
 import {
   bilibiliPlatform,
   emailPlatform,
@@ -49,7 +49,7 @@ export function SiteFooter({ homeCompact = false }: SiteFooterProps) {
               哔哩哔哩 · {bilibiliPlatform.name} ↗
             </a>
             <Link className="footer-douyin" href="/media#douyin">
-              <Image src={douyinPlatform.qrImage} alt={douyinPlatform.qrAlt} width={54} height={72} />
+              <Image src={douyinPlatform.qrImage} alt={douyinPlatform.qrAlt} width={54} height={54} />
               <span>抖音 · {douyinPlatform.name}<small>{douyinPlatform.label} · 查看二维码</small></span>
             </Link>
             <a href={footballChinaPlatform.href} target="_blank" rel="noopener noreferrer" aria-label="前往足球中国，将在新标签页打开">
@@ -58,18 +58,13 @@ export function SiteFooter({ homeCompact = false }: SiteFooterProps) {
             <a href={emailPlatform.href}>联系邮箱 · {emailPlatform.label}</a>
             <div className="footer-emblem">
               <Image src="/brand/nuaa-official-emblem.jpg" alt="南京航空航天大学官方校徽" width={64} height={64} />
-              <p><strong>学校归属：南京航空航天大学</strong><br />官方校徽仅用于学校归属展示</p>
+              <p><strong>学校归属：南京航空航天大学</strong></p>
             </div>
           </div>
         </div>
 
-        <div className="footer-declarations" aria-label="网站范围声明">
-          {footerScopeStatements.map((statement) => <p key={statement}>{statement}</p>)}
-        </div>
-
         <div className="footer-bottom">
           <p>© 2026 {associationIdentity.shortName} · {associationIdentity.establishedLabel}</p>
-          <p>公开数据以协会核验内容为准 · 待确认事项不作推测</p>
         </div>
       </div>
     </footer>

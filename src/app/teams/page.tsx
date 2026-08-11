@@ -55,7 +55,7 @@ export default function TeamsPage() {
           ) : (
             <EmptyState
               title="当前暂无经协会确认的 2026 新生杯组队信息"
-              description="学院或队伍名称、组队状态与联系人将在获得公开授权并完成核验后更新，请勿依据非正式渠道信息报名。"
+              description="2026新生杯组队资料尚未发布，请关注赛事公告与球队信息页后续更新。"
               href="/participation"
               actionLabel="查看参赛指南"
             />

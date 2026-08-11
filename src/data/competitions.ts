@@ -35,12 +35,12 @@ export const annualCompetitions = coreCompetitions;
 export const annualCompetitionGroups = [
   {
     id: "first-semester",
-    label: "上半学年",
+    label: "上半学期",
     competitionIds: ["freshman-cup", "tianmuhu-futsal-league"],
   },
   {
     id: "second-semester",
-    label: "下半学年",
+    label: "下半学期",
     competitionIds: ["mens-intercollege-cup", "womens-intercollege-cup"],
   },
 ] as const;

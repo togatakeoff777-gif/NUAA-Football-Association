@@ -18,7 +18,7 @@ export default function CrossCampusCompetitionsPage() {
       notice="南航天目湖足协立足天目湖校区，不代表南京航空航天大学三个校区的统一足球组织，也不管理其他校区内部事务。"
       items={[
         { title: "经确认的赛事信息", description: "赛事主办方、范围与资料来源确认后再行发布。", meta: "发布原则", status: "资料待更新" },
-        { title: "其他校区内部事务", description: "不在本网站默认管理与发布范围内。", meta: "职责边界", status: "不纳入管理" },
+        { title: "其他校区内部事务", description: "由对应校区相关足球组织负责。", meta: "职责边界", status: "分校区负责" },
         { title: "资料核验", description: "跨校区内容须明确组织方、来源和更新责任。", meta: "内容治理", status: "按确认发布" },
       ]}
     />

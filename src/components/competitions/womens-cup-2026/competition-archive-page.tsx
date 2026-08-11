@@ -20,7 +20,7 @@ export function WomensCompetitionArchivePage() {
       titleId="womens-cup-title"
       title={competition.canonicalTitle}
       eyebrow="COMPETITION ARCHIVE · WOMEN'S FOOTBALL · 2026"
-      status="已结束 / 来源已确认"
+      status="已结束 · 已归档"
       description="依据足球中国赛事截图、结构化数据、校级官方账号报道与协会原始照片整理。"
       heroImage={heroImage}
       heroAlt="2026天目湖校区女子足球院际杯赛事集体合影"
@@ -31,7 +31,7 @@ export function WomensCompetitionArchivePage() {
         { label: "规模", value: `${competition.summary.teams}队 / ${competition.summary.matches}场` },
         { label: "进球", value: `${competition.summary.goals}球` },
       ]}
-      returnStatus="档案状态：已结束 / 来源已确认"
+      returnStatus="档案状态：2026赛季已归档"
     >
       <ShareActions title={competition.canonicalTitle} text="2026女子足球院际杯（天目湖校区）赛事档案" />
       <WomensCompetitionOverview />

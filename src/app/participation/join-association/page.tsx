@@ -40,9 +40,9 @@ export default function JoinAssociationPage() {
     <SectionIndexPage
       eyebrow="JOIN THE ASSOCIATION"
       title="加入天目湖足协"
-      description="了解协会工作方向，并等待经确认的正式招募信息。"
+      description="了解协会工作方向与后续招募安排。"
       sectionTitle="加入说明"
-      sectionDescription="本站不直接办理成员报名，也不收集或保存个人资料。"
+      sectionDescription="招募方式、材料要求与报名渠道以协会正式通知为准。"
       notice="具体岗位与招募安排尚待协会更新，请以正式通知为准。"
       statusLabel="招募资料待更新"
       items={items}

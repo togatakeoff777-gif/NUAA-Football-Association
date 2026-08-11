@@ -76,7 +76,7 @@ export function MatchCenter() {
             </article>
           </div>
         </div>
-        <p className="home-demo-note" data-home-reveal data-home-delay="3">以上比分、时间、场地与冠军信息均来自2026男、女子足球院际杯已核验赛事归档。</p>
+        <p className="home-demo-note" data-home-reveal data-home-delay="3">2026男、女子足球院际杯均已结束并完成赛事归档。</p>
       </div>
     </section>
   );

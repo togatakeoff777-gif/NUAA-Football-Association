@@ -43,14 +43,14 @@ export default function JoinPage() {
           <div className="detail-shell">
             <p>JOIN THE ASSOCIATION</p>
             <h1>加入我们</h1>
-            <p>这里集中说明协会运营、裁判队伍和摄影宣传方向；当前不建设在线报名表，也不收集个人敏感信息。</p>
+            <p>了解协会运营、裁判队伍和摄影宣传方向，关注各方向后续招募安排。</p>
           </div>
         </section>
         <section className="functional-section">
           <div className="detail-shell">
             <div className="functional-section-head">
               <div><span>RECRUITMENT DIRECTIONS</span><h2>参与方向</h2></div>
-              <p>招募状态、岗位、时间和群入口必须经协会确认后更新，未确认内容不作推测。</p>
+              <p>招募状态、岗位、时间和群入口以协会正式通知为准。</p>
             </div>
             <div className="join-direction-list">
               {directions.map((direction, index) => (

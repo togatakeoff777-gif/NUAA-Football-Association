@@ -30,7 +30,7 @@ export function DouyinQrCard() {
             src={douyinPlatform.qrImage}
             alt={douyinPlatform.qrAlt}
             fill
-            sizes="(max-width: 720px) 84vw, 360px"
+            sizes="(max-width: 720px) 240px, 310px"
           />
         </button>
         <div>
@@ -54,9 +54,9 @@ export function DouyinQrCard() {
             <Image
               src={douyinPlatform.qrImage}
               alt={douyinPlatform.qrAlt}
-              height={980}
+              height={698}
               priority
-              width={720}
+              width={698}
             />
             <p>保存图片后，可在抖音中使用“扫一扫”识别；抖音号：nuaafa。</p>
           </div>

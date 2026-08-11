@@ -19,7 +19,7 @@ export function CompetitionArchivePage() {
       titleId="cup-archive-title"
       title={competition.name}
       eyebrow="OFFICIAL COMPETITION ARCHIVE · 2026"
-      status="已结束 / 官方数据"
+      status="已结束 · 已归档"
       description={`${competition.structure.groupStage}。赛事于2026年5月17日完成决赛，致慧书院夺得冠军。`}
       heroImage={competition.heroImage}
       heroAlt="天目湖校区西操场晚霞与足球"
@@ -30,7 +30,7 @@ export function CompetitionArchivePage() {
         { label: "规模", value: `${competition.summary.teams}队 / ${competition.summary.matches}场` },
         { label: "进球", value: `${competition.summary.goals}球` },
       ]}
-      returnStatus="档案状态：已结束 / 官方数据"
+      returnStatus="档案状态：2026赛季已归档"
     >
       <ShareActions title={competition.name} text="2026男子足球院际杯（天目湖校区）赛事档案" />
       <CompetitionOverview />

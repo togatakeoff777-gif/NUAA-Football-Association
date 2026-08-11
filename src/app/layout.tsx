@@ -11,6 +11,7 @@ import "@/styles/functional-pages.css";
 import "@/styles/acceptance-upgrade.css";
 import "@/styles/v24.css";
 import "@/styles/v25.css";
+import "@/styles/v26.css";
 import {
   SITE_DESCRIPTION,
   SITE_NAME,

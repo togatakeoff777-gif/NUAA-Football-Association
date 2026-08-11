@@ -4,7 +4,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { PageIntro } from "@/components/templates/page-intro";
 
-type DetailMeta = { source: string; published: string; updated: string };
+type DetailMeta = { source: string; published: string; updated: string; sourceLabel?: string };
 type RelatedItem = { title: string; href: string; meta: string };
 type DetailAttachment = string | { label: string; href: string; external?: boolean };
 
@@ -22,7 +22,7 @@ type DetailPageLayoutProps = {
 export function DetailPageLayout({ eyebrow, title, description, meta, attachments = [], related = [], statusLabel = "演示详情 · 非正式发布", children }: DetailPageLayoutProps) {
   const aside = (
     <dl className="detail-meta-panel">
-      <div><dt>来源</dt><dd>{meta.source}</dd></div>
+      <div><dt>{meta.sourceLabel ?? "来源"}</dt><dd>{meta.source}</dd></div>
       <div><dt>发布日期</dt><dd>{meta.published}</dd></div>
       <div><dt>更新时间</dt><dd>{meta.updated}</dd></div>
     </dl>

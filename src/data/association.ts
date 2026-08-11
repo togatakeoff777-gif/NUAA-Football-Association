@@ -21,7 +21,7 @@ export const associationScope = {
   representedCampus: "南京航空航天大学天目湖校区",
   supportedCampusValues: ["tianmuhu", "cross-campus"],
   summary:
-    "本网站仅代表南京航空航天大学天目湖足球协会，服务天目湖校区校园足球。",
+    "南京航空航天大学天目湖足球协会立足天目湖校区，服务校园足球。",
   permittedContent: [
     "天目湖校区赛事与球队",
     "天目湖足协新闻、公告、裁判、规则、招新和协会历史",
@@ -47,8 +47,8 @@ export const associationDevelopmentFacts = [
   {
     id: "academic-terms",
     value: "2",
-    label: "学年赛事阶段",
-    note: "上半学年 / 下半学年",
+    label: "学期赛事阶段",
+    note: "上半学期 / 下半学期",
   },
   {
     id: "formats",
@@ -59,12 +59,6 @@ export const associationDevelopmentFacts = [
 ] as const;
 
 export const associationStats = associationDevelopmentFacts;
-
-export const footerScopeStatements = [
-  "本网站由南京航空航天大学天目湖足球协会建设与维护，主要发布天目湖校区足球赛事、协会活动及相关信息。部分赛事由不同校区相关足球组织共同举办，涉及跨校区赛事的内容以赛事组织方最终确认的信息为准。",
-  "“南航大足球协会”哔哩哔哩账号为校区共享视频平台。",
-  "球员注册、球队组建、赛事报名及相关竞赛管理统一通过足球中国平台完成。",
-] as const;
 
 export const associationCampusRelationship = {
   title: "校区足球组织关系",
@@ -97,7 +91,7 @@ export const currentAssociationTeam = {
     { role: "宣传部副部长", name: "魏宇轩" },
     { role: "外联部部长", name: "涂文乐" },
   ],
-  note: "现任足协成员依据协会确认名单公开。",
+  note: "第五届南京航空航天大学天目湖足球协会成员名单。",
 } as const;
 
 export const associationTerms = [
@@ -106,14 +100,14 @@ export const associationTerms = [
     academicYear: "2021-2022",
     positions: [{ role: "主席", name: "尹键峰" }],
     unassignedMembers: [],
-    roleNote: "除主席外的成员资料尚未提供。",
+    roleNote: "现有档案仅记录主席信息。",
   },
   {
     term: "第二届",
     academicYear: "2022-2023",
     positions: [],
     unassignedMembers: ["程涛", "米尔", "阿里木", "周浩楠", "朱润涛"],
-    roleNote: "现有公开资料未明确成员与具体岗位的对应关系。",
+    roleNote: "现有档案未记录成员与具体岗位的对应关系。",
   },
   {
     term: "第三届",
@@ -127,7 +121,7 @@ export const associationTerms = [
       { role: "宣传部部长", name: "努尔江·阿依肯" },
     ],
     unassignedMembers: [],
-    roleNote: "成员与岗位依据协会已确认资料公开。",
+    roleNote: "第三届成员与岗位记录。",
   },
   {
     term: "第四届",
@@ -143,13 +137,13 @@ export const associationTerms = [
       { role: "竞赛部副部长", name: "黄泽鑫" },
     ],
     unassignedMembers: [],
-    roleNote: "成员与岗位依据协会已确认资料公开，两名副部长继续保留。",
+    roleNote: "第四届成员与岗位记录，两名副部长一并列入。",
   },
 ] as const;
 
 export const associationDataGovernance = [
   "球员注册、球队组建与赛事报名通过足球中国平台完成。",
-  "比赛数据与裁判选派可依据足球中国平台记录整理后公开。",
-  "本站不宣称与足球中国存在实时 API 同步，公开信息需经过人工核验。",
-  "身份证号、手机号、学号等报名字段不进入公开网站。",
+  "比赛信息、裁判选派与赛事文件以协会正式发布内容为准。",
+  "参赛队伍应按赛事通知准备并提交报名材料。",
+  "赛事咨询可通过协会公开邮箱联系。",
 ] as const;

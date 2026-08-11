@@ -39,7 +39,7 @@ export const participationEntries = [
 export const participationDataPolicy = {
   mode: "information-only",
   statement:
-    "本站仅提供参赛说明，不直接办理报名，也不收集或提交个人报名资料。",
+    "参赛报名与材料提交请按赛事通知及足球中国平台要求办理。",
   prohibitedFields: ["身份证号", "学号", "手机号"],
   collectedFields: [],
 } as const;

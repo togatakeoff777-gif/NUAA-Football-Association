@@ -49,7 +49,7 @@ export function CoreCompetitionPreviewPage({
               <p>COMPETITION PROFILE</p>
               <h2 id={`${competition.id}-overview-title`}>赛事概览</h2>
             </div>
-            <span>未正式公布的时间、场地与组织信息保持明确占位，不作推测。</span>
+            <span>未正式公布的时间、场地与组织信息标注为待确认。</span>
           </div>
           <div className="core-competition-facts">
             {[
@@ -90,7 +90,7 @@ export function CoreCompetitionPreviewPage({
             <p>STANDINGS & KNOCKOUT</p>
             <h2 id={`${competition.id}-standings-title`}>积分榜与淘汰赛</h2>
           </div>
-          <p>当前尚无可核验榜单或淘汰赛对阵，不生成空表格或虚构排名。</p>
+          <p>当前届次积分榜与淘汰赛对阵尚未公布。</p>
           <Link href="/competitions/standings">查看赛事类别与当前届次 →</Link>
         </div>
       </section>
@@ -143,7 +143,7 @@ export function CoreCompetitionPreviewPage({
                 </Link>
               ))}
             </div>
-          ) : <p>当前暂无已核验的本届赛事报道。</p>}
+          ) : <p>当前暂无本届赛事报道。</p>}
           <Link href="/news">进入新闻公告 →</Link>
         </div>
       </section>
@@ -154,7 +154,7 @@ export function CoreCompetitionPreviewPage({
             <p>MEDIA</p>
             <h2 id={`${competition.id}-media-title`}>赛事影像</h2>
           </div>
-          <p>只在取得来源与授权后发布赛事照片和视频。</p>
+          <p>赛事照片和视频将在影像资料页面陆续发布。</p>
           <Link href="/media">进入影像资料 →</Link>
         </div>
       </section>
@@ -166,7 +166,7 @@ export function CoreCompetitionPreviewPage({
             <h2 id={`${competition.id}-scope-title`}>文件与资料说明</h2>
           </div>
           <p>{competition.notice}</p>
-          <Link href={competition.links.files}>查看已核验赛事文件 →</Link>
+          <Link href={competition.links.files}>查看赛事文件 →</Link>
         </div>
       </section>
     </CompetitionArchiveLayout>

@@ -9,7 +9,7 @@ import { ASSOCIATION_EMAIL } from "@/data/platforms";
 export const metadata: Metadata = {
   alternates: { canonical: "/news" },
   title: "新闻公告",
-  description: "南航天目湖足协已核验新闻报道与公开通知公告。",
+  description: "南京航空航天大学天目湖足球协会新闻报道与通知公告。",
 };
 
 export default function NewsPage() {
@@ -17,10 +17,10 @@ export default function NewsPage() {
     <ListPageLayout
       eyebrow="NEWS & NOTICES"
       title="新闻公告"
-      description="集中发布赛事战报、协会动态与经核验的正式公告。"
+      description="集中发布赛事战报、协会动态与正式通知公告。"
       listTitle="最新发布"
-      listDescription="2026男、女子足球院际杯正式报道与四份公开纪律决定已经归档。"
-      statusLabel="正式报道与公开决定"
+      listDescription="2026新生杯筹备动态、男女子足球院际杯报道与纪律决定均可在此查阅。"
+      statusLabel="新闻报道与通知公告"
     >
       <PublicNewsBoard news={newsFeed} notices={publicAnnouncements} />
       <aside className="news-contact-panel">
@@ -28,7 +28,6 @@ export default function NewsPage() {
           <span>SUBMISSIONS & CORRECTIONS</span>
           <h2>新闻投稿与内容纠错</h2>
         </div>
-        <p>不建设公开上传表单或后台。如需投稿、补充来源或反馈内容错误，请通过协会公开邮箱联系。</p>
         <Link href={`mailto:${ASSOCIATION_EMAIL}`}>{ASSOCIATION_EMAIL}</Link>
       </aside>
     </ListPageLayout>

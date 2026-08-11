@@ -56,7 +56,7 @@ export function FreshmanCupServiceDesk() {
             </article>
           </div>
         </div>
-        <p className="home-demo-note" data-home-reveal data-home-delay="3">新生杯未公布事项将在赛事组委会正式确认后更新；决赛比分来自已核验的 2026 赛季档案。</p>
+        <p className="home-demo-note" data-home-reveal data-home-delay="3">新生杯后续安排以正式公告为准。</p>
       </div>
     </section>
   );

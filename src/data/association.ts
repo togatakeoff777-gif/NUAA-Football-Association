@@ -19,13 +19,12 @@ export const associationIdentity = {
 
 export const associationScope = {
   representedCampus: "南京航空航天大学天目湖校区",
-  supportedCampusValues: ["tianmuhu", "cross-campus"],
+  supportedCampusValues: ["tianmuhu"],
   summary:
     "南京航空航天大学天目湖足球协会立足天目湖校区，服务校园足球。",
   permittedContent: [
     "天目湖校区赛事与球队",
     "天目湖足协新闻、公告、裁判、规则、招新和协会历史",
-    "经相关组织确认的跨校区赛事",
     "不同校区相关足球组织共同使用的视频平台内容",
   ],
   excludedContent: ["将军路体系内部赛事与组织信息"],
@@ -59,14 +58,6 @@ export const associationDevelopmentFacts = [
 ] as const;
 
 export const associationStats = associationDevelopmentFacts;
-
-export const associationCampusRelationship = {
-  title: "校区足球组织关系",
-  description:
-    "天目湖校区与将军路校区足球协会分别独立开展工作；两校区在新生杯淘汰赛阶段进行跨校区主客场比赛。",
-  sharedPlatform: "“南航大足球协会”哔哩哔哩账号为校区共享视频平台。",
-  separatePlatform: "天目湖与将军路相关微信公众号分别运营。",
-} as const;
 
 export const associationRoleFramework = [
   "主席",

@@ -16,12 +16,12 @@ export const registrationCta = {
 } as const;
 
 export const competitionNavigation = [
-  { label: "当前赛事", href: "/competitions/current" },
-  { label: "赛程与赛果", href: "/competitions/schedule" },
+  { label: "赛程", href: "/competitions/schedule" },
   { label: "积分榜", href: "/competitions/standings" },
   { label: "射手榜", href: "/competitions/scorers" },
   { label: "历届赛事", href: "/competitions/history" },
-  { label: "仲裁与申诉", href: "/competitions/arbitration" },
+  { label: "赛事文件", href: "/competitions/files" },
+  { label: "仲裁中心", href: "/competitions/arbitration" },
 ] as const;
 
 export const footerNavigation = [

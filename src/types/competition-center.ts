@@ -42,6 +42,36 @@ export type CoreCompetitionLinkSet = {
   news: string;
 };
 
+export type CompetitionNextMatch =
+  | {
+      state: "pending";
+      label: "赛程待发布";
+      summary: string;
+      dateLabel: string;
+      venue: string;
+    }
+  | {
+      state: "scheduled";
+      label: "下一场";
+      homeTeam: string;
+      awayTeam: string;
+      dateLabel: string;
+      timeLabel: string;
+      venue: string;
+      detailHref: string;
+    }
+  | {
+      state: "none";
+      label: "暂无下一场";
+      summary: string;
+    }
+  | {
+      state: "completed";
+      label: "赛事已结束";
+      summary: string;
+      archiveHref: string;
+    };
+
 export type CoreCompetitionDirectoryEntry = {
   id: string;
   currentEditionId: string;
@@ -53,8 +83,8 @@ export type CoreCompetitionDirectoryEntry = {
   season: string;
   semester: "first" | "second";
   semesterLabel: "上半学期" | "下半学期";
-  campus: "天目湖校区" | "天目湖校区 / 将军路校区";
-  eventType: "天目湖赛事" | "跨校区赛事";
+  campus: "天目湖校区" | "南京航空航天大学";
+  eventType: "天目湖赛事" | "校园赛事";
   format: "eleven-a-side" | "futsal";
   formatLabel: "十一人制" | "五人制";
   teamFormation: "院系组队" | "自由组队";
@@ -63,6 +93,7 @@ export type CoreCompetitionDirectoryEntry = {
   dataStatus: "confirmed";
   badge: string;
   stageLabel: string;
+  nextMatch: CompetitionNextMatch;
   registrationWindow: string;
   matchWindow: string;
   venue: string;

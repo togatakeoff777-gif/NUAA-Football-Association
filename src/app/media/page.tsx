@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { DouyinQrCard } from "@/components/media/douyin-qr-card";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { SectionContactCard } from "@/components/ui/section-contact-card";
+import { publicSectionContacts } from "@/data/contacts";
 import { bilibiliPlatform } from "@/data/platforms";
 
 export const metadata: Metadata = {
@@ -40,10 +42,7 @@ export default function MediaPage() {
                 前往哔哩哔哩主页 ↗
               </a>
             </article>
-            <article className="media-archive-note">
-              <h2>影像投稿与内容纠错</h2>
-              <a href="mailto:nuaafootball@163.com">nuaafootball@163.com</a>
-            </article>
+            <SectionContactCard contact={publicSectionContacts.media} note="影像投稿与内容纠错" />
           </div>
         </section>
       </main>

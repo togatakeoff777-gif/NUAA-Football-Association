@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { SectionContactCard } from "@/components/ui/section-contact-card";
+import { publicSectionContacts } from "@/data/contacts";
 import {
   currentTeamDirectory,
   currentTeamDirectoryStatuses,
@@ -31,8 +33,8 @@ export default function TeamsPage() {
               <li><strong>02</strong><span>仅使用球队负责人已经确认可公开的联系方式；未确认时不展示私人账号。</span></li>
               <li><strong>03</strong><span>如暂未公布联系人，请持续关注学院组队信息、赛事公告与官网更新。</span></li>
             </ol>
-            <a href="mailto:nuaafootball@163.com">nuaafootball@163.com</a>
           </section>
+          <SectionContactCard contact={publicSectionContacts.teams} note="组队与参赛事务咨询" />
         </div></section>
         <section className="functional-section functional-section-tint"><div className="detail-shell">
           <div className="functional-section-head"><div><span>2026 FRESHMAN CUP DIRECTORY</span><h2>2026 新生杯组队目录</h2></div><p>目录支持{Object.values(currentTeamDirectoryStatuses).join("、")}四种状态；只有经负责人确认可公开的联系方式才会展示。</p></div>

@@ -12,7 +12,7 @@ export function CurrentCompetitions() {
       <div className="page-shell">
         <div className="home-section-bar" data-home-reveal data-home-delay="0">
           <div><p>ACTIVE COMPETITIONS / 当前赛事</p><h2 id="home-competitions-title">四项核心赛事，贯穿两个学期</h2></div>
-          <Link className="text-link" href="/competitions/current">查看全部赛事 →</Link>
+          <Link className="text-link" href="/competitions">查看全部赛事 →</Link>
         </div>
         <div className="current-competition-layout">
           <article className="featured-competition-card" id={featured.slug} data-home-reveal data-home-delay="1">

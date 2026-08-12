@@ -16,7 +16,7 @@ const tianmuhuOwnership = {
 const crossCampusOwnership = {
   campus: "cross-campus" as const,
   organizationId: "nuaa-tianmuhu-fa",
-  contentOwner: "经确认的跨校区赛事组织方",
+  contentOwner: "相关赛事组织方",
   dataSource: "local" as const,
 };
 

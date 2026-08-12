@@ -10,8 +10,6 @@ const publicRoutes = [
   "/competitions/2026-mens-intercollege-cup",
   "/competitions/2026-womens-intercollege-cup",
   "/competitions/arbitration",
-  "/competitions/cross-campus",
-  "/competitions/current",
   "/competitions/files",
   "/competitions/freshman-cup",
   "/competitions/history",

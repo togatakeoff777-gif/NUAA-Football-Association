@@ -1,53 +1,71 @@
 import type { Metadata } from "next";
 
-import { SectionIndexPage } from "@/components/pages/section-index-page";
-import { FOOTBALL_CHINA_URL } from "@/data/platforms";
+import { SiteFooter } from "@/components/layout/site-footer";
+import { SiteHeader } from "@/components/layout/site-header";
+import { PdfResourcePanel } from "@/components/participation/pdf-resource-panel";
+import {
+  footballChinaOperationAreas,
+  individualPlayerGuideSteps,
+  participationPdfResources,
+} from "@/data/participation-resources";
+import { footballChinaPlatform } from "@/data/platforms";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/participation/event-guide" },
-  title: "赛事报名指南",
-  description: "天目湖校园足球赛事报名入口、办理流程与注意事项。",
+  title: "个人球员报名指南",
+  description: "个人球员参赛流程、资格确认方式及足球中国平台操作参考。",
 };
 
-const items = [
-  {
-    title: "查看赛事通知与竞赛规程",
-    description:
-      "报名时间、参赛范围、赛制和资格要求须以对应赛事正式通知与最新竞赛规程为准。",
-    meta: "第一步",
-    status: "资料待更新",
-  },
-  {
-    title: "在足球中国完成相关操作",
-    description:
-      "球员注册、球队组建、赛事报名及相关竞赛管理统一通过足球中国平台完成。",
-    meta: "第二步",
-    status: "外部平台办理",
-    href: FOOTBALL_CHINA_URL,
-    external: true,
-    openInNewTab: true,
-    actionLabel: "打开足球中国",
-  },
-  {
-    title: "等待赛事组织方确认",
-    description:
-      "平台操作不代表参赛资格自动确认，最终结果以赛事组织方审核与通知为准。",
-    meta: "第三步",
-    status: "以正式通知为准",
-  },
-];
-
 export default function EventGuidePage() {
+  const resource = participationPdfResources.footballChinaOperations;
+
   return (
-    <SectionIndexPage
-      eyebrow="PARTICIPATION GUIDE"
-      title="赛事报名指南"
-      description="说明天目湖校园足球赛事报名的一般入口、办理流程与注意事项。"
-      sectionTitle="报名流程"
-      sectionDescription="具体时间、材料和资格要求将在赛事资料确认后更新。"
-      notice="报名渠道、材料清单与资格要求以赛事正式通知为准。"
-      statusLabel="具体资料待更新"
-      items={items}
-    />
+    <>
+      <SiteHeader />
+      <main className="detail-page participation-guide-page" id="main-content">
+        <section className="detail-hero">
+          <div className="page-shell detail-hero-inner">
+            <p className="detail-eyebrow">PLAYER PARTICIPATION GUIDE</p>
+            <h1>个人球员报名指南</h1>
+            <p className="detail-lead">先确认赛事通知与球队安排，再按要求完成足球中国平台相关操作并等待资格确认。</p>
+            <span className="detail-status">报名开放时间以当届赛事通知为准</span>
+          </div>
+        </section>
+
+        <section className="participation-guide-section" aria-labelledby="player-guide-flow-title">
+          <div className="page-shell">
+            <div className="v25-section-heading">
+              <div><p>PLAYER FLOW</p><h2 id="player-guide-flow-title">个人参赛流程</h2></div>
+              <a href={footballChinaPlatform.href} rel="noopener noreferrer" target="_blank">打开足球中国平台 ↗</a>
+            </div>
+            <ol className="participation-guide-steps">
+              {individualPlayerGuideSteps.map((step, index) => (
+                <li key={step.id}>
+                  <strong>{String(index + 1).padStart(2, "0")}</strong>
+                  <div><h3>{step.title}</h3><p>{step.description}</p></div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        <section className="participation-guide-section participation-guide-section-tint" aria-labelledby="platform-reference-title">
+          <div className="page-shell">
+            <PdfResourcePanel
+              description="本站目前暂未取得专门面向个人球员的足球中国注册操作手册。以下为中国足球协会提供的《足球中国赛事操作说明》，主要介绍足球中国平台的赛事管理、报名、赛程及比赛操作流程，可作为了解平台使用方式的参考资料。个人球员实际报名方式及赛事入口，请以当届赛事通知和球队负责人通知为准。"
+              eyebrow="PLATFORM REFERENCE"
+              fileLabel={resource.fileLabel}
+              href={resource.href}
+              title="足球中国平台操作参考"
+            >
+              <ul className="participation-resource-tags" aria-label="操作手册覆盖范围">
+                {footballChinaOperationAreas.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </PdfResourcePanel>
+          </div>
+        </section>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

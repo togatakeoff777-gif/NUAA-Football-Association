@@ -1,22 +1,123 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
-import { CategoryEntryLayout, type CategoryEntry } from "@/components/templates/category-entry-layout";
+import { SiteFooter } from "@/components/layout/site-footer";
+import { SiteHeader } from "@/components/layout/site-header";
+import { SectionContactCard } from "@/components/ui/section-contact-card";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { coreCompetitionDirectory } from "@/data/competition-directory";
+import { publicSectionContacts } from "@/data/contacts";
+import { competitionNavigation } from "@/data/navigation";
+import type { CoreCompetitionDirectoryEntry } from "@/types/competition-center";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/competitions" },
   title: "赛事中心",
-  description: "南京航空航天大学天目湖足球协会赛事体系与相关信息入口。",
+  description: "查看南京航空航天大学天目湖足球协会当前赛事、赛程、数据、文件与赛事服务。",
 };
 
-const entries = [
-  { title: "当前赛事", description: "查看四项年度核心赛事、当前阶段和赛事状态。", meta: "四项核心赛事", status: "2026赛季", href: "/competitions/current", actionLabel: "进入赛事总览", featured: true },
-  { title: "赛程与赛果", description: "按赛事、阶段与球队查看已公布赛果，移动端可使用分组列表浏览。", meta: "比赛信息", status: "2026男女足赛果", href: "/competitions/schedule", actionLabel: "查看赛程" },
-  { title: "赛事数据", description: "分别查看各项赛事已公布的积分榜、淘汰赛与射手记录。", meta: "数据中心", status: "赛事数据", links: [{ label: "积分榜", href: "/competitions/standings" }, { label: "射手榜", href: "/competitions/scorers" }] },
-  { id: "competition-files", title: "赛事文件", description: "下载竞赛规则、秩序册、纪律决定及面向球队和公众的赛事文件。", meta: "文件中心", status: "赛事文件", href: "/competitions/files", actionLabel: "进入文件中心" },
-  { title: "赛事档案", description: "查看2026男、女子足球院际杯归档与历届赛事资料；新生杯跨校区信息已归入对应赛事详情。", meta: "赛事档案", status: "已有正式归档", links: [{ label: "2026男子院际杯", href: "/competitions/2026-mens-intercollege-cup" }, { label: "2026女子院际杯", href: "/competitions/2026-womens-intercollege-cup" }, { label: "历届赛事", href: "/competitions/history" }] },
-  { title: "仲裁与申诉", description: "查看适用范围、申请主体、材料、流程、纪律决定和公开文件入口。", meta: "赛事治理", status: "公开流程已建立", href: "/competitions/arbitration", actionLabel: "进入治理入口" },
-] as const satisfies readonly CategoryEntry[];
+const currentCompetitions = coreCompetitionDirectory.filter(
+  (competition) => competition.semester === "first",
+);
+
+function getNextArrangement(competition: CoreCompetitionDirectoryEntry) {
+  const forecast = competition.nextMatch;
+  if (forecast.state === "scheduled") {
+    return `${forecast.homeTeam} vs ${forecast.awayTeam} · ${forecast.dateLabel} ${forecast.timeLabel}`;
+  }
+  return forecast.summary;
+}
 
 export default function CompetitionsPage() {
-  return <CategoryEntryLayout eyebrow="TIANMUHU COMPETITIONS" title="赛事中心" description="聚焦比赛、赛程与赛事服务，连接年度赛事体系及跨校区赛事。" sectionTitle="赛事服务航线" sectionDescription="按比赛信息、赛事数据、文件与赛事治理分类进入各项服务。" notice="尚未公布的赛程、球队与赛事安排统一标注为待确认。" entries={entries} />;
+  return (
+    <>
+      <SiteHeader />
+      <main className="functional-page competition-center-v28" id="main-content">
+        <section className="functional-hero">
+          <div className="detail-shell">
+            <p>TIANMUHU COMPETITIONS</p>
+            <h1>赛事中心</h1>
+            <p>直接查看当前学期赛事，并由赛事导航进入赛程、数据、文件与赛事治理服务。</p>
+          </div>
+        </section>
+
+        <section className="functional-section">
+          <div className="detail-shell competition-center-layout">
+            <aside className="competition-center-sidebar">
+              <nav aria-labelledby="competition-navigation-title" className="competition-service-navigation">
+                <span>COMPETITION SERVICES</span>
+                <h2 id="competition-navigation-title">赛事导航</h2>
+                <div>
+                  {competitionNavigation.map((item, index) => (
+                    <Link href={item.href} key={item.href}>
+                      <span>{String(index + 1).padStart(2, "0")}</span>
+                      <strong>{item.label}</strong>
+                    </Link>
+                  ))}
+                </div>
+              </nav>
+              <SectionContactCard contact={publicSectionContacts.competitions} />
+            </aside>
+
+            <div className="competition-center-main">
+              <div className="functional-section-head">
+                <div>
+                  <span>CURRENT TERM</span>
+                  <h2>当前学期赛事</h2>
+                </div>
+                <p>新生杯与天目湖五人制联赛目前均处于筹备阶段，未发布事项保持明确状态。</p>
+              </div>
+
+              <div className="current-competition-grid">
+                {currentCompetitions.map((competition, index) => (
+                  <article className="current-competition-card" key={competition.id}>
+                    <header>
+                      <span>{String(index + 1).padStart(2, "0")} / {competition.semesterLabel}</span>
+                      <StatusBadge tone="neutral">
+                        {competition.statusLabel} · {competition.nextMatch.label}
+                      </StatusBadge>
+                    </header>
+                    <div className="current-competition-card-copy">
+                      <p>{competition.eventType} · {competition.formatLabel}</p>
+                      <h2>{competition.name}</h2>
+                    </div>
+                    <dl>
+                      <div>
+                        <dt>赛制 / 组队</dt>
+                        <dd>{competition.formatLabel} · {competition.teamFormation}</dd>
+                      </div>
+                      <div>
+                        <dt>当前阶段</dt>
+                        <dd>{competition.stageLabel}</dd>
+                      </div>
+                      <div>
+                        <dt>时间状态</dt>
+                        <dd>{competition.matchWindow}</dd>
+                      </div>
+                      <div>
+                        <dt>下一项安排</dt>
+                        <dd>{getNextArrangement(competition)}</dd>
+                      </div>
+                    </dl>
+                    <Link href={competition.detailHref}>
+                      进入赛事详情 <span aria-hidden="true">→</span>
+                    </Link>
+                  </article>
+                ))}
+              </div>
+
+              <aside className="competition-pending-notice" aria-labelledby="competition-pending-title">
+                <div>
+                  <span>PENDING ANNOUNCEMENTS</span>
+                  <h2 id="competition-pending-title">待后续公告事项</h2>
+                </div>
+                <p>报名时间、比赛日期、比赛场地、参赛规模及具体赛程尚未全部正式发布。请以赛事组委会后续公告和正式竞赛文件为准。</p>
+              </aside>
+            </div>
+          </div>
+        </section>
+      </main>
+      <SiteFooter />
+    </>
+  );
 }

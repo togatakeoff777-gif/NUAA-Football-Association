@@ -18,21 +18,21 @@ export const participationEntries = [
   },
   {
     id: "competition-registration-guide",
-    title: "赛事报名指南",
-    description: "查看赛事报名步骤、资料准备与平台操作说明。",
+    title: "个人球员报名指南",
+    description: "查看个人参赛流程、资格确认方式与平台操作参考。",
     href: "/participation/event-guide",
     external: false,
-    status: "placeholder",
-    badge: "参赛指南",
+    status: "available-guide",
+    badge: "操作指南",
   },
   {
     id: "team-manager-guide",
     title: "球队负责人指南",
-    description: "查看球队组建、名单维护与参赛沟通说明。",
+    description: "查看球队报名组建、比赛日名单与平台完整操作资料。",
     href: "/participation/team-manager-guide",
     external: false,
-    status: "placeholder",
-    badge: "参赛指南",
+    status: "available-guide",
+    badge: "操作指南",
   },
 ] as const satisfies readonly ParticipationEntry[];
 

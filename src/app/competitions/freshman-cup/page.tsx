@@ -9,7 +9,7 @@ import { sportsEventJsonLd } from "@/lib/structured-data";
 export const metadata: Metadata = {
   alternates: { canonical: "/competitions/freshman-cup" },
   title: "2026南京航空航天大学新生杯足球赛事",
-  description: "2026南京航空航天大学新生杯足球赛事信息、跨校区边界与待公布事项。",
+  description: "2026南京航空航天大学新生杯足球赛事信息与待公布事项。",
   openGraph: {
     title: "2026南京航空航天大学新生杯足球赛事",
     description: "赛事筹备工作已启动，竞赛规程、报名安排与赛程信息将在确认后发布。",

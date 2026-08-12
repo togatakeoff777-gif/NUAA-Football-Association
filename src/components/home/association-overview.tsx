@@ -13,7 +13,7 @@ export function AssociationOverview() {
             <div className="association-v2-id"><span>{associationIdentity.establishedLabel}</span><small>{associationIdentity.englishName}</small></div>
             <h3>{associationIdentity.slogan}</h3>
             <p>{associationScope.summary} 我们围绕赛事组织、裁判发展、规则传播、校园影像与参赛服务，搭建清晰、可靠的足球信息入口。</p>
-            <p>跨校区赛事信息以相关赛事组织方正式发布内容为准。</p>
+            <p>赛事信息以相关赛事组织方正式发布内容为准。</p>
             <Link className="button button-secondary" href="/association">了解协会与范围 <span aria-hidden="true">→</span></Link>
           </div>
           <div className="association-v2-data">

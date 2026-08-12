@@ -30,7 +30,7 @@ export type Competition = ContentOwnership & {
   formatLabel: "十一人制" | "五人制";
   teamFormation: "院系组队" | "自由组队";
   group?: "男子组" | "女子组";
-  eventType: "天目湖赛事" | "跨校区赛事";
+  eventType: "天目湖赛事" | "校园赛事";
   organizerNote: string;
   tags: readonly string[];
   recordStatus: "confirmed";
@@ -202,7 +202,7 @@ export type ParticipationEntry = {
   external: boolean;
   target?: "_blank";
   rel?: "noopener noreferrer";
-  status: "available-external-entry" | "placeholder";
+  status: "available-external-entry" | "available-guide" | "placeholder";
   badge: string;
 };
 
@@ -273,10 +273,14 @@ export type RefereeAssignmentPublication = ContentOwnership & {
   demo: true;
 };
 
-export type ContactCardData = {
+export type PublicSectionContact = {
+  label: string;
   role: string;
   name: string;
-  responsibilities: string[];
   email: string;
   qq: string;
+};
+
+export type ContactCardData = PublicSectionContact & {
+  responsibilities: string[];
 };

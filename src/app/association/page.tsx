@@ -4,7 +4,6 @@ import type { Metadata } from "next";
 import { ArchivePageLayout } from "@/components/templates/archive-page-layout";
 import { BrandMark } from "@/components/ui/brand-mark";
 import {
-  associationCampusRelationship,
   associationDataGovernance,
   associationDevelopmentFacts,
   associationIdentity,
@@ -62,8 +61,7 @@ export default function AssociationPage() {
         </div>
       </section>
       <section className="association-governance" aria-labelledby="association-governance-title">
-        <article><p>CAMPUS RELATIONSHIP</p><h2 id="association-governance-title">{associationCampusRelationship.title}</h2><strong>{associationCampusRelationship.description}</strong><p>{associationCampusRelationship.sharedPlatform}</p><p>{associationCampusRelationship.separatePlatform}</p></article>
-        <article><p>COMPETITION SERVICES</p><h2>赛事服务</h2><ul>{associationDataGovernance.map((item) => <li key={item}>{item}</li>)}</ul></article>
+        <article><p>COMPETITION SERVICES</p><h2 id="association-governance-title">赛事服务</h2><ul>{associationDataGovernance.map((item) => <li key={item}>{item}</li>)}</ul></article>
       </section>
       <section className="association-contact-section" aria-labelledby="association-contact-title">
         <div><p>CONTACT US</p><h2 id="association-contact-title">联系我们</h2><span>赛事、裁判、媒体合作与内容纠错可通过以下公开渠道联系。</span></div>
@@ -80,7 +78,7 @@ export default function AssociationPage() {
           <div><dt>新闻投稿与纠错</dt><dd><a href={`mailto:${ASSOCIATION_EMAIL}`}>{ASSOCIATION_EMAIL}</a></dd></div>
         </dl>
       </section>
-      <section className="archive-scope-record" aria-labelledby="archive-scope-title"><div><p>PUBLIC SCOPE</p><h2 id="archive-scope-title">公开范围记录</h2></div><div><strong>{associationScope.summary}</strong><ul>{associationScope.permittedContent.map((item) => <li key={item}>{item}</li>)}</ul><p>不包含：{associationScope.excludedContent.join("、")}。</p><Link href="/competitions/freshman-cup">查看新生杯跨校区内容边界 →</Link></div></section>
+      <section className="archive-scope-record" aria-labelledby="archive-scope-title"><div><p>PUBLIC SCOPE</p><h2 id="archive-scope-title">公开范围记录</h2></div><div><strong>{associationScope.summary}</strong><ul>{associationScope.permittedContent.map((item) => <li key={item}>{item}</li>)}</ul></div></section>
     </ArchivePageLayout>
   );
 }

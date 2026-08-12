@@ -27,7 +27,7 @@ export function AnnualCompetitions() {
               <div className="competition-tags">
                 {competition.tags.map((tag) => <span key={tag}>{tag}</span>)}
               </div>
-              <Link href="/competitions/current" aria-label={`查看${competition.name}介绍`}>
+              <Link href="/competitions" aria-label={`查看${competition.name}介绍`}>
                 赛事介绍 <span aria-hidden="true">↗</span>
               </Link>
               <div className="competition-route" aria-hidden="true"><i /><i /><i /></div>

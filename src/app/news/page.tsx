@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { PublicNewsBoard } from "@/components/public-news-board";
 import { ListPageLayout } from "@/components/templates/list-page-layout";
+import { SectionContactCard } from "@/components/ui/section-contact-card";
+import { publicSectionContacts } from "@/data/contacts";
 import { newsFeed, publicAnnouncements } from "@/data/content";
-import { ASSOCIATION_EMAIL } from "@/data/platforms";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/news" },
@@ -23,13 +23,7 @@ export default function NewsPage() {
       statusLabel="新闻报道与通知公告"
     >
       <PublicNewsBoard news={newsFeed} notices={publicAnnouncements} />
-      <aside className="news-contact-panel">
-        <div>
-          <span>SUBMISSIONS & CORRECTIONS</span>
-          <h2>新闻投稿与内容纠错</h2>
-        </div>
-        <Link href={`mailto:${ASSOCIATION_EMAIL}`}>{ASSOCIATION_EMAIL}</Link>
-      </aside>
+      <SectionContactCard contact={publicSectionContacts.news} note="新闻投稿与内容纠错" />
     </ListPageLayout>
   );
 }

@@ -13,10 +13,10 @@ type SiteHeaderProps = {
 
 function Brand() {
   return (
-    <Link className="brand" href="/" aria-label={`${associationIdentity.shortName}首页`}>
+    <Link className="brand" href="/" aria-label={`${associationIdentity.formalName}首页`}>
       <BrandMark />
       <span className="brand-copy">
-        <strong>{associationIdentity.shortName}</strong>
+        <strong>{associationIdentity.formalName}</strong>
         <small>{associationIdentity.englishName.toUpperCase()}</small>
       </span>
     </Link>

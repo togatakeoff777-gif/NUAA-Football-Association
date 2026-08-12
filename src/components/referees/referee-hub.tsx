@@ -2,21 +2,29 @@ import Link from "next/link";
 
 import { RefereeContactCard } from "@/components/referees/referee-contact-card";
 import {
+  refereeLearningEntries,
   refereePrimaryEntries,
   refereeSecondaryEntries,
-  rulesResourceEntries,
 } from "@/data/referees";
 
 export function RefereeHub() {
   return (
     <main className="functional-page referee-center" id="main-content">
       <section className="functional-hero referee-center-hero">
-        <div className="detail-shell">
-          <p>REFEREE CENTER</p>
+        <div className="detail-shell referee-hero-layout">
+          <p className="referee-hero-kicker">REFEREE CENTER</p>
           <h1>裁判中心</h1>
-          <p>
-            公开裁判名录、场次、选派与历史记录；已登记裁判员和管理员分别进入受保护的工作入口。
+          <p className="referee-hero-summary">
+            提供裁判招募、公开名录、场次、选派、竞赛规则与历史档案等校园足球裁判服务。
           </p>
+          <div className="referee-hero-actions" aria-label="裁判中心主要入口">
+            <Link className="referee-hero-primary-action" href="/referees/recruitment">加入裁判队伍</Link>
+            <Link className="referee-hero-secondary-action" href="/referees/open-matches">查看公开场次</Link>
+          </div>
+          <Link className="referee-hero-login" href="/referees/login">
+            <span>裁判员登录</span>
+            <span aria-hidden="true">→</span>
+          </Link>
         </div>
       </section>
 
@@ -28,7 +36,7 @@ export function RefereeHub() {
               <h2>联系裁判负责人</h2>
             </div>
             <p>
-              负责人姓名尚未确认，不公开私人手机号或微信号；赛事、规则与执裁事务统一使用协会公开邮箱。
+              裁判招募、培训、选派及规则咨询，可通过协会公开邮箱或咨询 QQ 联系裁判事务负责人。
             </p>
           </div>
           <RefereeContactCard />
@@ -40,12 +48,11 @@ export function RefereeHub() {
           <div className="referee-center-intro">
             <div>
               <span>PUBLIC INFORMATION</span>
-              <h2>公开信息对所有访客开放</h2>
+              <h2>裁判公开信息</h2>
               <p>
-                公开名录只展示经确认可公开的信息；开放场次可直接浏览。裁判工作区正式启用后，完成协会登记的裁判员可提交执裁意向并查看个人任务。
+                提供裁判招募、公开名录、裁判选派等信息查询服务。涉及个人任务与内部管理的功能需通过裁判员工作区登录后使用。
               </p>
             </div>
-            <Link href="/referees/open-matches">查看公开场次 →</Link>
           </div>
           <div className="referee-affairs-grid referee-affairs-grid-primary">
             {refereePrimaryEntries.map((entry, index) => (
@@ -62,16 +69,40 @@ export function RefereeHub() {
         </div>
       </section>
 
-      <section className="functional-section">
+      <section className="functional-section" id="referee-resources">
         <div className="detail-shell">
           <div className="functional-section-head">
             <div>
-              <span>RESOURCES & RECORDS</span>
-              <h2>资料与历史</h2>
+              <span>LEARNING & RESOURCES</span>
+              <h2>裁判学习与资料</h2>
             </div>
-            <p>第二层入口承载规则学习、历史公示与经授权的人物内容，不与比赛申请入口重复。</p>
+            <p>集中提供足球竞赛规则、五人制足球竞赛规则、培训资料与裁判工作文件。</p>
           </div>
-          <div className="referee-secondary-directory">
+          <div className="referee-rule-directory referee-learning-directory">
+            {refereeLearningEntries.map((entry, index) => (
+              <Link href={entry.href} key={entry.id}>
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <div>
+                  <h3>{entry.title}</h3>
+                  <p>{entry.description}</p>
+                </div>
+                <strong>{entry.badge}</strong>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="functional-section functional-section-tint">
+        <div className="detail-shell">
+          <div className="functional-section-head">
+            <div>
+              <span>REFEREE ARCHIVE</span>
+              <h2>裁判档案</h2>
+            </div>
+            <p>回顾已结束比赛的公开选派记录，并记录校园足球裁判员的专业成长。</p>
+          </div>
+          <div className="referee-secondary-directory referee-archive-directory">
             {refereeSecondaryEntries.map((entry, index) => {
               const content = (
                 <>
@@ -93,44 +124,23 @@ export function RefereeHub() {
         </div>
       </section>
 
-      <section className="functional-section functional-section-tint" id="referee-rules">
-        <div className="detail-shell">
-          <div className="functional-section-head">
-            <div>
-              <span>LAWS & RESOURCES</span>
-              <h2>规则与资料</h2>
-            </div>
-            <p>按足球规则、五人制规则、规则更新和裁判工作资料四类查看已发布文件。</p>
-          </div>
-          <div className="referee-rule-directory">
-            {rulesResourceEntries.map((entry, index) => {
-              const content = (
-                <>
-                  <span>{String(index + 1).padStart(2, "0")}</span>
-                  <div>
-                    <h3>{entry.title}</h3>
-                    <p>{entry.description}</p>
-                  </div>
-                  <strong>{entry.badge}</strong>
-                </>
-              );
-              return <Link href={entry.href} key={entry.id}>{content}</Link>;
-            })}
-          </div>
-        </div>
-      </section>
-
-      <section className="functional-section functional-section-tint">
+      <section className="functional-section">
         <div className="detail-shell referee-secure-access">
           <div>
-            <span>SECURE WORK AREAS</span>
+            <span>REFEREE WORKSPACE</span>
             <h2>裁判员工作区</h2>
             <p>
-              工作区暂未开放。完成协会登记的裁判员将在正式启用后获得登录信息；现有审核、选派和公示功能继续由协会保留。
+              裁判员账号将按申请与审核流程启用，工作区启用安排以协会通知为准。
             </p>
+            <ol className="referee-account-path" aria-label="未来裁判员账号启用流程">
+              <li><span>01</span>裁判员自主申请注册</li>
+              <li><span>02</span>协会后台审核</li>
+              <li><span>03</span>审核通过后启用账号</li>
+              <li><span>04</span>管理员配置相应权限</li>
+            </ol>
           </div>
           <div>
-            <Link href="/referees/login">查看开放说明</Link>
+            <Link href="/referees/login">裁判员登录</Link>
           </div>
         </div>
       </section>

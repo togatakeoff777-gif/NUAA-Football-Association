@@ -29,6 +29,7 @@ import {
   getDisciplineDecisionArticle,
 } from "@/data/public-information";
 import { newsArticleJsonLd } from "@/lib/structured-data";
+import { SITE_NAME } from "@/lib/site-metadata";
 
 type NewsDetailPageProps = {
   params: Promise<{ slug: string }>;
@@ -70,7 +71,7 @@ export async function generateMetadata({ params }: NewsDetailPageProps): Promise
     openGraph: {
       type: "article",
       locale: "zh_CN",
-      siteName: "南航天目湖足协",
+      siteName: SITE_NAME,
       title: story.title,
       description: story.summary,
       url: canonicalPath,
@@ -199,12 +200,7 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
           </ul>
         ),
       )}
-      {isDisciplineDecision && disciplineDecision ? (
-        <section className="detail-inline-attachment" aria-labelledby="discipline-attachment-title">
-          <h2 id="discipline-attachment-title">附件</h2>
-          <a href={disciplineDecision.pdfHref} rel="noopener noreferrer" target="_blank">查看 / 下载处罚决定原件（PDF）</a>
-        </section>
-      ) : isFreshmanCupStory ? (
+      {isFreshmanCupStory ? (
         <blockquote>报名时间、比赛日期、比赛场地、参赛资格和竞赛规程以协会后续正式公告为准。</blockquote>
       ) : isWomensCupStory ? (
         <>

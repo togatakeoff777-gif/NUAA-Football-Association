@@ -2,7 +2,7 @@ import { ASSOCIATION_EMAIL } from "@/data/platforms";
 import type { RefereeRecruitmentConfig } from "@/types";
 
 export const refereeRecruitment: RefereeRecruitmentConfig = {
-  groupName: "南航天目湖足协裁判员招新群",
+  groupName: "南京航空航天大学天目湖足球协会裁判员招新群",
   academicYear: "2026—2027 学年",
   validUntil: "开放时间待正式公告",
   status: "not-open",

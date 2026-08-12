@@ -6,7 +6,7 @@ import { formatRefereeDateTime } from "@/lib/referee-presenters";
 import { getPublicRefereeDirectory } from "@/lib/referee-public";
 
 export const metadata: Metadata = {
-  alternates: { canonical: "/referees/directory" }, title: "注册裁判员公开名录", description: "公开展示已核验的裁判员编号、姓名及登记赛制。" };
+  alternates: { canonical: "/referees/directory" }, title: "裁判员名录", description: "展示允许公开的已登记裁判员编号、姓名及登记赛制。" };
 export const dynamic = "force-dynamic";
 
 export default async function RefereeDirectoryPage() {

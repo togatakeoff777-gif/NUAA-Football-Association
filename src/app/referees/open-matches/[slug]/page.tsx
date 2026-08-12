@@ -89,7 +89,7 @@ export default async function OpenMatchDetailPage({
       <div className="functional-empty functional-empty-compact" role="status">
         <strong>裁判员工作区暂未开放</strong>
         <p>
-          完成协会登记的裁判员将在工作区正式启用后获得登录信息。如需联系裁判事务，请发送邮件至{" "}
+          裁判员账号申请功能暂未开放。未来将由裁判员自主申请，经协会审核通过后启用账号。如需联系裁判事务，请发送邮件至{" "}
           <a href={`mailto:${ASSOCIATION_EMAIL}`}>{ASSOCIATION_EMAIL}</a>。
         </p>
       </div>

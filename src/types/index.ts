@@ -278,4 +278,5 @@ export type ContactCardData = {
   name: string;
   responsibilities: string[];
   email: string;
+  qq: string;
 };

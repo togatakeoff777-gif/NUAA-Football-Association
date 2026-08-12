@@ -5,7 +5,7 @@ import { CategoryEntryLayout, type CategoryEntry } from "@/components/templates/
 export const metadata: Metadata = {
   alternates: { canonical: "/competitions" },
   title: "赛事中心",
-  description: "南航天目湖足协赛事体系与相关信息入口。",
+  description: "南京航空航天大学天目湖足球协会赛事体系与相关信息入口。",
 };
 
 const entries = [

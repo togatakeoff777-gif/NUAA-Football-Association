@@ -8,7 +8,7 @@ import { publicCompetitions } from "@/data/competition-center";
 export const metadata: Metadata = {
   alternates: { canonical: "/competitions/current" },
   title: "当前赛事",
-  description: "南航天目湖足协四项核心赛事的公开状态、时间、场地和赛事入口。",
+  description: "南京航空航天大学天目湖足球协会四项核心赛事的公开状态、时间、场地和赛事入口。",
 };
 
 export default function CurrentCompetitionsPage() {

@@ -64,7 +64,7 @@ export function SiteFooter({ homeCompact = false }: SiteFooterProps) {
         </div>
 
         <div className="footer-bottom">
-          <p>© 2026 {associationIdentity.shortName} · {associationIdentity.establishedLabel}</p>
+          <p>© 2026 {associationIdentity.formalName} · {associationIdentity.establishedLabel}</p>
         </div>
       </div>
     </footer>

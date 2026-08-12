@@ -12,6 +12,7 @@ import "@/styles/acceptance-upgrade.css";
 import "@/styles/v24.css";
 import "@/styles/v25.css";
 import "@/styles/v26.css";
+import "@/styles/v27.css";
 import {
   SITE_DESCRIPTION,
   SITE_NAME,
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_ORIGIN),
   title: {
     default: SITE_NAME,
-    template: "%s | 南航天目湖足协",
+    template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
@@ -35,14 +36,14 @@ export const metadata: Metadata = {
   keywords: [
     "南京航空航天大学",
     "天目湖足球协会",
-    "南航天目湖足协",
+    SITE_NAME,
     "校园足球",
     "NUAA Tianmuhu Football Association",
   ],
   openGraph: {
     type: "website",
     locale: "zh_CN",
-    siteName: "南航天目湖足协",
+    siteName: SITE_NAME,
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
     url: "/",

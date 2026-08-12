@@ -33,7 +33,7 @@ export function RefereeHub() {
           <div className="functional-section-head">
             <div>
               <span>CONTACT</span>
-              <h2>联系裁判负责人</h2>
+              <h2>裁判负责人</h2>
             </div>
             <p>
               裁判招募、培训、选派及规则咨询，可通过协会公开邮箱或咨询 QQ 联系裁判事务负责人。
@@ -48,7 +48,7 @@ export function RefereeHub() {
           <div className="referee-center-intro">
             <div>
               <span>PUBLIC INFORMATION</span>
-              <h2>裁判公开信息</h2>
+              <h2>公开信息</h2>
               <p>
                 提供裁判招募、公开名录、裁判选派等信息查询服务。涉及个人任务与内部管理的功能需通过裁判员工作区登录后使用。
               </p>
@@ -74,7 +74,7 @@ export function RefereeHub() {
           <div className="functional-section-head">
             <div>
               <span>LEARNING & RESOURCES</span>
-              <h2>裁判学习与资料</h2>
+              <h2>学习与资料</h2>
             </div>
             <p>集中提供足球竞赛规则、五人制足球竞赛规则、培训资料与裁判工作文件。</p>
           </div>

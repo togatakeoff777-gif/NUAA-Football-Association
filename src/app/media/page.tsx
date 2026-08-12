@@ -8,9 +8,9 @@ import { bilibiliPlatform } from "@/data/platforms";
 export const metadata: Metadata = {
   alternates: { canonical: "/media" },
   title: "影像资料",
-  description: "南航天目湖足协官方抖音二维码与南航校园足球共享视频平台入口。",
+  description: "南京航空航天大学天目湖足球协会官方抖音二维码与南航校园足球共享视频平台入口。",
   openGraph: {
-    title: "影像资料｜南航天目湖足协",
+    title: "影像资料｜南京航空航天大学天目湖足球协会",
     description: "查看南航足协官方媒体账号与校园足球影像资料。",
     url: "/media",
   },

@@ -55,7 +55,7 @@ export function RefereeMemberLoginForm() {
         />
       </label>
       <p className="referee-form-note">
-        本入口仅面向已登记裁判员。初始登录信息由协会管理员线下发放，网站不收集手机号等个人敏感信息。
+        本入口面向经协会审核并启用账号的裁判员。账号申请开放后，裁判员可自主提交申请，由协会审核并配置相应权限。
       </p>
       <button disabled={submitting} type="submit">
         {submitting ? "登录中…" : "进入裁判员工作区"}

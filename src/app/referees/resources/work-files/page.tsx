@@ -8,7 +8,7 @@ import { refereeWorkFiles } from "@/data/referees";
 export const metadata: Metadata = {
   alternates: { canonical: "/referees/resources/work-files" },
   title: "裁判工作资料",
-  description: "裁判组与比赛官员使用的真实工作文件下载。",
+  description: "裁判组与比赛官员使用的工作文件下载。",
 };
 
 export default function RefereeWorkFilesPage() {
@@ -20,14 +20,14 @@ export default function RefereeWorkFilesPage() {
           <div className="detail-shell">
             <p>OFFICIALS&apos; WORK FILES</p>
             <h1>裁判工作资料</h1>
-            <p>集中提供已核验的比赛成绩报告单与裁判报告模板；发布日期未确认的文件保持明确标注。</p>
+            <p>集中提供比赛成绩报告单与裁判报告模板，并标明适用范围、版本和发布日期。</p>
           </div>
         </section>
         <section className="functional-section">
           <div className="detail-shell">
             <div className="functional-section-head">
-              <div><span>VERIFIED FILES</span><h2>工作文件下载</h2></div>
-              <p>文件版本、适用范围、来源与日期状态直接复用裁判中心现有真实数据。</p>
+              <div><span>WORK FILES</span><h2>工作文件下载</h2></div>
+              <p>请根据比赛赛制与文件适用范围选择对应模板。</p>
             </div>
             <div className="referee-work-file-list">
               {refereeWorkFiles.map((file) => (

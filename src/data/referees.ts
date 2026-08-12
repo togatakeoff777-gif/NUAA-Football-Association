@@ -229,21 +229,20 @@ export const refereeAssignmentPublications: readonly RefereeAssignmentPublicatio
 export const refereePrimaryEntries = [
   {
     id: "join",
-    title: "如何加入裁判队伍",
-    description:
-      "面向希望成为裁判员的新生，以及已有证书、希望加入天目湖裁判团队的人员。",
+    title: "加入裁判队伍",
+    description: "查看裁判招募方式、参与条件与后续培训安排。",
     href: "/referees/recruitment",
   },
   {
     id: "directory",
-    title: "注册裁判员名录",
-    description: "查看可公开的裁判员编号、姓名与已登记赛制。",
+    title: "裁判员名录",
+    description: "查看允许公开展示的已登记裁判员信息。",
     href: "/referees/directory",
   },
   {
     id: "assignments",
-    title: "裁判员选派公示",
-    description: "按场次查看管理员已发布且未撤回的裁判组选派结果；访客也可查看公开场次。",
+    title: "裁判选派公示",
+    description: "查看当前已公开发布且未撤回的比赛裁判组选派。",
     href: "/referees/assignments",
   },
 ] as const;
@@ -258,45 +257,54 @@ export const refereeSecondaryEntries = [
   {
     id: "stories",
     title: "裁判员风采",
-    description: "仅在获得授权后发布裁判员故事与人物影像。",
-    badge: "内容待更新",
-  },
-  {
-    id: "resources",
-    title: "规则与资料",
-    description: "查看足球、五人制规则更新与裁判工作资料下载。",
-    href: "#referee-rules",
+    description: "记录校园足球裁判员的执裁经历、学习成长与团队风貌。",
+    badge: "暂无公开内容",
   },
 ] as const;
 
-export const rulesResourceEntries = [
+export const refereeLearningEntries = [
   {
     id: "laws-football",
     title: "足球竞赛规则",
-    description: "2025/2026足球竞赛规则中文文件。",
-    href: "/documents/rules/football/2025-26-laws-of-the-game-zh.pdf",
-    badge: "真实文件",
+    description: "查看2025/2026足球竞赛规则及现有规则修改说明。",
+    href: "/referees/resources/football-laws",
+    badge: "规则文件",
   },
   {
     id: "laws-futsal",
     title: "五人制足球竞赛规则",
     description: "2025/2026五人制足球竞赛规则中文文件。",
     href: "/documents/rules/futsal/2025-26-fifa-futsal-laws-zh.pdf",
-    badge: "真实文件",
+    badge: "规则文件",
   },
   {
-    id: "rule-updates",
-    title: "规则更新",
-    description: "追踪适用于校园赛事的规则版本和重点变化。",
-    href: "/documents/rules/football/2026-27-changes-explained-zh.pdf",
-    badge: "真实文件",
+    id: "training",
+    title: "裁判培训资料",
+    description: "汇集协会裁判培训、业务学习与执裁能力提升资料。",
+    href: "/referees/resources/training",
+    badge: "培训资料",
   },
   {
     id: "referee-downloads",
-    title: "裁判工作资料下载",
-    description: "集中下载比赛成绩报告单与裁判报告模板。",
+    title: "裁判工作资料",
+    description: "下载比赛成绩报告单、裁判报告模板与现有正式工作文件。",
     href: "/referees/resources/work-files",
-    badge: "3份真实文件",
+    badge: "工作文件",
+  },
+] as const;
+
+export const refereeFootballLawFiles = [
+  {
+    id: "football-laws-2025-26",
+    title: "2025/2026足球竞赛规则（中文）",
+    description: "足球竞赛规则中文文件。",
+    href: "/documents/rules/football/2025-26-laws-of-the-game-zh.pdf",
+  },
+  {
+    id: "football-laws-2026-27-changes",
+    title: "2026/2027足球竞赛规则修改说明（中文）",
+    description: "现有足球竞赛规则重点变化说明。",
+    href: "/documents/rules/football/2026-27-changes-explained-zh.pdf",
   },
 ] as const;
 

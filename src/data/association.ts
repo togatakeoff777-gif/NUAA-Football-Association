@@ -9,7 +9,7 @@ export const associationIdentity = {
   dataSource: "local",
   campus: "tianmuhu",
   formalName: "南京航空航天大学天目湖足球协会",
-  shortName: "南航天目湖足协",
+  shortName: "南京航空航天大学天目湖足球协会",
   englishName: "NUAA Tianmuhu Football Association",
   wechatBrandName: "湖区FA",
   establishedYear: 2021,

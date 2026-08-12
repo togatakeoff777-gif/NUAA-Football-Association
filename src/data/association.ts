@@ -12,8 +12,8 @@ export const associationIdentity = {
   shortName: "南京航空航天大学天目湖足球协会",
   englishName: "NUAA Tianmuhu Football Association",
   wechatBrandName: "湖区FA",
-  establishedYear: 2021,
-  establishedLabel: "EST. 2021",
+  establishedYear: 2022,
+  establishedLabel: "EST. 2022",
   slogan: "因热爱，奔赴绿茵",
 } as const;
 
@@ -33,7 +33,7 @@ export const associationScope = {
 export const associationDevelopmentFacts = [
   {
     id: "established",
-    value: "2021",
+    value: "2022",
     label: "协会成立",
     note: "已确认资料",
   },
@@ -58,6 +58,34 @@ export const associationDevelopmentFacts = [
 ] as const;
 
 export const associationStats = associationDevelopmentFacts;
+
+export const associationTimeline = [
+  {
+    period: "2022年",
+    label: "协会成立",
+    description: "天目湖学生足球协会正式成立，校园足球组织建设由此起步。",
+  },
+  {
+    period: "2022-2023",
+    label: "初步建设",
+    description: "第一届、第二届成员逐步完善协会组织架构与日常运行机制，为后续赛事组织和协会发展打下基础。",
+  },
+  {
+    period: "2023-2024",
+    label: "赛事体系逐步成形",
+    description: "校园足球赛事组织逐渐稳定，持续开展新生杯、五人制联赛等赛事，协会赛事运行经验不断积累。",
+  },
+  {
+    period: "2024-2025",
+    label: "组织与赛事进一步拓展",
+    description: "首次成功举办天目湖女足比赛，进一步丰富校园足球赛事类型；同年宣传部正式设立，协会宣传体系得到完善。",
+  },
+  {
+    period: "2025-2026",
+    label: "赛事规模继续扩大",
+    description: "首次承担新生杯主要组织工作，五人制联赛增设女子组，并首次举办男子、女子足球院际杯，赛事体系进一步完善。",
+  },
+] as const;
 
 export const associationRoleFramework = [
   "主席",
@@ -96,9 +124,15 @@ export const associationTerms = [
   {
     term: "第二届",
     academicYear: "2022-2023",
-    positions: [],
-    unassignedMembers: ["程涛", "米尔", "阿里木", "周浩楠", "朱润涛"],
-    roleNote: "现有档案未记录成员与具体岗位的对应关系。",
+    positions: [
+      { role: "主席", name: "程涛" },
+      { role: "副主席", name: "米尔" },
+      { role: "竞赛部部长", name: "阿里木" },
+      { role: "后勤部部长", name: "周浩楠" },
+      { role: "外联部部长", name: "朱润涛" },
+    ],
+    unassignedMembers: [],
+    roleNote: "第二届成员与岗位记录。",
   },
   {
     term: "第三届",

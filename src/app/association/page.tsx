@@ -9,6 +9,7 @@ import {
   associationIdentity,
   associationRoleFramework,
   associationScope,
+  associationTimeline,
   associationTerms,
   currentAssociationTeam,
 } from "@/data/association";
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
 export default function AssociationPage() {
   const identity = (
     <div className="association-identity-aside">
-      <div className="archive-identity-card"><BrandMark /><div><span>公开档案编号</span><strong>NUAA-TMH-FA / 2021</strong><small>南京航空航天大学天目湖足球协会</small></div></div>
+      <div className="archive-identity-card"><BrandMark /><div><span>公开档案编号</span><strong>NUAA-TMH-FA / 2022</strong><small>南京航空航天大学天目湖足球协会</small></div></div>
       <Link className="association-join-button" href="/join">加入我们 <span aria-hidden="true">→</span></Link>
     </div>
   );
@@ -41,7 +42,7 @@ export default function AssociationPage() {
         <section className="archive-profile" aria-labelledby="archive-profile-title"><p>BASIC PROFILE</p><h2 id="archive-profile-title">基本信息</h2><dl><div><dt>正式名称</dt><dd>{associationIdentity.formalName}</dd></div><div><dt>英文名称</dt><dd>{associationIdentity.englishName}</dd></div><div><dt>成立年份</dt><dd>{associationIdentity.establishedYear}</dd></div><div><dt>服务范围</dt><dd>{associationScope.representedCampus}</dd></div><div><dt>公开邮箱</dt><dd><a href={`mailto:${ASSOCIATION_EMAIL}`}>{ASSOCIATION_EMAIL}</a></dd></div></dl></section>
         <section className="archive-stats" aria-labelledby="archive-stats-title"><p>ASSOCIATION DATA</p><h2 id="archive-stats-title">协会概况</h2><div>{associationDevelopmentFacts.map((fact) => <article key={fact.id}><strong>{fact.value}</strong><span>{fact.label}</span><small>{fact.note}</small></article>)}</div></section>
       </div>
-      <section className="archive-timeline" aria-labelledby="archive-timeline-title"><div><p>TIMELINE</p><h2 id="archive-timeline-title">发展记录</h2><span>协会历史与历届成员资料持续整理。</span></div><ol><li><time>2021</time><section><span>协会成立</span><h3>南京航空航天大学天目湖足球协会成立</h3><p>协会成立于2021年，服务天目湖校区校园足球。</p></section></li><li className="archive-timeline-pending"><time>持续更新</time><section><span>资料整理中</span><h3>发展记录持续补充</h3><p>历届成员资料列于下方，更详细的协会发展记录将在资料完善后更新。</p></section></li></ol></section>
+      <section className="archive-timeline" aria-labelledby="archive-timeline-title"><div><p>TIMELINE</p><h2 id="archive-timeline-title">发展记录</h2><span>记录协会组织建设与校园足球赛事体系的发展历程。</span></div><ol>{associationTimeline.map((entry) => <li key={entry.period}><time>{entry.period}</time><section><span>发展阶段</span><h3>{entry.label}</h3><p>{entry.description}</p></section></li>)}</ol></section>
       <JsonLd data={organizationJsonLd()} />
       <ShareActions title="南京航空航天大学天目湖足球协会" />
       <section className="association-current-team" aria-labelledby="association-current-team-title">

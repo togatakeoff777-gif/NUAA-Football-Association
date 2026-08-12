@@ -6,31 +6,47 @@ import type { CurrentTeamDirectoryEntry, TeamShowcaseItem } from "@/types";
 import { mensIntercollegeCup2026 } from "@/data/mens-intercollege-cup-2026";
 import { womensIntercollegeCup2026 } from "@/data/womens-intercollege-cup-2026";
 
-export const verifiedCompetitionTeams = [
+export type VerifiedCompetitionTeamArchive = {
+  season: number;
+  competitionId: string;
+  competitionName: string;
+  competitionHref: string;
+  summary: string;
+  teams: readonly {
+    id: string;
+    name: string;
+    group?: string;
+    finalRank?: number;
+    publicRosterCount: number;
+  }[];
+};
+
+export const verifiedCompetitionTeams: readonly VerifiedCompetitionTeamArchive[] = [
   {
+    season: 2026,
     competitionId: "2026-mens-intercollege-cup",
     competitionName: "2026男子足球院际杯",
     competitionHref: "/competitions/2026-mens-intercollege-cup#teams",
-    summary: "8支参赛队伍，名单复用赛事结构化归档。",
+    summary: "本页面展示该届赛事已确认参赛球队及公开名单信息，具体赛事数据以赛事档案为准。",
     teams: mensIntercollegeCup2026.teams.map((team) => ({
       id: team.id,
       name: team.displayName,
-      meta: `${team.group}组 · ${team.players.length}名公开名单球员`,
-      description: "2026男子足球院际杯参赛队伍，公开名单与比赛数据以赛事归档为准。",
-      contact: "联系方式待球队负责人确认",
+      group: `${team.group}组`,
+      publicRosterCount: team.players.length,
     })),
   },
   {
+    season: 2026,
     competitionId: "2026-womens-intercollege-cup",
     competitionName: "2026女子足球院际杯",
     competitionHref: "/competitions/2026-womens-intercollege-cup#teams",
-    summary: "3支参赛队伍，公开名单范围以赛事归档为准。",
+    summary: "本页面展示该届赛事已确认参赛球队及公开名单信息，具体赛事数据以赛事档案为准。",
     teams: womensIntercollegeCup2026.teams.map((team) => ({
       id: team.name,
       name: team.name,
-      meta: `最终第${team.rank}名 · ${team.played}场比赛`,
-      description: "2026女子足球院际杯参赛队伍，现有公开信息以赛事归档为准。",
-      contact: "联系方式待球队负责人确认",
+      finalRank: team.rank,
+      publicRosterCount:
+        womensIntercollegeCup2026.rosters.find((roster) => roster.team === team.name)?.players.length ?? 0,
     })),
   },
 ] as const;
@@ -47,8 +63,6 @@ export const currentTeamDirectoryStatuses = {
  * 联系方式须同时满足 contactIsPublic=true 才能在前台展示。
  */
 export const currentTeamDirectory: readonly CurrentTeamDirectoryEntry[] = [];
-
-export const teamContactPendingLabel = "联系方式待球队负责人确认";
 
 export const teamDemoNotice =
   "以下球队名称、简介和编号均为演示数据，仅用于展示球队卡片布局，不代表真实天目湖参赛球队。真实球队资料待协会确认后更新。";

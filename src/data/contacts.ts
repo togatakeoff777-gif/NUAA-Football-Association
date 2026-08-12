@@ -1,13 +1,21 @@
 import type { ContactCardData, PublicSectionContact } from "@/types";
 import { ASSOCIATION_EMAIL } from "@/data/platforms";
 
+const competitionLead = {
+  name: "胡兵",
+  role: "会长",
+  qq: "1663690353",
+  email: ASSOCIATION_EMAIL,
+} as const;
+
 export const publicSectionContacts = {
   competitions: {
     label: "赛事中心负责人",
-    name: "胡兵",
-    role: "会长",
-    qq: "1663690353",
-    email: ASSOCIATION_EMAIL,
+    ...competitionLead,
+  },
+  arbitration: {
+    label: "仲裁与申诉负责人",
+    ...competitionLead,
   },
   teams: {
     label: "球队信息负责人",

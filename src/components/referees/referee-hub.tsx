@@ -74,7 +74,7 @@ export function RefereeHub() {
           <div className="functional-section-head">
             <div>
               <span>LEARNING & RESOURCES</span>
-              <h2>学习与资料</h2>
+              <h2>学习资料</h2>
             </div>
             <p>集中提供足球竞赛规则、五人制足球竞赛规则、培训资料与裁判工作文件。</p>
           </div>

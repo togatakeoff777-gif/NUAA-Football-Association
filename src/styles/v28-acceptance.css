@@ -1,0 +1,241 @@
+/* V2.8 acceptance fixes: public data selectors, archive exhibition, and referee training library. */
+
+/* Standings and scoring selectors */
+.competition-record-explorer { display: grid; gap: 28px; }
+
+.competition-record-filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 320px));
+  gap: 16px;
+  padding: 22px;
+  border-left: 4px solid var(--aviation-blue);
+  background: #eef5fc;
+}
+
+.competition-record-filters label,
+.team-archive-filters label,
+.team-archive-filters > div {
+  display: grid;
+  gap: 8px;
+}
+
+.competition-record-filters label > span,
+.team-archive-filters label > span,
+.team-archive-filters > div > span {
+  color: #47617f;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.competition-record-filters select,
+.team-archive-filters select {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 42px 0 14px;
+  border: 1px solid #b9cde4;
+  border-radius: 0;
+  background: white;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+}
+
+.competition-record-result {
+  padding: clamp(22px, 3vw, 36px);
+  border-top: 4px solid var(--space-blue);
+  background: white;
+  box-shadow: 0 18px 50px rgba(16, 43, 78, .07);
+}
+
+.competition-record-result > header,
+.team-archive-result > header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 26px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.competition-record-result > header span,
+.team-archive-result > header span {
+  color: var(--aviation-blue);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: .11em;
+}
+
+.competition-record-result > header h2,
+.team-archive-result > header h3 {
+  margin-top: 7px;
+  font-size: clamp(26px, 3vw, 40px);
+  line-height: 1.2;
+}
+
+.competition-record-result > header a,
+.team-archive-result > header a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--aviation-blue);
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.competition-standing-groups { display: grid; gap: 32px; margin-top: 28px; }
+.competition-standing-groups > section > h3 { margin-bottom: 14px; color: var(--nuaa-blue); font-size: 20px; }
+.competition-record-note { margin-top: 14px; padding: 14px 16px; border-left: 3px solid #9fb9d6; background: #f3f7fc; color: #536983; font-size: 13px; line-height: 1.7; }
+
+.competition-scorer-table-wrap { margin-top: 28px; overflow-x: auto; }
+.competition-scorer-table { width: 100%; min-width: 690px; border-collapse: collapse; }
+.competition-scorer-table th { padding: 13px 15px; background: var(--space-blue); color: white; font-size: 12px; text-align: left; }
+.competition-scorer-table td { padding: 15px; border-bottom: 1px solid var(--line); font-size: 14px; }
+.competition-scorer-table tbody tr:nth-child(even) { background: #f7faff; }
+.competition-scorer-table td:last-child b { color: var(--aviation-blue); }
+.competition-scorer-mobile { display: none; }
+
+/* Historical competition exhibition */
+.historical-year-list { display: grid; gap: 56px; margin-top: 38px; }
+.historical-year { display: grid; grid-template-columns: 145px minmax(0, 1fr); gap: 26px; align-items: start; }
+.historical-year > header { position: sticky; top: calc(var(--header-height) + 24px); display: grid; gap: 6px; padding: 22px; border-top: 4px solid var(--aviation-blue); background: var(--space-blue); color: white; }
+.historical-year > header strong { font-size: 38px; letter-spacing: -.04em; }
+.historical-year > header span { color: rgba(255,255,255,.62); font-size: 11px; }
+.historical-competition-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.historical-competition-card { min-width: 0; padding: 24px; border-top: 3px solid #7fa9d8; background: white; box-shadow: 0 14px 36px rgba(16, 43, 78, .06); }
+.historical-card-heading > span { color: var(--aviation-blue); font-size: 10px; font-weight: 850; letter-spacing: .1em; }
+.historical-card-heading h3 { margin-top: 8px; font-size: 22px; line-height: 1.4; }
+.historical-card-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; margin-top: 18px; background: var(--line); }
+.historical-card-meta > div { min-width: 0; padding: 11px 12px; background: #f6f9fd; }
+.historical-card-meta dt { color: var(--muted); font-size: 10px; }
+.historical-card-meta dd { margin: 5px 0 0; font-size: 13px; font-weight: 740; line-height: 1.55; }
+.historical-final { margin-top: 20px; padding: 18px; background: var(--space-blue); color: white; }
+.historical-final > span { color: #82c9ff; font-size: 10px; font-weight: 850; }
+.historical-final > div { display: grid; grid-template-columns: minmax(0, 1fr) 50px minmax(0, 1fr); align-items: center; gap: 10px; margin-top: 12px; }
+.historical-final > div strong { font-size: 14px; line-height: 1.45; }
+.historical-final > div strong:last-child { text-align: right; }
+.historical-final b { font-size: 20px; text-align: center; }
+.historical-final small { display: block; margin-top: 10px; color: rgba(255,255,255,.66); }
+.historical-ranking,
+.historical-officials { margin-top: 20px; }
+.historical-ranking h4,
+.historical-officials h4 { color: var(--nuaa-blue); font-size: 15px; }
+.historical-ranking ol { display: grid; gap: 1px; margin-top: 10px; list-style: none; background: var(--line); }
+.historical-ranking li { min-width: 0; display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 11px 12px; background: #f8fafd; }
+.historical-ranking li > span { color: var(--aviation-blue); font-size: 12px; font-weight: 850; }
+.historical-ranking li strong { font-size: 13px; line-height: 1.45; }
+.historical-ranking li small { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.historical-ranking li > b { color: var(--aviation-blue); font-size: 12px; }
+.historical-officials dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; margin-top: 10px; background: var(--line); }
+.historical-officials dl > div { padding: 10px 11px; background: #f8fafd; }
+.historical-officials dt { color: var(--muted); font-size: 10px; }
+.historical-officials dd { margin: 4px 0 0; font-size: 13px; font-weight: 750; }
+.historical-note { margin-top: 18px; padding: 13px 15px; border-left: 3px solid #bd7414; background: #fff7e9; color: #6d5638; font-size: 12px; line-height: 1.7; }
+
+/* Team archive selector */
+.team-archive-explorer { display: grid; gap: 24px; margin-top: 28px; }
+.team-archive-filters { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 20px; padding: 20px 22px; background: #eef5fc; }
+.team-archive-filters > div > div { display: flex; flex-wrap: wrap; gap: 8px; }
+.team-archive-filters button { min-height: 48px; padding: 0 16px; border: 1px solid #b9cde4; background: white; color: #48627f; font: inherit; font-size: 13px; font-weight: 760; cursor: pointer; }
+.team-archive-filters button[aria-pressed="true"] { border-color: var(--aviation-blue); background: var(--aviation-blue); color: white; }
+.team-archive-result { padding: clamp(22px, 3vw, 34px); border-top: 4px solid var(--space-blue); background: white; }
+.team-archive-result > header p { max-width: 720px; margin-top: 9px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+.team-archive-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin-top: 24px; background: var(--line); }
+.team-archive-grid article { min-width: 0; min-height: 170px; padding: 21px; background: #f8fafd; }
+.team-archive-grid article > span { color: var(--aviation-blue); font-size: 11px; font-weight: 850; }
+.team-archive-grid h4 { margin-top: 18px; font-size: 18px; line-height: 1.4; }
+.team-archive-grid dl { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.team-archive-grid dl > div { padding: 8px 10px; background: white; }
+.team-archive-grid dt { color: var(--muted); font-size: 9px; }
+.team-archive-grid dd { margin: 4px 0 0; font-size: 12px; font-weight: 760; }
+
+/* Arbitration contact and submission */
+.arbitration-submission { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(320px, .8fr); gap: 20px; margin-top: 22px; }
+.arbitration-submission > div { padding: 26px; border-left: 4px solid var(--aviation-blue); background: var(--space-blue); color: white; }
+.arbitration-submission > div > span { color: #8dceff; font-size: 10px; font-weight: 850; letter-spacing: .12em; }
+.arbitration-submission h3 { margin-top: 8px; font-size: 26px; }
+.arbitration-submission > div > p { margin-top: 14px; color: rgba(255,255,255,.76); font-size: 14px; line-height: 1.8; }
+.arbitration-submission > div > p strong { color: white; overflow-wrap: anywhere; }
+.arbitration-submission > div > a { min-height: 46px; display: inline-flex; align-items: center; margin-top: 20px; padding: 0 16px; background: white; color: var(--aviation-blue); font-size: 14px; font-weight: 800; }
+.arbitration-submission .section-contact-card { grid-template-columns: 1fr; gap: 14px; margin-top: 0; box-shadow: none; }
+.arbitration-submission .section-contact-card dl { grid-template-columns: 1fr; }
+
+/* Referee training library */
+.referee-training-levels { display: grid; gap: 46px; margin-top: 34px; }
+.referee-training-levels > section > header { display: flex; align-items: baseline; gap: 14px; padding-bottom: 13px; border-bottom: 1px solid var(--line); }
+.referee-training-levels > section > header span { color: var(--aviation-blue); font-size: 10px; font-weight: 850; letter-spacing: .12em; }
+.referee-training-levels > section > header h3 { font-size: 26px; }
+.referee-training-resource-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 18px; }
+.referee-training-resource-grid > :only-child { grid-column: 1 / -1; }
+.referee-training-resource-card { min-width: 0; display: flex; flex-direction: column; padding: 26px; border-top: 4px solid var(--aviation-blue); background: white; box-shadow: 0 16px 44px rgba(16,43,78,.07); }
+.referee-training-resource-card > header { display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 14px; }
+.referee-training-resource-card > header > span { color: var(--aviation-blue); font-size: 12px; font-weight: 900; }
+.referee-training-resource-card > header small { color: var(--muted); font-size: 10px; font-weight: 800; }
+.referee-training-resource-card h4 { margin-top: 7px; font-size: 22px; line-height: 1.35; }
+.referee-training-resource-card > p { margin-top: 16px; color: var(--muted); font-size: 14px; line-height: 1.8; }
+.referee-training-resource-card > ul { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 18px; list-style: none; }
+.referee-training-resource-card > ul li { padding: 7px 9px; background: var(--glacier); color: #315c8b; font-size: 11px; }
+.referee-training-version-note { margin-top: 18px; padding: 15px; border-left: 3px solid #bd7414; background: #fff7e9; }
+.referee-training-version-note strong { color: #8b5109; font-size: 12px; }
+.referee-training-version-note p { margin-top: 6px; color: #66523a; font-size: 12px; line-height: 1.7; }
+.referee-training-preview { margin-top: 20px; border: 1px solid var(--line); background: #e9eff6; }
+.referee-training-preview iframe { width: 100%; height: 440px; display: block; border: 0; background: white; }
+.referee-training-preview p { padding: 11px 13px; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.referee-training-resource-card > footer { display: flex; flex-wrap: wrap; gap: 9px; margin-top: auto; padding-top: 22px; }
+.referee-training-resource-card > footer a { min-height: 44px; display: inline-flex; align-items: center; padding: 0 14px; border: 1px solid #b9d1eb; color: var(--aviation-blue); font-size: 13px; font-weight: 800; }
+.referee-training-resource-card > footer a:first-child:not(:last-child) { border-color: var(--aviation-blue); background: var(--aviation-blue); color: white; }
+.referee-training-library .functional-back-link { margin-top: 36px; }
+
+.archive-timeline time { overflow-wrap: anywhere; line-height: 1.4; }
+
+@media (max-width: 980px) {
+  .historical-year { grid-template-columns: 1fr; }
+  .historical-year > header { position: static; }
+  .team-archive-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .arbitration-submission { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 767px) {
+  .competition-record-filters,
+  .team-archive-filters,
+  .historical-competition-grid,
+  .referee-training-resource-grid { grid-template-columns: 1fr; }
+
+  .competition-record-result,
+  .team-archive-result { padding: 21px 17px; }
+
+  .competition-record-result > header,
+  .team-archive-result > header { align-items: flex-start; flex-direction: column; gap: 10px; }
+
+  .competition-record-result > header a,
+  .team-archive-result > header a { width: 100%; }
+
+  .competition-scorer-table-wrap { display: none; }
+  .competition-scorer-mobile { display: grid; gap: 1px; margin-top: 22px; background: var(--line); }
+  .competition-scorer-mobile article { min-width: 0; display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 11px; padding: 13px; background: #f8fafd; }
+  .competition-scorer-mobile article > span { color: var(--aviation-blue); font-size: 11px; font-weight: 850; }
+  .competition-scorer-mobile strong { font-size: 14px; }
+  .competition-scorer-mobile small { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.45; }
+  .competition-scorer-mobile b { color: var(--aviation-blue); font-size: 12px; }
+
+  .historical-year-list { gap: 42px; }
+  .historical-competition-card { padding: 20px 17px; }
+  .historical-card-meta,
+  .historical-officials dl { grid-template-columns: 1fr; }
+  .historical-final > div { grid-template-columns: minmax(0, 1fr) 42px minmax(0, 1fr); }
+
+  .team-archive-filters { padding: 18px 16px; }
+  .team-archive-filters > div > div { display: grid; grid-template-columns: 1fr; }
+  .team-archive-filters button { width: 100%; }
+  .team-archive-grid { grid-template-columns: 1fr; }
+  .team-archive-grid article { min-height: 0; }
+
+  .arbitration-submission > div { padding: 22px 18px; }
+
+  .referee-training-resource-card { padding: 22px 17px; }
+  .referee-training-preview iframe { display: none; }
+  .referee-training-preview p { padding: 17px 14px; }
+  .referee-training-resource-card > footer { align-items: stretch; flex-direction: column; }
+  .referee-training-resource-card > footer a { width: 100%; justify-content: space-between; }
+}

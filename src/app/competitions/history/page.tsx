@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { coreCompetitionDirectory } from "@/data/competition-directory";
+import { historicalCompetitionYears } from "@/data/historical-competitions";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/competitions/history" },
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
   description: "南京航空航天大学天目湖足球协会年度赛事档案与赛季记录。",
   openGraph: {
     title: "历届赛事 | 南京航空航天大学天目湖足球协会",
-    description: "查看 2026 男、女子足球院际杯正式归档及后续历史资料整理状态。",
+    description: "查看2026赛事完整档案及2025、2024年已核实的历史赛事记录。",
     url: "/competitions/history",
   },
 };
@@ -35,7 +36,58 @@ export default function CompetitionHistoryPage() {
             </div>
           </div>
         </div></section>
-        <section className="functional-section functional-section-tint"><div className="detail-shell"><div className="history-pending"><span>EARLIER YEARS</span><h2>更早年份资料整理中</h2><p>冠军、比分、参赛队伍、比赛日期与影像资料将在资料完善后逐步补充。</p></div></div></section>
+        <section className="functional-section functional-section-tint history-exhibition"><div className="detail-shell">
+          <div className="v25-section-heading"><div><p>EARLIER YEARS</p><h2>历届赛事回顾</h2></div><p>早期赛事档案根据现存历史资料持续整理，页面仅展示已核实的信息与影像记录。</p></div>
+          <div className="historical-year-list">
+            {historicalCompetitionYears.map((year) => (
+              <section className="historical-year" key={year.year} aria-labelledby={`history-${year.year}`}>
+                <header><strong id={`history-${year.year}`}>{year.year}</strong><span>已核实赛事记录</span></header>
+                <div className="historical-competition-grid">
+                  {year.competitions.map((competition) => (
+                    <article className="historical-competition-card" key={competition.id}>
+                      <div className="historical-card-heading">
+                        <span>{competition.format ?? "历史赛事"}</span>
+                        <h3>{competition.name}</h3>
+                      </div>
+                      {competition.teamCount || competition.startDate || competition.venue ? (
+                        <dl className="historical-card-meta">
+                          {competition.teamCount ? <div><dt>参赛队伍</dt><dd>{competition.teamCount}支</dd></div> : null}
+                          {competition.startDate ? <div><dt>赛事起始日期</dt><dd>{competition.startDate}</dd></div> : null}
+                          {competition.venue ? <div><dt>已确认场地</dt><dd>{competition.venue}</dd></div> : null}
+                        </dl>
+                      ) : null}
+                      {competition.final ? (
+                        <section className="historical-final">
+                          <span>决赛</span>
+                          <div><strong>{competition.final.home}</strong><b>{competition.final.score}</b><strong>{competition.final.away}</strong></div>
+                          <small>{competition.final.date}</small>
+                        </section>
+                      ) : null}
+                      {competition.standings?.length ? (
+                        <section className="historical-ranking">
+                          <h4>{year.year === 2024 ? "已确认名次" : "最终名次"}</h4>
+                          <ol>
+                            {competition.standings.map((standing) => (
+                              <li key={`${competition.id}-${standing.position}`}>
+                                <span>{standing.position}</span>
+                                <div><strong>{standing.team}</strong>{standing.record ? <small>{standing.record}{standing.goals ? ` · 进/失 ${standing.goals}` : ""}</small> : null}</div>
+                                {standing.points !== undefined ? <b>{standing.points}分</b> : null}
+                              </li>
+                            ))}
+                          </ol>
+                        </section>
+                      ) : null}
+                      {competition.officials?.length ? (
+                        <section className="historical-officials"><h4>决赛裁判组</h4><dl>{competition.officials.map((official) => <div key={official.role}><dt>{official.role}</dt><dd>{official.name}</dd></div>)}</dl></section>
+                      ) : null}
+                      {competition.note ? <p className="historical-note">{competition.note}</p> : null}
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        </div></section>
       </main>
       <SiteFooter />
     </>

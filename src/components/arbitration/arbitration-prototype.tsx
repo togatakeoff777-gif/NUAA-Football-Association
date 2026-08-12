@@ -5,6 +5,8 @@ import {
   arbitrationPublicNotice,
   arbitrationResources,
 } from "@/data/arbitration";
+import { SectionContactCard } from "@/components/ui/section-contact-card";
+import { publicSectionContacts } from "@/data/contacts";
 
 function DefinitionSection({ title, items }: { title: string; items: readonly string[] }) {
   return <section><h3>{title}</h3><ul>{items.map((item) => <li key={item}>{item}</li>)}</ul></section>;
@@ -34,7 +36,15 @@ export function ArbitrationPrototype() {
         <div className="detail-shell">
           <div className="functional-section-head"><div><span>PUBLIC PROCESS</span><h2 id="arbitration-process-title">处理流程</h2></div><p>提交渠道及具体材料要求以对应赛事规程或赛事通知为准。</p></div>
           <ol className="arbitration-process-list">{arbitrationGuide.process.map((step, index) => <li key={step.id}><span>{String(index + 1).padStart(2, "0")}</span><div><h3>{step.title}</h3><p>{step.description}</p></div></li>)}</ol>
-          <div className="arbitration-contact-state"><span>{arbitrationGuide.submission.status}</span><p>{arbitrationGuide.submission.contact}</p></div>
+          <section className="arbitration-submission" aria-labelledby="arbitration-submission-title">
+            <div>
+              <span>SUBMIT AN APPEAL</span>
+              <h3 id="arbitration-submission-title">申诉提交</h3>
+              <p>请将申诉材料发送至南京航空航天大学天目湖足球协会官方邮箱：<strong>{publicSectionContacts.arbitration.email}</strong>。邮件中请注明对应赛事、球队名称、比赛场次及申诉事项，并按照当届赛事规程、纪律决定或赛事通知要求提交相关材料。</p>
+              <a href={`mailto:${publicSectionContacts.arbitration.email}`}>发送申诉邮件 →</a>
+            </div>
+            <SectionContactCard contact={publicSectionContacts.arbitration} />
+          </section>
         </div>
       </section>
 

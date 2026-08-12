@@ -52,7 +52,7 @@ export default function EventGuidePage() {
         <section className="participation-guide-section participation-guide-section-tint" aria-labelledby="platform-reference-title">
           <div className="page-shell">
             <PdfResourcePanel
-              description="本站目前暂未取得专门面向个人球员的足球中国注册操作手册。以下为中国足球协会提供的《足球中国赛事操作说明》，主要介绍足球中国平台的赛事管理、报名、赛程及比赛操作流程，可作为了解平台使用方式的参考资料。个人球员实际报名方式及赛事入口，请以当届赛事通知和球队负责人通知为准。"
+              description="以下为中国足球协会提供的《足球中国赛事操作说明》，主要介绍足球中国平台的赛事管理、报名、赛程及比赛操作流程，可作为了解平台使用方式的参考资料。个人球员实际报名方式及赛事入口，请以当届赛事通知和球队负责人通知为准。"
               eyebrow="PLATFORM REFERENCE"
               fileLabel={resource.fileLabel}
               href={resource.href}

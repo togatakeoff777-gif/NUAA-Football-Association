@@ -38,7 +38,7 @@ export default function RefereeFootballLawsPage() {
                 </article>
               ))}
             </div>
-            <Link className="functional-back-link" href="/referees#referee-resources">← 返回裁判学习与资料</Link>
+            <Link className="functional-back-link" href="/referees#referee-resources">← 返回裁判学习资料</Link>
           </div>
         </section>
       </main>

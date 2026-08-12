@@ -5,18 +5,18 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SectionContactCard } from "@/components/ui/section-contact-card";
+import { TeamArchiveExplorer } from "@/components/teams/team-archive-explorer";
 import { publicSectionContacts } from "@/data/contacts";
 import {
   currentTeamDirectory,
   currentTeamDirectoryStatuses,
-  teamContactPendingLabel,
   verifiedCompetitionTeams,
 } from "@/data/teams";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/teams" },
   title: "球队信息",
-  description: "当前招募与组队信息，以及2026男、女子足球院际杯真实参赛队伍档案。",
+  description: "当前招募与组队信息，以及2026男、女子足球院际杯参赛球队档案。",
 };
 
 export default function TeamsPage() {
@@ -46,8 +46,8 @@ export default function TeamsPage() {
                   <dl>
                     <div><dt>对应赛事</dt><dd><Link href={team.competitionHref}>{team.competitionName}</Link></dd></div>
                     <div><dt>招募对象 / 位置</dt><dd>{team.targetOrPositions}</dd></div>
-                    <div><dt>负责人</dt><dd>{team.confirmedLead ?? "待球队负责人确认"}</dd></div>
-                    <div><dt>联系方式</dt><dd>{team.contactIsPublic ? team.publicContact ?? teamContactPendingLabel : teamContactPendingLabel}</dd></div>
+                    {team.confirmedLead ? <div><dt>负责人</dt><dd>{team.confirmedLead}</dd></div> : null}
+                    {team.contactIsPublic && team.publicContact ? <div><dt>联系方式</dt><dd>{team.publicContact}</dd></div> : null}
                     <div><dt>更新时间</dt><dd>{team.updatedAt}</dd></div>
                     <div><dt>备注</dt><dd>{team.note}</dd></div>
                   </dl>
@@ -64,15 +64,8 @@ export default function TeamsPage() {
           )}
         </div></section>
         <section className="functional-section"><div className="detail-shell">
-          <div className="functional-section-head"><div><span>VERIFIED COMPETITION ARCHIVES</span><h2>真实参赛队伍档案</h2></div><p>2026男、女子足球院际杯名单与比赛数据复用对应结构化归档，不重复维护。</p></div>
-          <div className="verified-team-groups">
-            {verifiedCompetitionTeams.map((competition) => (
-              <section key={competition.competitionId}>
-                <header><div><span>COMPETITION ARCHIVE</span><h2>{competition.competitionName}</h2><p>{competition.summary}</p></div><Link href={competition.competitionHref}>进入赛事归档 →</Link></header>
-                <div>{competition.teams.map((team, index) => <article key={team.id}><span>{String(index + 1).padStart(2, "0")}</span><div><h3>{team.name}</h3><p>{team.meta}</p><small>{team.description}</small></div><strong>{team.contact}</strong></article>)}</div>
-              </section>
-            ))}
-          </div>
+          <div className="functional-section-head"><div><span>VERIFIED COMPETITION ARCHIVES</span><h2>参赛球队档案</h2></div><p>按赛季和赛事查看已经确认的参赛球队及公开名单信息。</p></div>
+          <TeamArchiveExplorer records={verifiedCompetitionTeams} />
         </div></section>
       </main>
       <SiteFooter />

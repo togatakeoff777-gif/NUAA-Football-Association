@@ -27,7 +27,7 @@ export default function OpenGraphImage() {
             <span>NUAA TIANMUHU</span>
             <span>FOOTBALL ASSOCIATION</span>
           </div>
-          <div style={{ fontSize: 30, marginTop: 34 }}>FOR THE LOVE OF FOOTBALL · EST. 2021</div>
+          <div style={{ fontSize: 30, marginTop: 34 }}>FOR THE LOVE OF FOOTBALL · EST. 2022</div>
         </div>
       </div>
     ),

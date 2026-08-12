@@ -11,17 +11,20 @@ export function RefereeHub() {
   return (
     <main className="functional-page referee-center" id="main-content">
       <section className="functional-hero referee-center-hero">
-        <div className="detail-shell">
-          <p>REFEREE CENTER</p>
+        <div className="detail-shell referee-hero-layout">
+          <p className="referee-hero-kicker">REFEREE CENTER</p>
           <h1>裁判中心</h1>
-          <p>
+          <p className="referee-hero-summary">
             提供裁判招募、公开名录、场次、选派、竞赛规则与历史档案等校园足球裁判服务。
           </p>
           <div className="referee-hero-actions" aria-label="裁判中心主要入口">
-            <Link href="/referees/recruitment">加入裁判队伍</Link>
-            <Link href="/referees/login">裁判员登录</Link>
-            <Link href="/referees/open-matches">查看公开场次</Link>
+            <Link className="referee-hero-primary-action" href="/referees/recruitment">加入裁判队伍</Link>
+            <Link className="referee-hero-secondary-action" href="/referees/open-matches">查看公开场次</Link>
           </div>
+          <Link className="referee-hero-login" href="/referees/login">
+            <span>裁判员登录</span>
+            <span aria-hidden="true">→</span>
+          </Link>
         </div>
       </section>
 

@@ -24,9 +24,86 @@
   max-width: 760px;
 }
 
-.referee-hero-actions a:nth-child(2) {
+.referee-hero-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 230px);
+  grid-template-rows: repeat(4, auto);
+  align-items: start;
+  column-gap: clamp(48px, 7vw, 112px);
+}
+
+.referee-hero-kicker,
+.referee-hero-layout > h1,
+.referee-hero-summary,
+.referee-hero-actions {
+  grid-column: 1;
+}
+
+.referee-hero-kicker {
+  grid-row: 1;
+}
+
+.referee-hero-layout > h1 {
+  grid-row: 2;
+}
+
+.referee-hero-summary {
+  grid-row: 3;
+  margin-top: 18px;
+  color: rgba(255, 255, 255, .76);
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.referee-hero-actions {
+  grid-row: 4;
+}
+
+.referee-hero-actions a.referee-hero-primary-action {
+  min-width: 168px;
   border-color: var(--aviation-blue);
   background: var(--aviation-blue);
+  color: white;
+}
+
+.referee-hero-actions a.referee-hero-primary-action:hover {
+  border-color: #527bd2;
+  background: #527bd2;
+}
+
+.referee-hero-actions a.referee-hero-secondary-action {
+  min-width: 154px;
+  border-color: rgba(255, 255, 255, .9);
+  background: rgba(255, 255, 255, .94);
+  color: var(--space-blue);
+}
+
+.referee-hero-actions a.referee-hero-secondary-action:hover {
+  background: white;
+}
+
+.referee-hero-login {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  align-self: center;
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 0 18px;
+  border: 1px solid rgba(171, 214, 255, .5);
+  background: rgba(255, 255, 255, .055);
+  color: rgba(255, 255, 255, .86);
+  font-size: 14px;
+  font-weight: 720;
+  transition: border-color .2s ease, background-color .2s ease, color .2s ease;
+}
+
+.referee-hero-login:hover {
+  border-color: rgba(255, 255, 255, .78);
+  background: rgba(255, 255, 255, .11);
+  color: white;
 }
 
 .referee-contact-layout {
@@ -82,14 +159,27 @@
 }
 
 .referee-contact-card .detail-tag-list {
-  gap: 9px;
-  margin-top: 13px;
+  width: min(100%, 268px);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 13px auto 0;
 }
 
 .referee-contact-card .detail-tag {
-  padding: 8px 11px;
+  min-width: 0;
+  min-height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 8px 10px;
   border-radius: 4px;
   font-size: 13px;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.referee-contact-card-body > section > h3 {
+  text-align: center;
 }
 
 .referee-contact-channels {
@@ -126,6 +216,45 @@
 
 .referee-learning-directory > a {
   min-height: 220px;
+}
+
+.referee-affairs-grid-primary > a,
+.referee-learning-directory > a {
+  grid-template-rows: auto 1fr auto;
+  align-content: stretch;
+  align-items: start;
+}
+
+.referee-affairs-grid-primary > a > span,
+.referee-learning-directory > a > span {
+  grid-column: 1;
+  grid-row: 1;
+  line-height: 1.35;
+}
+
+.referee-affairs-grid-primary > a > div,
+.referee-learning-directory > a > div {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  align-self: stretch;
+}
+
+.referee-affairs-grid-primary > a > strong,
+.referee-learning-directory > a > strong {
+  grid-column: 2;
+  grid-row: 3;
+  align-self: end;
+  margin-top: 22px;
+  color: var(--aviation-blue);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.4;
+  transition: color .2s ease;
+}
+
+.referee-affairs-grid-primary > a:hover > strong,
+.referee-learning-directory > a:hover > strong {
+  color: var(--space-blue);
 }
 
 .referee-archive-directory > * {
@@ -264,6 +393,18 @@
 }
 
 @media (max-width: 1020px) {
+  .referee-hero-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(5, auto);
+  }
+
+  .referee-hero-login {
+    grid-column: 1;
+    grid-row: 5;
+    width: min(100%, 230px);
+    margin-top: 16px;
+  }
+
   .referee-contact-layout,
   .referee-contact-card-body {
     grid-template-columns: 1fr;
@@ -309,6 +450,11 @@
   }
 
   .referee-hero-actions a {
+    min-height: 46px;
+  }
+
+  .referee-hero-login {
+    width: 100%;
     min-height: 46px;
   }
 
@@ -370,5 +516,11 @@
   .brand-copy strong {
     max-width: 160px;
     font-size: 11px;
+  }
+}
+
+@media (max-width: 330px) {
+  .referee-contact-card .detail-tag-list {
+    grid-template-columns: 1fr;
   }
 }

@@ -25,7 +25,7 @@ export function WomensCompetitionOverview() {
             <p>COMPETITION PROFILE</p>
             <h2 id="womens-overview-title">赛事概览</h2>
           </div>
-          <span>报名设置、赛事统计与竞赛规则均来自已核验的足球中国公开资料与赛事记录。</span>
+          <span>资料来源：足球中国公开资料与赛事记录。</span>
         </div>
 
         <div className="cup-womens-overview cup-womens-overview-complete">

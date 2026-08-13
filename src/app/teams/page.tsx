@@ -9,7 +9,6 @@ import { TeamArchiveExplorer } from "@/components/teams/team-archive-explorer";
 import { publicSectionContacts } from "@/data/contacts";
 import {
   currentTeamDirectory,
-  currentTeamDirectoryStatuses,
   verifiedCompetitionTeams,
 } from "@/data/teams";
 
@@ -24,7 +23,7 @@ export default function TeamsPage() {
     <>
       <SiteHeader />
       <main className="functional-page" id="main-content">
-        <section className="functional-hero"><div className="detail-shell"><p>CURRENT TEAM DIRECTORY</p><h1>球队信息</h1><p>优先发布当前招募、组建与成队状态；历届参赛队伍继续保留在赛事归档，不混作长期固定球队。</p></div></section>
+        <section className="functional-hero"><div className="detail-shell"><p>CURRENT TEAM DIRECTORY</p><h1>球队信息</h1><p>查看新赛季组队信息，以及2026男、女子足球院际杯参赛球队档案。</p></div></section>
         <section className="functional-section team-join-section"><div className="detail-shell">
           <section className="team-join-guide" aria-labelledby="team-join-title">
             <div><span>FOR NEW STUDENTS</span><h2 id="team-join-title">新生如何加入球队</h2></div>
@@ -37,7 +36,7 @@ export default function TeamsPage() {
           <SectionContactCard contact={publicSectionContacts.teams} note="组队与参赛事务咨询" />
         </div></section>
         <section className="functional-section functional-section-tint"><div className="detail-shell">
-          <div className="functional-section-head"><div><span>2026 FRESHMAN CUP DIRECTORY</span><h2>2026 新生杯组队目录</h2></div><p>目录支持{Object.values(currentTeamDirectoryStatuses).join("、")}四种状态；只有经负责人确认可公开的联系方式才会展示。</p></div>
+          <div className="functional-section-head"><div><span>2026 FRESHMAN CUP DIRECTORY</span><h2>2026 新生杯组队目录</h2></div><p>查看各学院或队伍的组建进度、招募状态与公开联系方式。</p></div>
           {currentTeamDirectory.length ? (
             <div className="current-team-directory">
               {currentTeamDirectory.map((team) => (
@@ -64,7 +63,7 @@ export default function TeamsPage() {
           )}
         </div></section>
         <section className="functional-section"><div className="detail-shell">
-          <div className="functional-section-head"><div><span>VERIFIED COMPETITION ARCHIVES</span><h2>参赛球队档案</h2></div><p>按赛季和赛事查看已经确认的参赛球队及公开名单信息。</p></div>
+          <div className="functional-section-head"><div><span>COMPETITION ARCHIVES</span><h2>参赛球队档案</h2></div><p>按赛季和赛事查看参赛球队及公开名单。</p></div>
           <TeamArchiveExplorer records={verifiedCompetitionTeams} />
         </div></section>
       </main>

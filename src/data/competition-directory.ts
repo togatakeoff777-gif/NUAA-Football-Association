@@ -195,9 +195,9 @@ export const coreCompetitionDirectory = [
     host: MEN_AND_WOMEN_CUP_HOST,
     organizer: MEN_AND_WOMEN_CUP_ORGANIZER,
     scale: `${womensArchive.competition.summary.teams}支球队 / ${womensArchive.competition.summary.players}名注册球员 / ${womensArchive.competition.summary.matches}场比赛`,
-    summary: "2026年天目湖校区女子五人制院系赛事，赛果、积分、名单、已核验裁判选派与收官报道均已归档。",
+    summary: "2026年天目湖校区女子五人制院系赛事，赛果、积分、名单、裁判选派与收官报道均已归档。",
     requirements: ["3支球队", "24名注册球员", "8场比赛"],
-    notice: "完整赛果、积分榜、球队、已核验裁判选派与新闻资料均可在赛事档案查看。",
+    notice: "完整赛果、积分榜、球队、裁判选派与新闻资料均可在赛事档案查看。",
     detailHref: "/competitions/2026-womens-intercollege-cup",
     filesHref: "/competitions/files#notices",
     links: {

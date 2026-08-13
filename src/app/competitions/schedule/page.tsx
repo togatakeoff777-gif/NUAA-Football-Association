@@ -17,11 +17,11 @@ export default function CompetitionSchedulePage() {
       <SiteHeader />
       <main className="functional-page" id="main-content">
         <section className="functional-hero">
-          <div className="detail-shell"><p>FIXTURES & RESULTS</p><h1>赛程与赛果</h1><p>按赛事查看2026男子、女子足球院际杯比赛记录。</p></div>
+          <div className="detail-shell"><p>FIXTURES & RESULTS</p><h1>赛程与赛果</h1><p>按赛事查看已收录的赛程与赛果。</p></div>
         </section>
         <section className="functional-section">
           <div className="detail-shell">
-            <div className="functional-section-head"><div><span>OFFICIAL MATCH RECORDS</span><h2>比赛记录</h2></div><p>当前收录2026男子、女子足球院际杯赛程与赛果。</p></div>
+            <div className="functional-section-head"><div><span>OFFICIAL MATCH RECORDS</span><h2>比赛记录</h2></div><p>浏览2026男子、女子足球院际杯赛程与赛果。</p></div>
             <CompetitionScheduleExplorer matches={publicMatchRecords} />
           </div>
         </section>

@@ -55,7 +55,7 @@ export function CompetitionOverview() {
         <div className="cup-overview-stats" aria-label="赛事核心数据">
           {overviewStats.map(([value, label]) => <div key={label}><strong>{value}</strong><span>{label}</span></div>)}
         </div>
-        <p className="cup-source-note">数据来源：{competition.source}。页面不包含球员学号、手机号或邮箱；秩序册 PDF 按迁移资料原样保留。</p>
+        <p className="cup-source-note">资料来源：{competition.source}。</p>
       </div>
     </section>
   );

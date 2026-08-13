@@ -65,7 +65,7 @@ export default function CompetitionsPage() {
                   <span>CURRENT TERM</span>
                   <h2>当前学期赛事</h2>
                 </div>
-                <p>新生杯与天目湖五人制联赛目前均处于筹备阶段，未发布事项保持明确状态。</p>
+                <p>关注新生杯与天目湖五人制联赛的筹备进度和后续安排。</p>
               </div>
 
               <div className="current-competition-grid">

@@ -21,7 +21,7 @@ export function WomensCompetitionArchivePage() {
       title={competition.canonicalTitle}
       eyebrow="COMPETITION ARCHIVE · WOMEN'S FOOTBALL · 2026"
       status="已结束 · 已归档"
-      description="依据足球中国赛事截图、结构化数据、校级官方账号报道与协会原始照片整理。"
+      description={`2026年天目湖校区女子五人制院系赛事，共${competition.summary.teams}支球队完成${competition.summary.matches}场比赛。`}
       heroImage={heroImage}
       heroAlt="2026天目湖校区女子足球院际杯赛事集体合影"
       actions={[{ href: "#honours", label: "查看名次与奖项" }, { href: "#reports", label: "阅读赛事报道" }]}

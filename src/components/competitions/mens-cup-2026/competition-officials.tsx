@@ -21,7 +21,7 @@ export function CompetitionOfficials() {
       <div className="page-shell">
         <div className="cup-section-heading">
           <div><p>MATCH OFFICIALS</p><h2 id="cup-officials-title">裁判委员会与每场安排</h2></div>
-          <span>16场比赛的裁判员安排均按已核验的赛事原始记录展示。</span>
+          <span>查看16场比赛的裁判员安排。</span>
         </div>
 
         <div className="cup-official-overview">

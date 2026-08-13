@@ -206,7 +206,6 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
         <>
           <h2>赛事影像</h2>
           <ArchiveGallery images={womensCupGallery} ariaLabel="2026女子足球院际杯收官报道原始照片" className="detail-archive-gallery" />
-          <blockquote>本文依据NUAA湖畔印象报道与协会原始照片重新整理；逐场数据及完整名单后续补充。</blockquote>
         </>
       ) : (
         <blockquote>本文数据来自赛事秩序册、足球中国赛事后台及湖区FA公众号归档资料。</blockquote>

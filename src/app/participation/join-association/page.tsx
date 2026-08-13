@@ -19,9 +19,9 @@ const items = [
   {
     title: "关注正式招募通知",
     description:
-      "招募时间、岗位、条件与流程将在协会确认后通过官网和“湖区FA”公众号发布。",
+      "招募时间、岗位、条件与流程将通过官网和“湖区FA”公众号发布。",
     meta: "招募信息",
-    status: "资料待更新",
+    status: "招募安排待通知",
   },
   {
     title: "联系协会",
@@ -43,8 +43,7 @@ export default function JoinAssociationPage() {
       description="了解协会工作方向与后续招募安排。"
       sectionTitle="加入说明"
       sectionDescription="招募方式、材料要求与报名渠道以协会正式通知为准。"
-      notice="具体岗位与招募安排尚待协会更新，请以正式通知为准。"
-      statusLabel="招募资料待更新"
+      statusLabel="招募尚未开放"
       items={items}
     />
   );

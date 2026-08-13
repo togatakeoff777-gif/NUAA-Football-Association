@@ -57,12 +57,11 @@ export function CompetitionStories() {
       </section>
       <section className="cup-archive-section cup-archive-section-tint" id="media" aria-labelledby="cup-media-title">
         <div className="page-shell">
-          <div className="cup-section-heading"><div><p>PHOTO ARCHIVE</p><h2 id="cup-media-title">赛事影像</h2></div><span>赛事原始照片按赛事节点集中归档。</span></div>
+          <div className="cup-section-heading"><div><p>PHOTO ARCHIVE</p><h2 id="cup-media-title">赛事影像</h2></div><span>查看赛前、比赛与收官阶段的赛事影像。</span></div>
           <ArchiveGallery images={gallery} ariaLabel="2026男子足球院际杯赛事照片" />
-          <div className="cup-document-callout"><div><p>OFFICIAL DOCUMENT</p><h3>赛事秩序册</h3><span>PDF 文件按赛事归档原始版本保留，包含完整赛事组织与竞赛资料。</span></div><a href={competition.guidebook} download>下载 PDF <span aria-hidden="true">↓</span></a></div>
+          <div className="cup-document-callout"><div><p>OFFICIAL DOCUMENT</p><h3>赛事秩序册</h3><span>下载赛事秩序册，查看赛事组织与竞赛资料。</span></div><a href={competition.guidebook} download>下载 PDF <span aria-hidden="true">↓</span></a></div>
         </div>
       </section>
-      <section className="cup-archive-source-section" id="archive-scope" aria-labelledby="cup-source-title"><div className="page-shell"><div><p>ARCHIVE SCOPE</p><h2 id="cup-source-title">资料说明</h2></div><p>本页复用结构化赛事数据、秩序册、正式赛事报道与原始照片。公开内容不包含学号、手机号、邮箱等个人敏感信息。</p></div></section>
     </>
   );
 }

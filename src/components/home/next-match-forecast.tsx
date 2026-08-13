@@ -99,7 +99,7 @@ export function NextMatchForecast() {
         <div className="home-section-bar" data-home-delay="0" data-home-reveal>
           <div>
             <p>NEXT MATCH / 赛事预告</p>
-            <h2 id="home-next-match-title">两项赛事，各自的下一场</h2>
+            <h2 id="home-next-match-title">两项赛事，关注最新安排</h2>
           </div>
           <Link className="text-link" href="/competitions">
             进入赛事中心 →

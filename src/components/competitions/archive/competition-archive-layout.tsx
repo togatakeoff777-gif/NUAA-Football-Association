@@ -16,7 +16,6 @@ export const competitionArchiveNavigation = [
   { id: "honours", label: "名次与奖项" },
   { id: "reports", label: "赛事报道" },
   { id: "media", label: "赛事影像" },
-  { id: "archive-scope", label: "资料说明" },
 ] as const;
 
 type ArchiveAction = { href: string; label: string; download?: boolean };

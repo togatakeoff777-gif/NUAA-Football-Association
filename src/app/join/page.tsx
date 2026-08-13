@@ -64,7 +64,7 @@ export default function JoinPage() {
             </div>
             <aside className="join-contact-panel">
               <div><span>RECRUITMENT STATUS</span><h2>当前招募尚未开放</h2></div>
-              <p>招新QQ群待创建。开放后将在本页或协会官方平台公布经确认的群名称、适用年度和有效期。</p>
+              <p>招募信息发布后，可在本页或协会官方平台查看群名称、适用年度和有效期。</p>
               <a href={`mailto:${ASSOCIATION_EMAIL}`}>公开邮箱：{ASSOCIATION_EMAIL}</a>
             </aside>
           </div>

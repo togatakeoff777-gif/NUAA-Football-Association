@@ -44,7 +44,7 @@ export function CompetitionScheduleExplorer({ matches }: { matches: readonly Pub
         <label>赛事<select value={competition} onChange={(event) => { setCompetition(event.target.value); resetDependentFilters(); }}><option value="all">全部赛事</option>{competitions.map(([id, name]) => <option value={id} key={id}>{name}</option>)}</select></label>
         <label>阶段<select value={stage} onChange={(event) => { setStage(event.target.value); setVisibleCount(12); }}><option value="all">全部阶段</option>{stages.map((item) => <option value={item} key={item}>{item}</option>)}</select></label>
         <label>球队<select value={team} onChange={(event) => { setTeam(event.target.value); setVisibleCount(12); }}><option value="all">全部球队</option>{teams.map((item) => <option value={item} key={item}>{item}</option>)}</select></label>
-        <span>按时间由近至远 · 共 {filteredMatches.length} 场已核验比赛</span>
+        <span>按时间由近至远 · 共 {filteredMatches.length} 场比赛</span>
       </div>
 
       {filteredMatches.length ? (

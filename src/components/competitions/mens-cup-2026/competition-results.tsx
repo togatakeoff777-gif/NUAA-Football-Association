@@ -21,7 +21,7 @@ export function CompetitionResults() {
   return (
     <section className="cup-archive-section cup-archive-section-tint" id="schedule" aria-labelledby="cup-schedule-title">
       <div className="page-shell">
-        <div className="cup-section-heading"><div><p>FIXTURES & RESULTS</p><h2 id="cup-schedule-title">赛程与赛果</h2></div><span>16场比赛均已结束；桌面端使用数据表，移动端自动切换为比赛卡片。</span></div>
+        <div className="cup-section-heading"><div><p>FIXTURES & RESULTS</p><h2 id="cup-schedule-title">赛程与赛果</h2></div><span>16场比赛均已结束。</span></div>
         <ArchiveMatchTable caption="2026男子足球院际杯完整赛果" rows={rows} />
       </div>
     </section>

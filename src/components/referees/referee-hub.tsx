@@ -76,7 +76,7 @@ export function RefereeHub() {
               <span>LEARNING & RESOURCES</span>
               <h2>学习资料</h2>
             </div>
-            <p>集中提供足球竞赛规则、五人制足球竞赛规则、培训资料与裁判工作文件。</p>
+            <p>集中提供十一人制与五人制竞赛规则、培训资料及裁判工作文件。</p>
           </div>
           <div className="referee-rule-directory referee-learning-directory">
             {refereeLearningEntries.map((entry, index) => (

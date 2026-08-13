@@ -264,29 +264,22 @@ export const refereeSecondaryEntries = [
 
 export const refereeLearningEntries = [
   {
-    id: "laws-football",
-    title: "足球竞赛规则",
-    description: "查看2025/2026足球竞赛规则及现有规则修改说明。",
-    href: "/referees/resources/football-laws",
-    badge: "规则文件",
-  },
-  {
-    id: "laws-futsal",
-    title: "五人制足球竞赛规则",
-    description: "2025/2026五人制足球竞赛规则中文文件。",
-    href: "/documents/rules/futsal/2025-26-fifa-futsal-laws-zh.pdf",
+    id: "competition-rules",
+    title: "竞赛规则",
+    description: "集中查阅十一人制、五人制足球竞赛规则及现有规则变更说明。",
+    href: "/referees/resources/competition-rules",
     badge: "规则文件",
   },
   {
     id: "training",
-    title: "裁判培训资料",
+    title: "培训资料",
     description: "汇集协会裁判培训、业务学习与执裁能力提升资料。",
     href: "/referees/resources/training",
     badge: "培训资料",
   },
   {
     id: "referee-downloads",
-    title: "裁判工作资料",
+    title: "工作资料",
     description: "下载比赛成绩报告单、裁判报告模板与现有正式工作文件。",
     href: "/referees/resources/work-files",
     badge: "工作文件",

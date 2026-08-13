@@ -27,7 +27,7 @@ export const verifiedCompetitionTeams: readonly VerifiedCompetitionTeamArchive[]
     competitionId: "2026-mens-intercollege-cup",
     competitionName: "2026男子足球院际杯",
     competitionHref: "/competitions/2026-mens-intercollege-cup#teams",
-    summary: "本页面展示该届赛事已确认参赛球队及公开名单信息，具体赛事数据以赛事档案为准。",
+    summary: "2026男子足球院际杯参赛球队与公开名单。",
     teams: mensIntercollegeCup2026.teams.map((team) => ({
       id: team.id,
       name: team.displayName,
@@ -40,7 +40,7 @@ export const verifiedCompetitionTeams: readonly VerifiedCompetitionTeamArchive[]
     competitionId: "2026-womens-intercollege-cup",
     competitionName: "2026女子足球院际杯",
     competitionHref: "/competitions/2026-womens-intercollege-cup#teams",
-    summary: "本页面展示该届赛事已确认参赛球队及公开名单信息，具体赛事数据以赛事档案为准。",
+    summary: "2026女子足球院际杯参赛球队与公开名单。",
     teams: womensIntercollegeCup2026.teams.map((team) => ({
       id: team.name,
       name: team.name,

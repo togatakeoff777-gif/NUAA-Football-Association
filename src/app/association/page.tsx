@@ -42,7 +42,7 @@ export default function AssociationPage() {
         <section className="archive-profile" aria-labelledby="archive-profile-title"><p>BASIC PROFILE</p><h2 id="archive-profile-title">基本信息</h2><dl><div><dt>正式名称</dt><dd>{associationIdentity.formalName}</dd></div><div><dt>英文名称</dt><dd>{associationIdentity.englishName}</dd></div><div><dt>成立年份</dt><dd>{associationIdentity.establishedYear}</dd></div><div><dt>服务范围</dt><dd>{associationScope.representedCampus}</dd></div><div><dt>公开邮箱</dt><dd><a href={`mailto:${ASSOCIATION_EMAIL}`}>{ASSOCIATION_EMAIL}</a></dd></div></dl></section>
         <section className="archive-stats" aria-labelledby="archive-stats-title"><p>ASSOCIATION DATA</p><h2 id="archive-stats-title">协会概况</h2><div>{associationDevelopmentFacts.map((fact) => <article key={fact.id}><strong>{fact.value}</strong><span>{fact.label}</span><small>{fact.note}</small></article>)}</div></section>
       </div>
-      <section className="archive-timeline" aria-labelledby="archive-timeline-title"><div><p>TIMELINE</p><h2 id="archive-timeline-title">发展记录</h2><span>记录协会组织建设与校园足球赛事体系的发展历程。</span></div><ol>{associationTimeline.map((entry) => <li key={entry.period}><time>{entry.period}</time><section><span>发展阶段</span><h3>{entry.label}</h3><p>{entry.description}</p></section></li>)}</ol></section>
+      <section className="archive-timeline" aria-labelledby="archive-timeline-title"><div><p>TIMELINE</p><h2 id="archive-timeline-title">发展记录</h2><span>记录协会组织建设与校园足球赛事体系的发展历程。</span></div><ol>{associationTimeline.map((entry) => <li key={entry.period}><time>{entry.period}</time><section><h3>{entry.label}</h3><p>{entry.description}</p></section></li>)}</ol></section>
       <JsonLd data={organizationJsonLd()} />
       <ShareActions title="南京航空航天大学天目湖足球协会" />
       <section className="association-current-team" aria-labelledby="association-current-team-title">
@@ -73,13 +73,11 @@ export default function AssociationPage() {
           <div><dt>微信公众号</dt><dd>{wechatPlatform.name}</dd></div>
           <div><dt>哔哩哔哩</dt><dd><a href={bilibiliPlatform.href} rel="noopener noreferrer" target="_blank">{bilibiliPlatform.name}</a></dd></div>
           <div><dt>抖音</dt><dd>{douyinPlatform.name} · {douyinPlatform.label}</dd></div>
-          <div><dt>招新 QQ 群</dt><dd>招新群待创建</dd></div>
           <div><dt>裁判事务</dt><dd><Link href="/referees#referee-contact">进入裁判中心联系区</Link></dd></div>
           <div><dt>赛事事务</dt><dd><Link href="/competitions">进入赛事中心</Link></dd></div>
           <div><dt>新闻投稿与纠错</dt><dd><a href={`mailto:${ASSOCIATION_EMAIL}`}>{ASSOCIATION_EMAIL}</a></dd></div>
         </dl>
       </section>
-      <section className="archive-scope-record" aria-labelledby="archive-scope-title"><div><p>PUBLIC SCOPE</p><h2 id="archive-scope-title">公开范围记录</h2></div><div><strong>{associationScope.summary}</strong><ul>{associationScope.permittedContent.map((item) => <li key={item}>{item}</li>)}</ul></div></section>
     </ArchivePageLayout>
   );
 }

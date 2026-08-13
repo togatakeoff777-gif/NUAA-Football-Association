@@ -31,7 +31,7 @@ const publicRoutes = [
   "/referees/history",
   "/referees/open-matches",
   "/referees/recruitment",
-  "/referees/resources/football-laws",
+  "/referees/resources/competition-rules",
   "/referees/resources/training",
   "/referees/resources/work-files",
   "/teams",

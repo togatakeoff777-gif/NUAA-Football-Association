@@ -2,11 +2,19 @@ import type { Metadata } from "next";
 
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
-import { PdfResourcePanel } from "@/components/participation/pdf-resource-panel";
+import {
+  GuideDownload,
+  GuideScreenshotGallery,
+  NumberedGuideSteps,
+  OperationAreaList,
+} from "@/components/participation/operation-guide-section";
 import {
   footballChinaOperationAreas,
+  footballChinaOperationScreenshots,
+  matchdayRosterScreenshots,
   matchdayRosterSteps,
   participationPdfResources,
+  teamRegistrationScreenshots,
   teamRegistrationSteps,
 } from "@/data/participation-resources";
 import { footballChinaPlatform } from "@/data/platforms";
@@ -14,21 +22,14 @@ import { footballChinaPlatform } from "@/data/platforms";
 export const metadata: Metadata = {
   alternates: { canonical: "/participation/team-manager-guide" },
   title: "球队负责人指南",
-  description: "球队报名组建、比赛日名单提交及足球中国平台完整操作资料。",
+  description: "球队报名组建、比赛日名单提交及足球中国平台赛事操作指南。",
 };
 
-function NumberedSteps({ steps }: { steps: readonly string[] }) {
-  return (
-    <ol className="participation-document-steps">
-      {steps.map((step, index) => (
-        <li key={step}>
-          <strong>{String(index + 1).padStart(2, "0")}</strong>
-          <span>{step}</span>
-        </li>
-      ))}
-    </ol>
-  );
-}
+const guideNavigation = [
+  { href: "#team-registration", label: "球队报名与组建", audience: "球队负责人" },
+  { href: "#matchday-roster", label: "比赛日名单", audience: "球队官员" },
+  { href: "#platform-operations", label: "赛事平台操作", audience: "赛事组织方" },
+] as const;
 
 export default function TeamManagerGuidePage() {
   const resources = participationPdfResources;
@@ -41,53 +42,50 @@ export default function TeamManagerGuidePage() {
           <div className="page-shell detail-hero-inner">
             <p className="detail-eyebrow">TEAM MANAGER GUIDE</p>
             <h1>球队负责人指南</h1>
-            <p className="detail-lead">依次完成球队报名与组建、比赛日名单提交，并通过完整操作手册核对平台赛事流程。</p>
+            <p className="detail-lead">查看球队报名、比赛日名单提交与赛事平台管理的具体步骤，必要时下载 PDF 原件。</p>
             <a className="button button-light" href={footballChinaPlatform.href} rel="noopener noreferrer" target="_blank">打开足球中国平台 ↗</a>
           </div>
         </section>
 
+        <nav className="participation-guide-navigation" aria-label="指南章节导航">
+          <div className="page-shell">
+            {guideNavigation.map((item, index) => (
+              <a href={item.href} key={item.href}><span>{String(index + 1).padStart(2, "0")}</span><strong>{item.label}</strong><small>{item.audience}</small></a>
+            ))}
+          </div>
+        </nav>
+
         <section className="participation-guide-section participation-guide-section-tint">
           <div className="page-shell participation-document-stack">
-            <PdfResourcePanel
-              description="在足球中国平台选择当届正式开放报名的赛事，创建球队并完善球队与球员资料。"
-              eyebrow="01 / TEAM REGISTRATION"
-              fileLabel={resources.teamRegistration.fileLabel}
-              href={resources.teamRegistration.href}
-              title="球队报名与组建"
-            >
-              <NumberedSteps steps={teamRegistrationSteps} />
-            </PdfResourcePanel>
+            <article className="participation-guide-module" id="team-registration" aria-labelledby="team-registration-title">
+              <header><span>01 / TEAM REGISTRATION</span><h2 id="team-registration-title">A. 球队报名与组建</h2><p>面向球队负责人：在足球中国 APP 中进入学校足球协会，选择正式开放报名的赛事，创建球队并完善资料。</p></header>
+              <NumberedGuideSteps steps={teamRegistrationSteps} />
+              <GuideScreenshotGallery screenshots={teamRegistrationScreenshots} />
+              <GuideDownload href={resources.teamRegistration.href} fileLabel={resources.teamRegistration.fileLabel} label="下载完整《球队报名与组建操作说明》PDF" />
+            </article>
 
-            <PdfResourcePanel
-              description="赛前由球队负责人按对应比赛完成首发、替补、队长与球队官员设置，并签名提交。"
-              eyebrow="02 / MATCHDAY ROSTER"
-              fileLabel={resources.matchdayRoster.fileLabel}
-              href={resources.matchdayRoster.href}
-              title="比赛日名单提交"
-            >
+            <article className="participation-guide-module" id="matchday-roster" aria-labelledby="matchday-roster-title">
+              <header><span>02 / MATCHDAY ROSTER</span><h2 id="matchday-roster-title">B. 比赛日名单</h2><p>面向报名时登记的主教练、助理教练与领队：在足球中国 APP 中完成对应场次的球员、队长与球队官员设置。</p></header>
               <aside className="participation-important-note" aria-label="比赛日名单重要提示">
-                <strong>重要提示</strong>
+                <strong>提交与修改要求</strong>
                 <ul>
                   <li>比赛开始前半小时提交比赛名单。</li>
-                  <li>若需修改，请在比赛开始前向裁判员申请，由管理员后台删除签名后重新提交。</li>
+                  <li>比赛开始前如需修改，请向裁判员申请，由管理员在后台删除签名后重新提交。</li>
                   <li>比赛开始后不允许修改比赛名单。</li>
                 </ul>
               </aside>
-              <NumberedSteps steps={matchdayRosterSteps} />
-            </PdfResourcePanel>
+              <NumberedGuideSteps steps={matchdayRosterSteps} />
+              <GuideScreenshotGallery screenshots={matchdayRosterScreenshots} />
+              <GuideDownload href={resources.matchdayRoster.href} fileLabel={resources.matchdayRoster.fileLabel} label="下载完整《比赛日名单提交操作说明》PDF" />
+            </article>
 
-            <PdfResourcePanel
-              description="中国足球协会提供的足球中国赛事完整操作参考，覆盖从权限设置、报名管理到成绩确认和完结赛事的主要流程。"
-              eyebrow="03 / COMPLETE OPERATIONS MANUAL"
-              fileLabel={resources.footballChinaOperations.fileLabel}
-              href={resources.footballChinaOperations.href}
-              title="足球中国赛事完整操作手册"
-            >
-              <ul className="participation-resource-tags" aria-label="完整操作手册覆盖范围">
-                {footballChinaOperationAreas.map((item) => <li key={item}>{item}</li>)}
-              </ul>
-              <p className="participation-operation-note">比赛首发名单由双方教练使用足球中国 APP 的实名账号提交；报名时登记的主教练、助理教练、领队账号具有提交权限。签名后如需修改，应先由后台删除签名，再重新填报。</p>
-            </PdfResourcePanel>
+            <article className="participation-guide-module" id="platform-operations" aria-labelledby="platform-operations-title">
+              <header><span>03 / COMPETITION OPERATIONS</span><h2 id="platform-operations-title">C. 足球中国赛事操作</h2><p>面向协会、部门和赛事管理员的赛事管理流程，与球队及教练在 APP 中的比赛日操作分开说明。</p></header>
+              <aside className="participation-role-note"><strong>权限说明</strong><p>球队主教练、助理教练和领队使用本人实名 APP 账号提交比赛名单；赛事信息、报名审核、赛程和比赛官员由赛事组织方在相应管理权限下操作。</p></aside>
+              <OperationAreaList areas={footballChinaOperationAreas} />
+              <GuideScreenshotGallery screenshots={footballChinaOperationScreenshots} />
+              <GuideDownload href={resources.footballChinaOperations.href} fileLabel={resources.footballChinaOperations.fileLabel} label="下载完整《足球中国赛事操作说明》PDF" />
+            </article>
           </div>
         </section>
       </main>

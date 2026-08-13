@@ -28,7 +28,7 @@ export default function CompetitionHistoryPage() {
       <main className="functional-page competition-history-v25" id="main-content">
         <section className="functional-hero"><div className="detail-shell"><p>COMPETITION ARCHIVE</p><h1>历届赛事</h1><p>按年度查看赛事信息、赛果、球队与新闻报道。</p></div></section>
         <section className="functional-section"><div className="detail-shell">
-          <div className="v25-section-heading"><div><p>2026 ARCHIVE NODE</p><h2>2026 年度赛事档案</h2></div><p>现已收录2026男子、女子足球院际杯赛事档案。</p></div>
+          <div className="v25-section-heading"><div><p>2026 ARCHIVE NODE</p><h2>2026 年度赛事档案</h2></div><p>查看2026男子、女子足球院际杯赛事档案。</p></div>
           <div className="history-year-node">
             <div className="history-year-marker"><strong>2026</strong><span>年度赛事档案</span></div>
             <div className="history-archive-list">
@@ -37,11 +37,11 @@ export default function CompetitionHistoryPage() {
           </div>
         </div></section>
         <section className="functional-section functional-section-tint history-exhibition"><div className="detail-shell">
-          <div className="v25-section-heading"><div><p>EARLIER YEARS</p><h2>历届赛事回顾</h2></div><p>早期赛事档案根据现存历史资料持续整理，页面仅展示已核实的信息与影像记录。</p></div>
+          <div className="v25-section-heading"><div><p>EARLIER YEARS</p><h2>历届赛事回顾</h2></div><p>按年度回顾已归档的校园足球赛事。</p></div>
           <div className="historical-year-list">
             {historicalCompetitionYears.map((year) => (
               <section className="historical-year" key={year.year} aria-labelledby={`history-${year.year}`}>
-                <header><strong id={`history-${year.year}`}>{year.year}</strong><span>已核实赛事记录</span></header>
+                <header><strong id={`history-${year.year}`}>{year.year}</strong><span>年度赛事记录</span></header>
                 <div className="historical-competition-grid">
                   {year.competitions.map((competition) => (
                     <article className="historical-competition-card" key={competition.id}>
@@ -53,7 +53,7 @@ export default function CompetitionHistoryPage() {
                         <dl className="historical-card-meta">
                           {competition.teamCount ? <div><dt>参赛队伍</dt><dd>{competition.teamCount}支</dd></div> : null}
                           {competition.startDate ? <div><dt>赛事起始日期</dt><dd>{competition.startDate}</dd></div> : null}
-                          {competition.venue ? <div><dt>已确认场地</dt><dd>{competition.venue}</dd></div> : null}
+                          {competition.venue ? <div><dt>决赛场地</dt><dd>{competition.venue}</dd></div> : null}
                         </dl>
                       ) : null}
                       {competition.final ? (
@@ -65,7 +65,7 @@ export default function CompetitionHistoryPage() {
                       ) : null}
                       {competition.standings?.length ? (
                         <section className="historical-ranking">
-                          <h4>{year.year === 2024 ? "已确认名次" : "最终名次"}</h4>
+                          <h4>{year.year === 2024 ? "公开名次" : "最终名次"}</h4>
                           <ol>
                             {competition.standings.map((standing) => (
                               <li key={`${competition.id}-${standing.position}`}>

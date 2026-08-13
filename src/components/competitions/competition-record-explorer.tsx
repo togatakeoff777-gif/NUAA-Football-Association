@@ -79,7 +79,7 @@ export function CompetitionRecordExplorer({
             <div className="competition-scorer-table-wrap">
               <table className="competition-scorer-table">
                 <caption className="sr-only">{selectedRecord.competitionName}射手记录</caption>
-                <thead><tr><th>排名</th><th>球员</th><th>球队</th><th>号码</th><th>进球 / 记录</th></tr></thead>
+                <thead><tr><th>排名</th><th>球员</th><th>球队</th><th>号码</th><th>进球数</th></tr></thead>
                 <tbody>
                   {selectedRecord.scorers.map((player) => (
                     <tr key={player.id}>

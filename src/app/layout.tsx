@@ -15,6 +15,7 @@ import "@/styles/v26.css";
 import "@/styles/v27.css";
 import "@/styles/v28.css";
 import "@/styles/v28-acceptance.css";
+import "@/styles/v28-final-acceptance.css";
 import {
   SITE_DESCRIPTION,
   SITE_NAME,

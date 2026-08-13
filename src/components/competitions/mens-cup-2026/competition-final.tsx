@@ -55,7 +55,7 @@ export function CompetitionFinal() {
           <article className="cup-final-timeline">
             <header><p>MATCH TIMELINE</p><h3>决赛时间线</h3></header>
             <ol>
-              <li><time>13:30</time><div><strong>赛前活动</strong><span>按核验资料记录，不作为正式开球时间。</span></div></li>
+              <li><time>13:30</time><div><strong>赛前活动</strong><span>赛前活动时间，非正式开球时间。</span></div></li>
               <li><time>14:00</time><div><strong>正式开球</strong><span>{final.homeTeam} 对阵 {final.awayTeam}</span></div></li>
               {final.events?.map((event, index) => (
                 <li key={`${event.minute}-${event.player}-${index}`}>

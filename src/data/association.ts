@@ -35,24 +35,24 @@ export const associationDevelopmentFacts = [
     id: "established",
     value: "2022",
     label: "协会成立",
-    note: "已确认资料",
+    note: "EST. 2022",
   },
   {
     id: "core-competitions",
     value: "4",
     label: "年度核心赛事",
-    note: "已确认赛事体系",
+    note: "新生杯 / 五人制联赛 / 院际杯",
   },
   {
     id: "academic-terms",
     value: "2",
-    label: "学期赛事阶段",
+    label: "学期赛事周期",
     note: "上半学期 / 下半学期",
   },
   {
     id: "formats",
-    value: "11 + 5",
-    label: "两类核心赛制",
+    value: "2",
+    label: "核心赛制",
     note: "十一人制 / 五人制",
   },
 ] as const;
@@ -63,7 +63,7 @@ export const associationTimeline = [
   {
     period: "2022年",
     label: "协会成立",
-    description: "天目湖学生足球协会正式成立，校园足球组织建设由此起步。",
+    description: "南京航空航天大学天目湖足球协会正式成立，校园足球组织建设由此起步。",
   },
   {
     period: "2022-2023",
@@ -119,7 +119,7 @@ export const associationTerms = [
     academicYear: "2021-2022",
     positions: [{ role: "主席", name: "尹键峰" }],
     unassignedMembers: [],
-    roleNote: "现有档案仅记录主席信息。",
+    roleNote: "公开记录：主席。",
   },
   {
     term: "第二届",

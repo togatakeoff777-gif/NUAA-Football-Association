@@ -49,7 +49,7 @@ export function CoreCompetitionPreviewPage({
               <p>COMPETITION PROFILE</p>
               <h2 id={`${competition.id}-overview-title`}>赛事概览</h2>
             </div>
-            <span>未正式公布的时间、场地与组织信息标注为待确认。</span>
+            <span>查看赛事状态、赛制与已发布的基本信息。</span>
           </div>
           <div className="core-competition-facts">
             {[
@@ -123,7 +123,7 @@ export function CoreCompetitionPreviewPage({
             <p>HONOURS</p>
             <h2 id={`${competition.id}-honours-title`}>名次与奖项</h2>
           </div>
-          <p>赛事尚未结束，不提前生成名次、奖项或获奖人员信息。</p>
+          <p>名次与奖项将在赛事结束并正式发布后更新。</p>
         </div>
       </section>
 
@@ -159,16 +159,6 @@ export function CoreCompetitionPreviewPage({
         </div>
       </section>
 
-      <section className="cup-archive-section" id="archive-scope" aria-labelledby={`${competition.id}-scope-title`}>
-        <div className="page-shell core-competition-pending">
-          <div>
-            <p>FILES & DATA SCOPE</p>
-            <h2 id={`${competition.id}-scope-title`}>文件与资料说明</h2>
-          </div>
-          <p>{competition.notice}</p>
-          <Link href={competition.links.files}>查看赛事文件 →</Link>
-        </div>
-      </section>
     </CompetitionArchiveLayout>
   );
 }

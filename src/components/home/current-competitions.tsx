@@ -17,7 +17,7 @@ export function CurrentCompetitions() {
         <div className="current-competition-layout">
           <article className="featured-competition-card" id={featured.slug} data-home-reveal data-home-delay="1">
             <div className="featured-competition-top"><span>PRIMARY COMPETITION</span><StatusBadge tone="success">{featured.displayStatus.label} · {featured.displayStatus.badge}</StatusBadge></div>
-            <p>{featured.semesterLabel} · {featured.eventType} · {featured.formatLabel}</p>
+            <p>{featured.semesterLabel} · {featured.formatLabel}</p>
             <h3>{featured.name}</h3>
             <dl>
               <div><dt>当前阶段</dt><dd>{featured.stageLabel}</dd></div>

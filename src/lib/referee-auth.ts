@@ -2,7 +2,10 @@ import { createHmac, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 
 import { prisma } from "@/lib/prisma";
-import { verifyAdminCredentials } from "@/lib/referee-credentials";
+import {
+  authenticateAdminCredentials,
+  verifyAdminCredentials,
+} from "@/lib/referee-credentials";
 import { isSessionFresh } from "@/lib/referee-security";
 import { SITE_ORIGIN } from "@/lib/site-metadata";
 
@@ -19,20 +22,34 @@ function hashToken(token: string, secret: string) {
 }
 
 export function getAdminConfigurationIssue() {
-  if (!process.env.REFEREE_ADMIN_PASSWORD_HASH) return "管理员认证尚未配置。";
   if (!getSessionSecret()) return "管理员会话认证尚未配置。";
   return null;
 }
 
-export async function createAdminSession(password: string) {
+export async function createAdminSession(username: string, password: string) {
   const secret = getSessionSecret();
-  if (!secret || !(await verifyAdminCredentials(password))) return false;
+  if (!secret) return false;
+  const account = await authenticateAdminCredentials(username, password);
+  const legacyAuthenticated = !username.trim() && await verifyAdminCredentials(password);
+  if (!account && !legacyAuthenticated) return false;
 
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Date.now() + sessionDurationMs);
-  await prisma.adminSession.deleteMany({ where: { expiresAt: { lt: new Date() } } });
-  await prisma.adminSession.create({
-    data: { tokenHash: hashToken(token, secret), expiresAt },
+  await prisma.$transaction(async (tx) => {
+    await tx.adminSession.deleteMany({ where: { expiresAt: { lt: new Date() } } });
+    await tx.adminSession.create({
+      data: {
+        tokenHash: hashToken(token, secret),
+        expiresAt,
+        adminAccountId: account?.id ?? null,
+      },
+    });
+    if (account) {
+      await tx.adminAccount.update({
+        where: { id: account.id },
+        data: { lastLoginAt: new Date() },
+      });
+    }
   });
 
   (await cookies()).set(sessionCookieName, token, {
@@ -51,12 +68,39 @@ export async function getAdminSession() {
   if (!secret || !token) return null;
   const session = await prisma.adminSession.findUnique({
     where: { tokenHash: hashToken(token, secret) },
+    include: {
+      adminAccount: {
+        select: {
+          id: true,
+          username: true,
+          displayName: true,
+          role: true,
+          isActive: true,
+          mustChangePassword: true,
+        },
+      },
+    },
   });
-  if (!session || !isSessionFresh(session.expiresAt)) {
+  if (
+    !session ||
+    !isSessionFresh(session.expiresAt) ||
+    (session.adminAccount && !session.adminAccount.isActive)
+  ) {
     if (session) await prisma.adminSession.delete({ where: { id: session.id } });
     return null;
   }
   return session;
+}
+
+export function getAdminActor(session: Awaited<ReturnType<typeof getAdminSession>>) {
+  if (!session) return null;
+  const role = session.adminAccount?.role ?? "SUPER_ADMIN";
+  return {
+    id: session.adminAccount?.id ?? null,
+    role,
+    displayName: session.adminAccount?.displayName ?? "Legacy 管理员",
+    isLegacy: !session.adminAccount,
+  };
 }
 
 export async function destroyAdminSession() {

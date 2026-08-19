@@ -12,7 +12,9 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
     "test:referee-flow": "tsx scripts/test-referee-flow.ts",
+    "test:referee-r1": "tsx scripts/test-referee-r1.ts",
     "security:hash-password": "node scripts/hash-password.mjs",
+    "admin:create": "tsx scripts/create-admin-account.ts",
     "db:backup": "node scripts/backup-database.mjs",
     "health:check": "node scripts/health-check.mjs"
   },

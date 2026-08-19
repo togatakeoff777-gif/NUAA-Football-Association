@@ -4,7 +4,7 @@ import path from "node:path";
 
 import { createClient } from "@libsql/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
-import { PrismaClient } from "../src/generated/prisma/client";
+import { PrismaClient } from "../src/generated/prisma-v29/client";
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -392,23 +392,34 @@ async function main() {
       applicationWindowStatus: "CLOSED",
       positionCounts: { REFEREE: 1 },
     });
-    let conflictBlocked = false;
-    try {
-      await service.saveAppointmentDraft({
-        matchId: conflictMatch.id,
-        publicationNote: "",
-        positions: [{ key: "REFEREE", slot: 1, refereeId: referees[0].id }],
-      });
-    } catch (error) {
-      conflictBlocked =
-        error instanceof service.RefereeServiceError && error.status === 409;
-    }
-    assert(conflictBlocked, "明显时间冲突的重复选派未被阻止。");
+    const adjacentResult = await service.saveAppointmentDraft({
+      matchId: conflictMatch.id,
+      publicationNote: "",
+      positions: [{ key: "REFEREE", slot: 1, refereeId: referees[0].id }],
+    });
+    const adjacentWarning = adjacentResult.warnings.find(
+      (warning) => warning.code === "ADJACENT_MATCH",
+    );
+    assert(adjacentWarning, "相邻比赛未返回结构化提醒。");
+    assert(
+      adjacentWarning.details.gapMinutes === 60 && !adjacentWarning.overridable,
+      "相邻比赛未按实际间隔提示，或仍被错误视为硬性冲突。",
+    );
 
     const publicDirectory = await publicQueries.getPublicRefereeDirectory();
     assert(publicDirectory.length === 1, "公开名录授权过滤失败。");
     const publicKeys = Object.keys(publicDirectory[0]);
-    for (const forbidden of ["passwordHash", "internalNote", "certificateNote", "lastLoginAt"]) {
+    for (const forbidden of [
+      "studentId",
+      "phone",
+      "qq",
+      "passwordHash",
+      "internalNote",
+      "certificateNote",
+      "failedLoginCount",
+      "lockedUntil",
+      "lastLoginAt",
+    ]) {
       assert(!publicKeys.includes(forbidden), `公开名录泄露字段：${forbidden}`);
     }
 
@@ -546,7 +557,7 @@ async function main() {
       positionOverageBlocked: overageBlocked,
       publishWithdrawRepublish: true,
       versionHistoryRetained: true,
-      timeConflictBlocked: conflictBlocked,
+      adjacentMatchWarning: true,
       disabledAccountBlocked: disabledApplicationBlocked,
       loginRateLimited: rateLimited,
       csvAuthorizationGuard: true,

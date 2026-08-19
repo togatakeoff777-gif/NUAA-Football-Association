@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getAdminSession, isSameOrigin } from "@/lib/referee-auth";
+import { getAdminActor, getAdminSession, isSameOrigin } from "@/lib/referee-auth";
 import {
   RefereeServiceError,
   resetRefereePassword,
@@ -8,7 +8,9 @@ import {
 } from "@/lib/referee-service";
 import {
   isRecord,
+  readCapabilities,
   readBoolean,
+  readDate,
   readEnum,
   readShortText,
 } from "@/lib/referee-validation";
@@ -17,18 +19,19 @@ async function authorize(request: Request) {
   if (!isSameOrigin(request)) {
     return NextResponse.json({ error: "请求来源无效。" }, { status: 403 });
   }
-  if (!(await getAdminSession())) {
+  const session = await getAdminSession();
+  if (!session) {
     return NextResponse.json({ error: "请先登录管理员后台。" }, { status: 401 });
   }
-  return null;
+  return getAdminActor(session)!;
 }
 
 export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const denied = await authorize(request);
-  if (denied) return denied;
+  const authorization = await authorize(request);
+  if (authorization instanceof Response) return authorization;
   try {
     const body: unknown = await request.json();
     if (!isRecord(body)) throw new Error("账号内容格式不正确。");
@@ -36,6 +39,13 @@ export async function PATCH(
     await updateRefereeAccount(id, {
       publicCode: readShortText(body.publicCode, "裁判员编号", 32),
       name: readShortText(body.name, "姓名", 48),
+      studentId: readShortText(body.studentId, "学号", 32, false),
+      collegeId: readShortText(body.collegeId, "学院", 64, false),
+      grade: readShortText(body.grade, "年级", 32, false),
+      phone: readShortText(body.phone, "手机号", 32, false),
+      qq: readShortText(body.qq, "QQ", 32, false),
+      refereeLevel: readShortText(body.refereeLevel, "裁判等级", 80, false),
+      joinedAt: readDate(body.joinedAt, "加入日期", false),
       status: readEnum(
         body.status,
         ["PENDING", "ACTIVE", "INACTIVE", "ARCHIVED"] as const,
@@ -52,7 +62,8 @@ export async function PATCH(
       publicDirectoryEnabled: readBoolean(body.publicDirectoryEnabled, "公开名录授权"),
       publicBio: readShortText(body.publicBio, "公开简介", 300, false),
       internalNote: readShortText(body.internalNote, "内部备注", 500, false),
-    });
+      capabilities: body.capabilities === undefined ? undefined : readCapabilities(body.capabilities),
+    }, authorization);
     return NextResponse.json({ ok: true });
   } catch (error) {
     const status = error instanceof RefereeServiceError ? error.status : 400;
@@ -67,8 +78,8 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const denied = await authorize(request);
-  if (denied) return denied;
+  const authorization = await authorize(request);
+  if (authorization instanceof Response) return authorization;
   try {
     const body: unknown = await request.json();
     if (!isRecord(body)) throw new Error("密码内容格式不正确。");

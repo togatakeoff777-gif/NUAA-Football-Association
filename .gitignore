@@ -43,6 +43,7 @@ yarn-error.log*
 /prisma/backups/
 /prisma/test-*.db*
 /src/generated/prisma/
+/src/generated/prisma-v29/
 
 # vercel
 .vercel

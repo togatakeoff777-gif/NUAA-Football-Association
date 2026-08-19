@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { RefereeMemberLogoutButton } from "@/components/referees/mvp/referee-member-logout-button";
+import { RefereeWorkspaceR1 } from "@/components/referees/mvp/referee-workspace-r1";
 import { ApplicationWithdrawButton } from "@/components/referees/mvp/application-withdraw-button";
 import { RefereeSubnav } from "@/components/referees/mvp/public-appointment-list";
 import { applicationStatusLabels, formatRefereeDateTime } from "@/lib/referee-presenters";
@@ -23,7 +24,7 @@ export default async function RefereeWorkspacePage() {
   if (!session) redirect("/referees/login");
   if (session.referee.mustChangePassword) redirect("/referees/workspace/account");
 
-  const [applications, assignedPositions] = await Promise.all([
+  const [applications, assignedPositions, availability] = await Promise.all([
     prisma.refereeApplication.findMany({
       where: { refereeId: session.refereeId },
       include: {
@@ -36,11 +37,19 @@ export default async function RefereeWorkspacePage() {
     prisma.appointmentPosition.findMany({
       where: {
         refereeId: session.refereeId,
-        appointment: { status: "PUBLISHED" },
+        appointment: { status: { in: ["PUBLISHED", "COMPLETED"] } },
       },
       include: {
         appointment: {
           include: {
+            versions: {
+              orderBy: { revision: "desc" },
+              take: 1,
+              include: {
+                acknowledgements: { where: { refereeId: session.refereeId } },
+                conflictReports: { where: { refereeId: session.refereeId } },
+              },
+            },
             match: {
               include: { competition: true, homeTeam: true, awayTeam: true },
             },
@@ -49,11 +58,19 @@ export default async function RefereeWorkspacePage() {
       },
       orderBy: { appointment: { updatedAt: "desc" } },
     }),
+    prisma.refereeAvailability.findMany({
+      where: { refereeId: session.refereeId },
+      orderBy: { startAt: "asc" },
+    }),
   ]);
 
   const now = new Date();
-  const upcomingPositions = assignedPositions.filter((item) => item.appointment.match.kickoff > now);
-  const historicalPositions = assignedPositions.filter((item) => item.appointment.match.kickoff <= now);
+  const upcomingPositions = assignedPositions.filter(
+    (item) => item.appointment.status === "PUBLISHED" && item.appointment.match.kickoff > now,
+  );
+  const historicalPositions = assignedPositions.filter(
+    (item) => item.appointment.status === "COMPLETED" || item.appointment.match.kickoff <= now,
+  );
   return (
     <>
       <SiteHeader />
@@ -72,6 +89,39 @@ export default async function RefereeWorkspacePage() {
         <RefereeSubnav showWorkspace />
         <section className="functional-section">
           <div className="detail-shell referee-workspace-grid">
+            <RefereeWorkspaceR1
+              availability={availability.map((item) => ({
+                id: item.id,
+                startAt: formatRefereeDateTime(item.startAt),
+                endAt: formatRefereeDateTime(item.endAt),
+                kind: item.kind,
+                note: item.note ?? "",
+              }))}
+              profile={{
+                phone: session.referee.phone ?? "",
+                qq: session.referee.qq ?? "",
+                studentId: session.referee.studentId ?? "",
+                college: session.referee.college?.name ?? "",
+                grade: session.referee.grade ?? "",
+                refereeLevel: session.referee.refereeLevel ?? "",
+              }}
+              tasks={assignedPositions.map((position) => {
+                const version = position.appointment.versions[0];
+                return {
+                  appointmentId: position.appointment.id,
+                  competition: position.appointment.match.competition.name,
+                  matchup: `${position.appointment.match.homeTeam.name} vs ${position.appointment.match.awayTeam.name}`,
+                  kickoff: formatRefereeDateTime(position.appointment.match.kickoff),
+                  position: position.label,
+                  status: position.appointment.status,
+                  versionId: version?.id ?? null,
+                  acknowledgedAt: version?.acknowledgements[0]
+                    ? formatRefereeDateTime(version.acknowledgements[0].acknowledgedAt)
+                    : null,
+                  reportStatus: version?.conflictReports[0]?.status ?? null,
+                };
+              })}
+            />
             <section>
               <header className="functional-section-heading">
                 <div>

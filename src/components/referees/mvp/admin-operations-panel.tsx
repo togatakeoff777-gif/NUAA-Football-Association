@@ -16,6 +16,13 @@ type AccountRow = {
   id: string;
   publicCode: string;
   name: string;
+  studentId: string;
+  collegeId: string;
+  grade: string;
+  phone: string;
+  qq: string;
+  refereeLevel: string;
+  joinedAt: string;
   status: string;
   elevenASide: boolean;
   futsal: boolean;
@@ -25,14 +32,20 @@ type AccountRow = {
   publicBio: string;
   internalNote: string;
   mustChangePassword: boolean;
+  capabilities: string[];
 };
+type CollegeOption = { id: string; name: string };
 type MatchRow = {
   id: string;
   slug: string;
   competitionId: string;
   stage: string;
   kickoff: string;
+  endAt: string;
   venue: string;
+  round: string;
+  source: string;
+  externalMatchId: string;
   homeTeamId: string;
   awayTeamId: string;
   status: string;
@@ -55,9 +68,20 @@ function formText(form: FormData, name: string) {
 }
 
 function accountPayload(form: FormData) {
+  const capabilities = [...form.getAll("capability")].map((value) => {
+    const [format, positionKey] = String(value).split(":");
+    return { format, positionKey };
+  });
   return {
     publicCode: formText(form, "publicCode"),
     name: formText(form, "name"),
+    studentId: formText(form, "studentId"),
+    collegeId: formText(form, "collegeId"),
+    grade: formText(form, "grade"),
+    phone: formText(form, "phone"),
+    qq: formText(form, "qq"),
+    refereeLevel: formText(form, "refereeLevel"),
+    joinedAt: formText(form, "joinedAt"),
     initialPassword: formText(form, "initialPassword"),
     status: formText(form, "status"),
     elevenASide: form.get("elevenASide") === "on",
@@ -67,10 +91,30 @@ function accountPayload(form: FormData) {
     publicDirectoryEnabled: form.get("publicDirectoryEnabled") === "on",
     publicBio: formText(form, "publicBio"),
     internalNote: formText(form, "internalNote"),
+    capabilities,
   };
 }
 
-function AccountCreateForm() {
+const capabilityOptions = [
+  ["ELEVEN_A_SIDE", "REFEREE", "十一人制 · 裁判员"],
+  ["ELEVEN_A_SIDE", "ASSISTANT_REFEREE_1", "十一人制 · 第一助理裁判员"],
+  ["ELEVEN_A_SIDE", "ASSISTANT_REFEREE_2", "十一人制 · 第二助理裁判员"],
+  ["ELEVEN_A_SIDE", "FOURTH_OFFICIAL", "十一人制 · 第四官员"],
+  ["ELEVEN_A_SIDE", "RESERVE_ASSISTANT_REFEREE", "十一人制 · 候补助理裁判员"],
+  ["FUTSAL", "REFEREE", "五人制 · 裁判员"],
+  ["FUTSAL", "SECOND_REFEREE", "五人制 · 第二裁判员"],
+  ["FUTSAL", "THIRD_REFEREE", "五人制 · 第三裁判员"],
+  ["FUTSAL", "TIMEKEEPER", "五人制 · 计时员"],
+] as const;
+
+function CapabilityFields({ selected = [] }: { selected?: string[] }) {
+  return <fieldset className="referee-position-counts"><legend>岗位能力</legend>{capabilityOptions.map(([format, key, label]) => {
+    const value = `${format}:${key}`;
+    return <label key={value}><input defaultChecked={selected.includes(value)} name="capability" type="checkbox" value={value} />{label}</label>;
+  })}</fieldset>;
+}
+
+function AccountCreateForm({ colleges }: { colleges: CollegeOption[] }) {
   const router = useRouter();
   const [message, setMessage] = useState("");
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -94,11 +138,19 @@ function AccountCreateForm() {
       <div className="referee-form-grid">
         <label><span>裁判员编号</span><input name="publicCode" required /></label>
         <label><span>姓名</span><input name="name" required /></label>
+        <label><span>学号</span><input maxLength={32} name="studentId" /></label>
+        <label><span>学院</span><select name="collegeId"><option value="">待确认</option>{colleges.map((college) => <option key={college.id} value={college.id}>{college.name}</option>)}</select></label>
+        <label><span>年级</span><input maxLength={32} name="grade" /></label>
+        <label><span>手机号</span><input maxLength={32} name="phone" /></label>
+        <label><span>QQ</span><input maxLength={32} name="qq" /></label>
+        <label><span>裁判等级</span><input maxLength={80} name="refereeLevel" /></label>
+        <label><span>加入日期</span><input name="joinedAt" type="date" /></label>
         <label><span>初始密码</span><input minLength={12} name="initialPassword" required type="password" /></label>
         <label><span>账号状态</span><select defaultValue="PENDING" name="status"><option value="PENDING">待启用</option><option value="ACTIVE">已启用</option><option value="INACTIVE">停用</option><option value="ARCHIVED">归档</option></select></label>
         <label><span>培训状态</span><select defaultValue="NOT_STARTED" name="trainingStatus"><option value="NOT_STARTED">未开始</option><option value="IN_PROGRESS">进行中</option><option value="COMPLETED">已完成</option></select></label>
         <label><span>证书或登记说明</span><input name="certificateNote" /></label>
       </div>
+      <CapabilityFields />
       <div className="referee-checkbox-row">
         <label><input name="elevenASide" type="checkbox" />十一人制</label>
         <label><input name="futsal" type="checkbox" />五人制</label>
@@ -112,7 +164,7 @@ function AccountCreateForm() {
   );
 }
 
-function AccountEditor({ account }: { account: AccountRow }) {
+function AccountEditor({ account, colleges }: { account: AccountRow; colleges: CollegeOption[] }) {
   const router = useRouter();
   const [message, setMessage] = useState("");
   async function update(event: React.FormEvent<HTMLFormElement>) {
@@ -147,10 +199,18 @@ function AccountEditor({ account }: { account: AccountRow }) {
         <div className="referee-form-grid">
           <label><span>裁判员编号</span><input defaultValue={account.publicCode} name="publicCode" required /></label>
           <label><span>姓名</span><input defaultValue={account.name} name="name" required /></label>
+          <label><span>学号</span><input defaultValue={account.studentId} name="studentId" /></label>
+          <label><span>学院</span><select defaultValue={account.collegeId} name="collegeId"><option value="">待确认</option>{colleges.map((college) => <option key={college.id} value={college.id}>{college.name}</option>)}</select></label>
+          <label><span>年级</span><input defaultValue={account.grade} name="grade" /></label>
+          <label><span>手机号</span><input defaultValue={account.phone} name="phone" /></label>
+          <label><span>QQ</span><input defaultValue={account.qq} name="qq" /></label>
+          <label><span>裁判等级</span><input defaultValue={account.refereeLevel} name="refereeLevel" /></label>
+          <label><span>加入日期</span><input defaultValue={account.joinedAt} name="joinedAt" type="date" /></label>
           <label><span>账号状态</span><select defaultValue={account.status} name="status"><option value="PENDING">待启用</option><option value="ACTIVE">已启用</option><option value="INACTIVE">停用</option><option value="ARCHIVED">归档</option></select></label>
           <label><span>培训状态</span><select defaultValue={account.trainingStatus} name="trainingStatus"><option value="NOT_STARTED">未开始</option><option value="IN_PROGRESS">进行中</option><option value="COMPLETED">已完成</option></select></label>
           <label><span>证书或登记说明</span><input defaultValue={account.certificateNote} name="certificateNote" /></label>
         </div>
+        <CapabilityFields selected={account.capabilities} />
         <div className="referee-checkbox-row">
           <label><input defaultChecked={account.elevenASide} name="elevenASide" type="checkbox" />十一人制</label>
           <label><input defaultChecked={account.futsal} name="futsal" type="checkbox" />五人制</label>
@@ -195,7 +255,11 @@ function matchPayload(form: FormData, definitions: PositionDefinition[]) {
     competitionId: formText(form, "competitionId"),
     stage: formText(form, "stage"),
     kickoff: formText(form, "kickoff"),
+    endAt: formText(form, "endAt"),
     venue: formText(form, "venue"),
+    round: formText(form, "round"),
+    source: formText(form, "source") || "MANUAL",
+    externalMatchId: formText(form, "externalMatchId"),
     homeTeamId: formText(form, "homeTeamId"),
     awayTeamId: formText(form, "awayTeamId"),
     status: formText(form, "status"),
@@ -242,7 +306,11 @@ function MatchCreateForm({ competitions }: { competitions: CompetitionOption[] }
         <label><span>页面标识</span><input name="slug" required /></label>
         <label><span>比赛名称 / 轮次</span><input name="stage" required /></label>
         <label><span>比赛时间</span><input name="kickoff" required type="datetime-local" /></label>
+        <label><span>预计结束</span><input name="endAt" type="datetime-local" /></label>
         <label><span>比赛场地</span><input name="venue" required /></label>
+        <label><span>标准轮次</span><input name="round" /></label>
+        <label><span>数据来源</span><select defaultValue="MANUAL" name="source"><option value="MANUAL">手工维护</option><option value="FOOTBALL_CHINA">足球中国</option></select></label>
+        <label><span>外部比赛 ID</span><input name="externalMatchId" placeholder="当前不自行生成" /></label>
         <label><span>报名截止</span><input name="applicationDeadline" type="datetime-local" /></label>
         <label><span>主队</span><select name="homeTeamId" required><option value="">请选择</option>{competition?.teams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label>
         <label><span>客队</span><select name="awayTeamId" required><option value="">请选择</option>{competition?.teams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label>
@@ -299,7 +367,11 @@ function MatchManager({ match, competitions }: { match: MatchRow; competitions: 
           <label><span>页面标识</span><input defaultValue={match.slug} name="slug" required /></label>
           <label><span>比赛名称 / 轮次</span><input defaultValue={match.stage} name="stage" required /></label>
           <label><span>比赛时间</span><input defaultValue={match.kickoff} name="kickoff" required type="datetime-local" /></label>
+          <label><span>预计结束</span><input defaultValue={match.endAt} name="endAt" type="datetime-local" /></label>
           <label><span>比赛场地</span><input defaultValue={match.venue} name="venue" required /></label>
+          <label><span>标准轮次</span><input defaultValue={match.round} name="round" /></label>
+          <label><span>数据来源</span><select defaultValue={match.source} name="source"><option value="MANUAL">手工维护</option><option value="FOOTBALL_CHINA">足球中国</option></select></label>
+          <label><span>外部比赛 ID</span><input defaultValue={match.externalMatchId} name="externalMatchId" /></label>
           <label><span>报名截止</span><input defaultValue={match.applicationDeadline} name="applicationDeadline" type="datetime-local" /></label>
           <label><span>主队</span><select defaultValue={match.homeTeamId} name="homeTeamId">{competition.teams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label>
           <label><span>客队</span><select defaultValue={match.awayTeamId} name="awayTeamId">{competition.teams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label>
@@ -329,19 +401,21 @@ export function AdminOperationsPanel({
   competitions,
   matches,
   audit,
+  colleges,
 }: {
   accounts: AccountRow[];
   competitions: CompetitionOption[];
   matches: MatchRow[];
   audit: AuditRow[];
+  colleges: CollegeOption[];
 }) {
   const auditItems = useMemo(() => audit.slice(0, 50), [audit]);
   return (
     <>
       <section className="referee-admin-section" id="accounts">
         <header className="referee-admin-section-title"><h2>裁判员账号与档案</h2><Link href="/api/referees/admin/exports/referees">导出名录 CSV</Link></header>
-        <AccountCreateForm />
-        <div className="referee-admin-list">{accounts.map((account) => <AccountEditor account={account} key={account.id} />)}</div>
+        <AccountCreateForm colleges={colleges} />
+        <div className="referee-admin-list">{accounts.map((account) => <AccountEditor account={account} colleges={colleges} key={account.id} />)}</div>
       </section>
       <section className="referee-admin-section" id="matches">
         <h2>开放场次管理</h2>

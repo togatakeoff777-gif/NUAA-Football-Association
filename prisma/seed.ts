@@ -7,7 +7,7 @@ import {
   MatchStatus,
   PrismaClient,
   RefereeStatus,
-} from "../src/generated/prisma/client";
+} from "../src/generated/prisma-v29/client";
 
 const url = process.env.DATABASE_URL ?? "file:./prisma/dev.db";
 const prisma = new PrismaClient({ adapter: new PrismaLibSql({ url }) });

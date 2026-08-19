@@ -3,14 +3,14 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { PublicAppointmentList, RefereeSubnav, type PublicAppointment } from "@/components/referees/mvp/public-appointment-list";
 import { formatRefereeDateTime } from "@/lib/referee-presenters";
-import { prisma } from "@/lib/prisma";
+import { getPublicUpcomingAppointments } from "@/lib/referee-public";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/referees/assignments" }, title: "裁判员选派公告", description: "仅展示已发布且未撤回的裁判组选派。" };
 export const dynamic = "force-dynamic";
 
 async function getItems(): Promise<PublicAppointment[]> {
-  const appointments = await prisma.refereeAppointment.findMany({ where: { status: "PUBLISHED", match: { status: "SCHEDULED", kickoff: { gt: new Date() }, isTestData: false, competition: { isTestData: false } } }, include: { match: { include: { competition: true, homeTeam: true, awayTeam: true } }, positions: { include: { referee: true }, orderBy: [{ sortOrder: "asc" }, { slot: "asc" }] } }, orderBy: { publishedAt: "desc" } });
+  const appointments = await getPublicUpcomingAppointments();
   return appointments.map((item) => ({ id: item.id, competition: item.match.competition.name, match: `${item.match.homeTeam.name} vs ${item.match.awayTeam.name}`, stage: item.match.stage, kickoff: formatRefereeDateTime(item.match.kickoff), venue: item.match.venue, publishedAt: item.publishedAt ? formatRefereeDateTime(item.publishedAt) : "—", updatedAt: formatRefereeDateTime(item.updatedAt), note: item.publicationNote, positions: item.positions.flatMap((position) => position.referee ? [{ key: `${position.key}-${position.slot}`, label: `${position.label}${position.slot > 1 ? ` ${position.slot}` : ""}`, referee: position.referee.name }] : []) }));
 }
 

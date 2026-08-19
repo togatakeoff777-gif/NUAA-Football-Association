@@ -1,4 +1,4 @@
-import type { AppointmentPositionKey, ApplicationStatus, AppointmentStatus } from "@/generated/prisma/client";
+import type { AppointmentPositionKey, ApplicationStatus, AppointmentStatus } from "@/generated/prisma-v29/client";
 
 const dateTimeFormatter = new Intl.DateTimeFormat("zh-CN", {
   timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit",
@@ -20,7 +20,11 @@ export const applicationStatusLabels: Record<ApplicationStatus, string> = {
 };
 
 export const appointmentStatusLabels: Record<AppointmentStatus, string> = {
-  DRAFT: "草稿", PUBLISHED: "已发布", WITHDRAWN: "已撤回",
+  DRAFT: "草稿",
+  PUBLISHED: "已发布",
+  WITHDRAWN: "已撤回",
+  COMPLETED: "已完成",
+  CANCELLED: "已取消",
 };
 
 export function parsePreferredPositions(value: string): AppointmentPositionKey[] {

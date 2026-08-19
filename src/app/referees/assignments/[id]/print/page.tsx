@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { prisma } from "@/lib/prisma";
 import { formatRefereeDateTime } from "@/lib/referee-presenters";
+import { getPublicAppointmentById } from "@/lib/referee-public";
 
 export const metadata: Metadata = {
   title: "裁判选派单",
@@ -16,16 +16,7 @@ export default async function RefereeAppointmentPrintPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const appointment = await prisma.refereeAppointment.findFirst({
-    where: { id, status: "PUBLISHED" },
-    include: {
-      match: { include: { competition: true, homeTeam: true, awayTeam: true } },
-      positions: {
-        include: { referee: true },
-        orderBy: [{ sortOrder: "asc" }, { slot: "asc" }],
-      },
-    },
-  });
+  const appointment = await getPublicAppointmentById(id);
   if (!appointment) notFound();
   return (
     <main className="referee-print-sheet">
@@ -41,13 +32,12 @@ export default async function RefereeAppointmentPrintPage({
         <div><dt>场地</dt><dd>{appointment.match.venue}</dd></div>
       </dl>
       <table>
-        <thead><tr><th>岗位</th><th>裁判员</th><th>编号</th></tr></thead>
+        <thead><tr><th>岗位</th><th>裁判员</th></tr></thead>
         <tbody>
           {appointment.positions.map((position) => (
             <tr key={position.id}>
               <td>{position.label}{position.slot > 1 ? ` ${position.slot}` : ""}</td>
               <td>{position.referee?.name ?? "—"}</td>
-              <td>{position.referee?.publicCode ?? "—"}</td>
             </tr>
           ))}
         </tbody>

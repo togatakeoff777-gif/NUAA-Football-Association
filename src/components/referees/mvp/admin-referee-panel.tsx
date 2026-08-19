@@ -3,15 +3,16 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
-import type { AppointmentPositionKey } from "@/generated/prisma";
+import type { AppointmentPositionKey } from "@/generated/prisma-v29/client";
 
-type RefereeOption = { id: string; label: string; elevenASide: boolean; futsal: boolean };
+type RefereeOption = { id: string; label: string; elevenASide: boolean; futsal: boolean; capabilities: string[] };
 type ApplicationRow = {
   id: string; referee: string; match: string; competition: string; status: string; statusKey: string;
   preferred: string; note: string | null; createdAt: string;
 };
 type MatchEditor = {
   id: string; appointmentId: string | null; label: string; status: string; publicationNote: string; format: "ELEVEN_A_SIDE" | "FUTSAL";
+  statusKey: string;
   template: { key: AppointmentPositionKey; label: string; slot: number }[];
   positions: { key: AppointmentPositionKey; slot: number; refereeId: string | null }[];
 };
@@ -100,7 +101,8 @@ function AppointmentEditor({ match, referees }: { match: MatchEditor; referees: 
   const [assigned, setAssigned] = useState<Record<string, string>>(() => Object.fromEntries(match.template.map((item) => [identity(item), initial.get(identity(item)) ?? ""])));
   const [message, setMessage] = useState("");
   const [reason, setReason] = useState("");
-  const eligibleReferees = referees.filter((referee) => match.format === "ELEVEN_A_SIDE" ? referee.elevenASide : referee.futsal);
+  const [overrideReason, setOverrideReason] = useState("");
+  const [warnings, setWarnings] = useState<Array<{ code: string; message: string }>>([]);
 
   async function save(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -108,19 +110,22 @@ function AppointmentEditor({ match, referees }: { match: MatchEditor; referees: 
     const positions = match.template.filter((item) => enabled[identity(item)]).map((item) => ({ key: item.key, slot: item.slot, refereeId: assigned[identity(item)] || null }));
     const response = await fetch(`/api/referees/admin/appointments/${match.id}`, {
       method: "PUT", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ positions, publicationNote: form.get("publicationNote"), changeReason: reason }),
+      body: JSON.stringify({ positions, publicationNote: form.get("publicationNote"), changeReason: reason, overrideReason }),
     });
-    const result = (await response.json()) as { error?: string };
+    const result = (await response.json()) as { error?: string; warnings?: Array<{ code: string; message: string }> };
+    setWarnings(result.warnings ?? []);
     setMessage(response.ok ? "选派草稿已写入数据库。" : result.error ?? "保存失败。" );
     if (response.ok) router.refresh();
   }
 
-  async function action(actionName: "publish" | "withdraw") {
+  async function action(actionName: "publish" | "withdraw" | "complete" | "cancel") {
     const response = await fetch(`/api/referees/admin/appointments/${match.id}`, {
-      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: actionName, reason }),
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: actionName, reason, overrideReason }),
     });
-    const result = (await response.json()) as { error?: string };
-    setMessage(response.ok ? (actionName === "publish" ? "选派已发布。" : "公开选派已撤回，历史记录仍保留。") : result.error ?? "操作失败。" );
+    const result = (await response.json()) as { error?: string; warnings?: Array<{ code: string; message: string }> };
+    setWarnings(result.warnings ?? []);
+    const successLabels = { publish: "选派已发布。", withdraw: "公开选派已撤回，历史记录仍保留。", complete: "选派已标记完成。", cancel: "选派已取消。" };
+    setMessage(response.ok ? successLabels[actionName] : result.error ?? "操作失败。" );
     if (response.ok) router.refresh();
   }
 
@@ -133,14 +138,19 @@ function AppointmentEditor({ match, referees }: { match: MatchEditor; referees: 
             <div key={identity(position)}>
               <label><input checked={enabled[identity(position)]} onChange={(event) => setEnabled((current) => ({ ...current, [identity(position)]: event.target.checked }))} type="checkbox" /><span>{position.label}{position.slot > 1 ? ` ${position.slot}` : ""}</span></label>
               <select disabled={!enabled[identity(position)]} onChange={(event) => setAssigned((current) => ({ ...current, [identity(position)]: event.target.value }))} value={assigned[identity(position)]}>
-                <option value="">待分配</option>{eligibleReferees.map((referee) => <option key={referee.id} value={referee.id}>{referee.label}</option>)}
+                <option value="">待分配</option>{referees.filter((referee) => referee.capabilities.length
+                  ? referee.capabilities.includes(`${match.format}:${position.key}`)
+                  : (match.format === "ELEVEN_A_SIDE" ? referee.elevenASide : referee.futsal)
+                ).map((referee) => <option key={referee.id} value={referee.id}>{referee.label}</option>)}
               </select>
             </div>
           ))}
         </div>
         <input defaultValue={match.publicationNote} maxLength={240} name="publicationNote" placeholder="公示备注（选填）" />
         <input maxLength={240} onChange={(event) => setReason(event.target.value)} placeholder="撤回、改派或重新发布时填写原因" value={reason} />
-        <div className="referee-admin-actions"><button type="submit">保存草稿</button><button onClick={() => action("publish")} type="button">发布选派</button><button className="referee-danger-button" onClick={() => action("withdraw")} type="button">撤回发布</button></div>
+        <input maxLength={500} onChange={(event) => setOverrideReason(event.target.value)} placeholder="存在同院、不可执裁或重叠冲突时填写覆盖原因" value={overrideReason} />
+        {warnings.length ? <ul className="referee-warning-list">{warnings.map((warning, index) => <li key={`${warning.code}-${index}`}><strong>{warning.code}</strong> {warning.message}</li>)}</ul> : null}
+        <div className="referee-admin-actions"><button type="submit">保存草稿</button><button onClick={() => action("publish")} type="button">发布选派</button><button className="referee-danger-button" onClick={() => action("withdraw")} type="button">撤回发布</button><button onClick={() => action("complete")} type="button">完成</button><button className="referee-danger-button" onClick={() => action("cancel")} type="button">取消</button></div>
       </form>
       <p aria-live="polite">{message}</p>
     </article>

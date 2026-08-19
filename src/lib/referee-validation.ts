@@ -1,4 +1,4 @@
-import type { AppointmentPositionKey } from "@/generated/prisma/client";
+import type { AppointmentPositionKey } from "@/generated/prisma-v29/client";
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -42,7 +42,13 @@ export function readDate(value: unknown, label: string, required = true) {
     if (!required) return undefined;
     throw new Error(`请填写${label}。`);
   }
-  const date = new Date(value);
+  const text = value.trim();
+  const normalized = /^\d{4}-\d{2}-\d{2}$/.test(text)
+    ? `${text}T00:00:00+08:00`
+    : /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?$/.test(text)
+      ? `${text}+08:00`
+      : text;
+  const date = new Date(normalized);
   if (Number.isNaN(date.getTime())) throw new Error(`${label}格式不正确。`);
   return date;
 }
@@ -60,6 +66,19 @@ export function readPositionAssignments(value: unknown) {
       key: readEnum(item.key, positionKeys, "岗位"),
       slot: readInteger(item.slot ?? 1, "岗位序号", 1, 5),
       refereeId: readShortText(item.refereeId, "裁判员", 64, false) || null,
+    };
+  });
+}
+
+export function readCapabilities(value: unknown) {
+  if (!Array.isArray(value) || value.length > 20) {
+    throw new Error("岗位能力格式不正确。");
+  }
+  return value.map((item) => {
+    if (!isRecord(item)) throw new Error("岗位能力格式不正确。");
+    return {
+      format: readEnum(item.format, ["ELEVEN_A_SIDE", "FUTSAL"] as const, "比赛制式"),
+      positionKey: readEnum(item.positionKey, positionKeys, "岗位能力"),
     };
   });
 }

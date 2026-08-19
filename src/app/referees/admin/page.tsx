@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import type { ApplicationStatus } from "@/generated/prisma/client";
+import type { ApplicationStatus } from "@/generated/prisma-v29/client";
 
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { AdminOperationsPanel } from "@/components/referees/mvp/admin-operations-panel";
+import { AdminR1Panel } from "@/components/referees/mvp/admin-r1-panel";
 import { AdminRefereePanel } from "@/components/referees/mvp/admin-referee-panel";
-import { getAdminSession } from "@/lib/referee-auth";
+import { getAdminActor, getAdminSession } from "@/lib/referee-auth";
+import { adminRefereeSelect } from "@/lib/referee-dto";
 import {
   applicationStatusLabels,
   appointmentStatusLabels,
@@ -15,6 +17,7 @@ import {
 } from "@/lib/referee-presenters";
 import { getPositionTemplate } from "@/lib/referee-roles";
 import { prisma } from "@/lib/prisma";
+import { getCompletedRefereeStatistics } from "@/lib/referee-r1-service";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/referees/admin" },
@@ -39,12 +42,24 @@ function localInput(value: Date | null) {
     : "";
 }
 
+function localDate(value: Date | null) {
+  return value ? localInput(value).slice(0, 10) : "";
+}
+
+function shanghaiDayRange(now = new Date()) {
+  const shifted = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+  const start = new Date(Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate()) - 8 * 60 * 60 * 1000);
+  return { start, end: new Date(start.getTime() + 24 * 60 * 60 * 1000) };
+}
+
 export default async function RefereeAdminPage({
   searchParams,
 }: {
   searchParams: Promise<{ competition?: string; match?: string; status?: string }>;
 }) {
-  if (!(await getAdminSession())) redirect("/referees/admin/login");
+  const session = await getAdminSession();
+  if (!session) redirect("/referees/admin/login");
+  const actor = getAdminActor(session)!;
   const query = await searchParams;
   const status = allowedStatuses.includes(query.status as ApplicationStatus)
     ? query.status as ApplicationStatus
@@ -81,7 +96,7 @@ export default async function RefereeAdminPage({
           : {}),
       },
       include: {
-        referee: true,
+        referee: { select: { id: true, publicCode: true, name: true } },
         match: {
           include: { competition: true, homeTeam: true, awayTeam: true },
         },
@@ -99,7 +114,13 @@ export default async function RefereeAdminPage({
       },
       orderBy: { kickoff: "asc" },
     }),
-    prisma.referee.findMany({ orderBy: { publicCode: "asc" } }),
+    prisma.referee.findMany({
+      select: {
+        ...adminRefereeSelect,
+        availability: { orderBy: { startAt: "asc" } },
+      },
+      orderBy: { publicCode: "asc" },
+    }),
     prisma.refereeAppointment.findMany({
       include: {
         match: {
@@ -109,6 +130,62 @@ export default async function RefereeAdminPage({
       orderBy: { updatedAt: "desc" },
     }),
     prisma.auditLog.findMany({ orderBy: { createdAt: "desc" }, take: 50 }),
+  ]);
+
+  const { start: todayStart, end: todayEnd } = shanghaiDayRange();
+  const [
+    colleges,
+    affiliatedTeams,
+    conflictReports,
+    statistics,
+    versions,
+    adminAccounts,
+    todayMatches,
+    awaitingAssignment,
+    publishedAppointments,
+  ] = await Promise.all([
+    prisma.college.findMany({
+      include: { codeMappings: { orderBy: { prefix: "asc" } } },
+      orderBy: { name: "asc" },
+    }),
+    prisma.team.findMany({
+      include: { competition: { select: { name: true } }, affiliations: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.appointmentConflictReport.findMany({
+      include: {
+        referee: { select: { publicCode: true, name: true } },
+        appointment: {
+          select: {
+            match: { select: { homeTeam: { select: { name: true } }, awayTeam: { select: { name: true } } } },
+          },
+        },
+      },
+      orderBy: { reportedAt: "desc" },
+      take: 100,
+    }),
+    getCompletedRefereeStatistics(),
+    prisma.appointmentVersion.findMany({
+      include: {
+        createdByAdmin: { select: { displayName: true, username: true } },
+        appointment: {
+          select: {
+            match: { select: { homeTeam: { select: { name: true } }, awayTeam: { select: { name: true } } } },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    }),
+    actor.role === "SUPER_ADMIN"
+      ? prisma.adminAccount.findMany({
+          select: { id: true, username: true, displayName: true, role: true, isActive: true, lastLoginAt: true },
+          orderBy: { username: "asc" },
+        })
+      : Promise.resolve([]),
+    prisma.match.count({ where: { kickoff: { gte: todayStart, lt: todayEnd }, status: { not: "CANCELLED" } } }),
+    prisma.match.count({ where: { status: "SCHEDULED", OR: [{ appointment: null }, { appointment: { status: { in: ["DRAFT", "WITHDRAWN"] } } }] } }),
+    prisma.refereeAppointment.count({ where: { status: "PUBLISHED" } }),
   ]);
 
   const activeReferees = allReferees.filter((item) => item.status === "ACTIVE");
@@ -125,7 +202,11 @@ export default async function RefereeAdminPage({
     competitionId: item.competitionId,
     stage: item.stage,
     kickoff: localInput(item.kickoff),
+    endAt: localInput(item.endAt),
     venue: item.venue,
+    round: item.round ?? "",
+    source: item.source,
+    externalMatchId: item.externalMatchId ?? "",
     homeTeamId: item.homeTeamId,
     awayTeamId: item.awayTeamId,
     status: item.status,
@@ -152,11 +233,88 @@ export default async function RefereeAdminPage({
         </section>
         <section className="functional-section referee-admin-page">
           <div className="detail-shell">
+            <AdminR1Panel
+              actorName={actor.displayName}
+              actorRole={actor.role}
+              mustChangePassword={session.adminAccount?.mustChangePassword ?? false}
+              adminAccounts={adminAccounts.map((account) => ({
+                ...account,
+                lastLoginAt: account.lastLoginAt ? formatRefereeDateTime(account.lastLoginAt) : "",
+              }))}
+              colleges={colleges.map((college) => ({
+                id: college.id,
+                name: college.name,
+                mappings: college.codeMappings.map((mapping) => ({
+                  id: mapping.id,
+                  prefix: mapping.prefix,
+                })),
+              }))}
+              conflictReports={conflictReports.map((report) => ({
+                id: report.id,
+                referee: `${report.referee.publicCode} · ${report.referee.name}`,
+                match: `${report.appointment.match.homeTeam.name} vs ${report.appointment.match.awayTeam.name}`,
+                reason: report.reason,
+                reportedAt: formatRefereeDateTime(report.reportedAt),
+                status: report.status,
+                resolutionNote: report.resolutionNote ?? "",
+              }))}
+              isLegacy={actor.isLegacy}
+              overview={{
+                todayMatches,
+                awaitingAssignment,
+                published: publishedAppointments,
+                pendingReports: conflictReports.filter((report) => report.status === "PENDING").length,
+              }}
+              referees={allReferees.map((referee) => ({
+                id: referee.id,
+                label: `${referee.publicCode} · ${referee.name}`,
+                availability: referee.availability.map((item) => ({
+                  id: item.id,
+                  kind: item.kind,
+                  startAt: formatRefereeDateTime(item.startAt),
+                  endAt: formatRefereeDateTime(item.endAt),
+                  note: item.note ?? "",
+                })),
+              }))}
+              statistics={statistics.map((item) => ({
+                refereeId: item.refereeId,
+                publicCode: item.publicCode,
+                name: item.name,
+                totalMatches: item.totalMatches,
+                positions: item.positions,
+                competitions: item.competitions,
+              }))}
+              teams={affiliatedTeams.map((team) => ({
+                id: team.id,
+                name: team.name,
+                competition: team.competition.name,
+                collegeIds: team.affiliations.map((affiliation) => affiliation.collegeId),
+              }))}
+              versions={versions.map((version) => ({
+                id: version.id,
+                appointment: `${version.appointment.match.homeTeam.name} vs ${version.appointment.match.awayTeam.name}`,
+                revision: version.revision,
+                status: version.status,
+                reason: version.reason ?? "",
+                overrideReason: version.overrideReason ?? "",
+                actor: version.createdByAdmin
+                  ? `${version.createdByAdmin.displayName} (${version.createdByAdmin.username})`
+                  : "Legacy / 未记录",
+                createdAt: formatRefereeDateTime(version.createdAt),
+              }))}
+            />
             <AdminOperationsPanel
               accounts={allReferees.map((item) => ({
                 id: item.id,
                 publicCode: item.publicCode,
                 name: item.name,
+                studentId: item.studentId ?? "",
+                collegeId: item.collegeId ?? "",
+                grade: item.grade ?? "",
+                phone: item.phone ?? "",
+                qq: item.qq ?? "",
+                refereeLevel: item.refereeLevel ?? "",
+                joinedAt: localDate(item.joinedAt),
                 status: item.status,
                 elevenASide: item.elevenASide,
                 futsal: item.futsal,
@@ -166,7 +324,9 @@ export default async function RefereeAdminPage({
                 publicBio: item.publicBio ?? "",
                 internalNote: item.internalNote ?? "",
                 mustChangePassword: item.mustChangePassword,
+                capabilities: item.capabilities.map((capability) => `${capability.format}:${capability.positionKey}`),
               }))}
+              colleges={colleges.map((college) => ({ id: college.id, name: college.name }))}
               competitions={operationCompetitions}
               matches={operationMatches}
               audit={audit.map((item) => ({
@@ -231,6 +391,7 @@ export default async function RefereeAdminPage({
                   status: item.appointment
                     ? appointmentStatusLabels[item.appointment.status]
                     : "未建草稿",
+                  statusKey: item.appointment?.status ?? "NONE",
                   publicationNote: item.appointment?.publicationNote ?? "",
                   format: item.competition.format,
                   template: configuredPositions.flatMap((position) =>
@@ -253,6 +414,7 @@ export default async function RefereeAdminPage({
                 label: `${item.publicCode} · ${item.name}`,
                 elevenASide: item.elevenASide,
                 futsal: item.futsal,
+                capabilities: item.capabilities.map((capability) => `${capability.format}:${capability.positionKey}`),
               }))}
               history={appointmentHistory.map((item) => ({
                 id: item.id,

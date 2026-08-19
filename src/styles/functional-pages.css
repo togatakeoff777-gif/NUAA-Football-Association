@@ -124,6 +124,77 @@
   .cup-womens-stat-strip { grid-template-columns: repeat(3, 1fr); }.cup-womens-rule-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
+.referee-r1-admin,
+.referee-r1-workspace {
+  display: grid;
+  gap: 24px;
+}
+
+.referee-r1-metrics,
+.referee-r1-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.referee-r1-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.referee-r1-metrics article,
+.referee-r1-card,
+.referee-r1-admin details,
+.referee-r1-grid > section {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.referee-r1-metrics article {
+  display: grid;
+  gap: 6px;
+}
+
+.referee-r1-metrics strong {
+  color: var(--aviation-blue-dark);
+  font-size: 30px;
+}
+
+.referee-r1-admin details > summary {
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.referee-r1-admin form,
+.referee-r1-workspace form,
+.referee-r1-card,
+.referee-r1-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.referee-r1-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.referee-warning-list {
+  display: grid;
+  gap: 8px;
+  padding: 12px 12px 12px 32px;
+  border: 1px solid #f2c078;
+  border-radius: var(--radius-sm);
+  background: #fff8e8;
+  color: #8a4b08;
+}
+
+@media (max-width: 900px) {
+  .referee-r1-metrics,
+  .referee-r1-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 720px) {
   .functional-hero { padding: 60px 0 58px; }.functional-hero h1 { font-size: 42px; }.functional-hero .detail-shell > p:last-child { font-size: 12px; }
   .functional-section { padding: 58px 0; }.functional-section-head { align-items: flex-start; flex-direction: column; gap: 13px; }

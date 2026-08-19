@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 
-import { getAdminSession, isSameOrigin } from "@/lib/referee-auth";
+import { getAdminActor, getAdminSession, isSameOrigin } from "@/lib/referee-auth";
 import {
   createRefereeAccount,
   RefereeServiceError,
 } from "@/lib/referee-service";
 import {
   isRecord,
+  readCapabilities,
   readBoolean,
+  readDate,
   readEnum,
   readShortText,
 } from "@/lib/referee-validation";
@@ -16,15 +18,24 @@ export async function POST(request: Request) {
   if (!isSameOrigin(request)) {
     return NextResponse.json({ error: "请求来源无效。" }, { status: 403 });
   }
-  if (!(await getAdminSession())) {
+  const session = await getAdminSession();
+  if (!session) {
     return NextResponse.json({ error: "请先登录管理员后台。" }, { status: 401 });
   }
+  const actor = getAdminActor(session)!;
   try {
     const body: unknown = await request.json();
     if (!isRecord(body)) throw new Error("账号内容格式不正确。");
     const referee = await createRefereeAccount({
       publicCode: readShortText(body.publicCode, "裁判员编号", 32),
       name: readShortText(body.name, "姓名", 48),
+      studentId: readShortText(body.studentId, "学号", 32, false),
+      collegeId: readShortText(body.collegeId, "学院", 64, false),
+      grade: readShortText(body.grade, "年级", 32, false),
+      phone: readShortText(body.phone, "手机号", 32, false),
+      qq: readShortText(body.qq, "QQ", 32, false),
+      refereeLevel: readShortText(body.refereeLevel, "裁判等级", 80, false),
+      joinedAt: readDate(body.joinedAt, "加入日期", false),
       initialPassword: readShortText(body.initialPassword, "初始密码", 256),
       status: readEnum(
         body.status,
@@ -42,7 +53,8 @@ export async function POST(request: Request) {
       publicDirectoryEnabled: readBoolean(body.publicDirectoryEnabled, "公开名录授权"),
       publicBio: readShortText(body.publicBio, "公开简介", 300, false),
       internalNote: readShortText(body.internalNote, "内部备注", 500, false),
-    });
+      capabilities: body.capabilities === undefined ? undefined : readCapabilities(body.capabilities),
+    }, actor);
     return NextResponse.json({ ok: true, refereeId: referee.id }, { status: 201 });
   } catch (error) {
     const status = error instanceof RefereeServiceError ? error.status : 400;

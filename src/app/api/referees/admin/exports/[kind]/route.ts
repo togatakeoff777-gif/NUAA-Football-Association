@@ -31,7 +31,18 @@ export async function GET(
   const url = new URL(request.url);
 
   if (kind === "referees") {
-    const referees = await prisma.referee.findMany({ orderBy: { publicCode: "asc" } });
+    const referees = await prisma.referee.findMany({
+      select: {
+        publicCode: true,
+        name: true,
+        status: true,
+        elevenASide: true,
+        futsal: true,
+        trainingStatus: true,
+        publicDirectoryEnabled: true,
+      },
+      orderBy: { publicCode: "asc" },
+    });
     return csvResponse("referees.csv", [
       ["裁判员编号", "姓名", "账号状态", "十一人制", "五人制", "培训状态", "公开名录授权"],
       ...referees.map((item) => [
@@ -53,7 +64,13 @@ export async function GET(
   if (kind === "applications") {
     const applications = await prisma.refereeApplication.findMany({
       where: { matchId },
-      include: { referee: true },
+      select: {
+        status: true,
+        preferredPositions: true,
+        note: true,
+        createdAt: true,
+        referee: { select: { publicCode: true, name: true } },
+      },
       orderBy: { createdAt: "asc" },
     });
     return csvResponse("match-applications.csv", [
@@ -71,10 +88,21 @@ export async function GET(
   if (kind === "appointments") {
     const appointment = await prisma.refereeAppointment.findUnique({
       where: { matchId },
-      include: {
-        match: { include: { competition: true, homeTeam: true, awayTeam: true } },
+      select: {
+        status: true,
+        match: {
+          select: {
+            competition: { select: { name: true } },
+            homeTeam: { select: { name: true } },
+            awayTeam: { select: { name: true } },
+          },
+        },
         positions: {
-          include: { referee: true },
+          select: {
+            label: true,
+            slot: true,
+            referee: { select: { publicCode: true, name: true } },
+          },
           orderBy: [{ sortOrder: "asc" }, { slot: "asc" }],
         },
       },

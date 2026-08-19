@@ -1,4 +1,4 @@
-import type { AppointmentPositionKey, CompetitionFormat } from "@/generated/prisma/client";
+import type { AppointmentPositionKey, CompetitionFormat } from "@/generated/prisma-v29/client";
 
 export type PositionDefinition = { key: AppointmentPositionKey; label: string; order: number };
 
@@ -15,7 +15,6 @@ export const positionTemplates: Record<CompetitionFormat, readonly PositionDefin
     { key: "SECOND_REFEREE", label: "第二裁判员", order: 2 },
     { key: "THIRD_REFEREE", label: "第三裁判员", order: 3 },
     { key: "TIMEKEEPER", label: "计时员", order: 4 },
-    { key: "FOURTH_REFEREE", label: "第四裁判员", order: 5 },
   ],
 };
 

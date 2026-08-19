@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getAdminSession, isSameOrigin } from "@/lib/referee-auth";
+import { getAdminActor, getAdminSession, isSameOrigin } from "@/lib/referee-auth";
 import { prisma } from "@/lib/prisma";
 import {
   createMatch,
@@ -20,10 +20,11 @@ async function authorize(request: Request) {
   if (!isSameOrigin(request)) {
     return NextResponse.json({ error: "请求来源无效。" }, { status: 403 });
   }
-  if (!(await getAdminSession())) {
+  const session = await getAdminSession();
+  if (!session) {
     return NextResponse.json({ error: "请先登录管理员后台。" }, { status: 401 });
   }
-  return null;
+  return getAdminActor(session)!;
 }
 
 function counts(value: unknown) {
@@ -42,7 +43,11 @@ function inputFromBody(body: Record<string, unknown>) {
     competitionId: readShortText(body.competitionId, "赛事", 64),
     stage: readShortText(body.stage, "比赛名称或轮次", 80),
     kickoff: readDate(body.kickoff, "比赛时间")!,
+    endAt: readDate(body.endAt, "比赛结束时间", false),
     venue: readShortText(body.venue, "比赛场地", 120),
+    round: readShortText(body.round, "轮次", 80, false),
+    source: readEnum(body.source ?? "MANUAL", ["MANUAL", "FOOTBALL_CHINA"] as const, "数据来源"),
+    externalMatchId: readShortText(body.externalMatchId, "外部比赛 ID", 120, false),
     homeTeamId: readShortText(body.homeTeamId, "主队", 64),
     awayTeamId: readShortText(body.awayTeamId, "客队", 64),
     status: readEnum(
@@ -67,13 +72,13 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const denied = await authorize(request);
-  if (denied) return denied;
+  const authorization = await authorize(request);
+  if (authorization instanceof Response) return authorization;
   try {
     const body: unknown = await request.json();
     if (!isRecord(body)) throw new Error("场次内容格式不正确。");
     const { id } = await context.params;
-    await updateMatch(id, inputFromBody(body));
+    await updateMatch(id, inputFromBody(body), authorization);
     return NextResponse.json({ ok: true });
   } catch (error) {
     const status = error instanceof RefereeServiceError ? error.status : 400;
@@ -88,8 +93,8 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const denied = await authorize(request);
-  if (denied) return denied;
+  const authorization = await authorize(request);
+  if (authorization instanceof Response) return authorization;
   try {
     const body: unknown = await request.json();
     if (!isRecord(body) || body.action !== "copy") throw new Error("操作格式不正确。");
@@ -104,7 +109,10 @@ export async function POST(
       competitionId: source.competitionId,
       stage: readShortText(body.stage, "新比赛名称或轮次", 80),
       kickoff: readDate(body.kickoff, "新比赛时间")!,
+      endAt: source.endAt ?? undefined,
       venue: source.venue,
+      round: source.round ?? undefined,
+      source: "MANUAL",
       homeTeamId: source.homeTeamId,
       awayTeamId: source.awayTeamId,
       status: "SCHEDULED",
@@ -114,7 +122,7 @@ export async function POST(
       positionCounts: Object.fromEntries(
         source.positionRequirements.map((item) => [item.key, item.count]),
       ),
-    });
+    }, authorization);
     return NextResponse.json({ ok: true, matchId: copied.id }, { status: 201 });
   } catch (error) {
     const status = error instanceof RefereeServiceError ? error.status : 400;

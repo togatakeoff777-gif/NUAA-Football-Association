@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getAdminSession, isSameOrigin } from "@/lib/referee-auth";
+import { getAdminActor, getAdminSession, isSameOrigin } from "@/lib/referee-auth";
 import { createMatch, RefereeServiceError } from "@/lib/referee-service";
 import {
   isRecord,
@@ -25,9 +25,11 @@ export async function POST(request: Request) {
   if (!isSameOrigin(request)) {
     return NextResponse.json({ error: "请求来源无效。" }, { status: 403 });
   }
-  if (!(await getAdminSession())) {
+  const session = await getAdminSession();
+  if (!session) {
     return NextResponse.json({ error: "请先登录管理员后台。" }, { status: 401 });
   }
+  const actor = getAdminActor(session)!;
   try {
     const body: unknown = await request.json();
     if (!isRecord(body)) throw new Error("场次内容格式不正确。");
@@ -36,7 +38,11 @@ export async function POST(request: Request) {
       competitionId: readShortText(body.competitionId, "赛事", 64),
       stage: readShortText(body.stage, "比赛名称或轮次", 80),
       kickoff: readDate(body.kickoff, "比赛时间")!,
+      endAt: readDate(body.endAt, "比赛结束时间", false),
       venue: readShortText(body.venue, "比赛场地", 120),
+      round: readShortText(body.round, "轮次", 80, false),
+      source: readEnum(body.source ?? "MANUAL", ["MANUAL", "FOOTBALL_CHINA"] as const, "数据来源"),
+      externalMatchId: readShortText(body.externalMatchId, "外部比赛 ID", 120, false),
       homeTeamId: readShortText(body.homeTeamId, "主队", 64),
       awayTeamId: readShortText(body.awayTeamId, "客队", 64),
       status: readEnum(
@@ -53,7 +59,7 @@ export async function POST(request: Request) {
       publicNote: readShortText(body.publicNote, "公开说明", 500, false),
       internalNote: readShortText(body.internalNote, "内部备注", 500, false),
       positionCounts: readPositionCounts(body.positionCounts),
-    });
+    }, actor);
     return NextResponse.json({ ok: true, matchId: match.id }, { status: 201 });
   } catch (error) {
     const status = error instanceof RefereeServiceError ? error.status : 400;

@@ -6,6 +6,25 @@ export async function verifyAdminCredentials(password: string) {
   return Boolean(passwordHash && await verifyPassword(password, passwordHash));
 }
 
+export async function authenticateAdminCredentials(username: string, password: string) {
+  const normalizedUsername = username.trim().toLowerCase();
+  if (!normalizedUsername) return null;
+  const account = await prisma.adminAccount.findUnique({
+    where: { username: normalizedUsername },
+    select: {
+      id: true,
+      username: true,
+      displayName: true,
+      passwordHash: true,
+      role: true,
+      isActive: true,
+      mustChangePassword: true,
+    },
+  });
+  if (!account?.isActive || !(await verifyPassword(password, account.passwordHash))) return null;
+  return account;
+}
+
 export async function authenticateRefereeCredentials(
   publicCode: string,
   password: string,

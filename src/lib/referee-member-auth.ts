@@ -4,6 +4,7 @@ import { createHmac, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 
 import { prisma } from "@/lib/prisma";
+import { selfRefereeSelect } from "@/lib/referee-dto";
 import { authenticateRefereeCredentials } from "@/lib/referee-credentials";
 import { isSessionFresh } from "@/lib/referee-security";
 
@@ -60,18 +61,7 @@ export async function getRefereeMemberSession() {
   const session = await prisma.refereeSession.findUnique({
     where: { tokenHash: hashToken(token, secret) },
     include: {
-      referee: {
-        select: {
-          id: true,
-          publicCode: true,
-          name: true,
-          status: true,
-          elevenASide: true,
-          futsal: true,
-          mustChangePassword: true,
-          trainingStatus: true,
-        },
-      },
+      referee: { select: selfRefereeSelect },
     },
   });
   if (!session || !isSessionFresh(session.expiresAt) || session.referee.status !== "ACTIVE") {

@@ -475,7 +475,7 @@ async function main() {
     assert(rateLimited, "登录失败频率限制未生效。");
     await security.clearLoginFailures("referee", loginKey);
 
-    await sourceContains("src/app/referees/admin/page.tsx", ["getAdminSession", "redirect"]);
+    await sourceContains("src/app/referees/admin/(dashboard)/layout.tsx", ["getAdminSession", "redirect"]);
     await sourceContains("src/app/referees/workspace/page.tsx", ["getRefereeMemberSession", "redirect"]);
     await sourceContains("src/app/api/referees/admin/exports/[kind]/route.ts", ["getAdminSession"]);
     await sourceContains("src/app/api/referees/admin/logout/route.ts", ["destroyAdminSession"]);

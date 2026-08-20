@@ -102,6 +102,38 @@ async function main() {
         ),
         "开发环境本地同源请求被错误拒绝。",
       );
+      assert(
+        auth.isSameOrigin(
+          originRequest("http://127.0.0.1:3000/api/referees/login", "http://localhost:3100"),
+        ) && auth.isSameOrigin(
+          originRequest("http://localhost:3100/api/referees/login", "http://127.0.0.1:4173"),
+        ),
+        "开发环境未支持 localhost / 127.0.0.1 的可变本机端口。",
+      );
+      assert(
+        auth.isSameOrigin(originRequest("http://localhost:3100/api/referees/login")),
+        "开发环境本机无 Origin 的工具请求被错误拒绝。",
+      );
+      assert(
+        !auth.isSameOrigin(
+          originRequest("http://localhost:3100/api/referees/login", "https://evil.example"),
+        ) && !auth.isSameOrigin(
+          originRequest("https://evil.example/api/referees/login", "https://evil.example"),
+        ) && !auth.isSameOrigin(
+          originRequest("http://localhost:3100/api/referees/login", "https://localhost:3100"),
+        ),
+        "开发环境错误接受了非 HTTP 本机来源或外部来源。",
+      );
+
+      mutableEnvironment.NODE_ENV = "test";
+      assert(
+        auth.isSameOrigin(
+          originRequest("http://127.0.0.1:3200/api/referees/login", "http://localhost:5400"),
+        ) && !auth.isSameOrigin(
+          originRequest("http://127.0.0.1:3200/api/referees/login", "http://external.test:5400"),
+        ),
+        "测试环境的本机来源策略不正确。",
+      );
     } finally {
       if (originalNodeEnvironment === undefined) delete mutableEnvironment.NODE_ENV;
       else mutableEnvironment.NODE_ENV = originalNodeEnvironment;

@@ -115,9 +115,21 @@ export async function destroyAdminSession() {
   cookieStore.delete(sessionCookieName);
 }
 
+function isLocalDevelopmentUrl(value: URL) {
+  return value.protocol === "http:"
+    && (value.hostname === "localhost" || value.hostname === "127.0.0.1");
+}
+
 export function isSameOrigin(request: Request) {
   const origin = request.headers.get("origin");
-  if (!origin) return process.env.NODE_ENV !== "production";
+  if (!origin) {
+    if (process.env.NODE_ENV === "production") return false;
+    try {
+      return isLocalDevelopmentUrl(new URL(request.url));
+    } catch {
+      return false;
+    }
+  }
 
   try {
     const parsedOrigin = new URL(origin);
@@ -136,7 +148,11 @@ export function isSameOrigin(request: Request) {
     if (process.env.NODE_ENV === "production") {
       return normalizedOrigin === new URL(SITE_ORIGIN).origin;
     }
-    return normalizedOrigin === new URL(request.url).origin;
+
+    // Development and test traffic is limited to the local loopback hosts,
+    // while allowing the browser-facing and internal dev-server ports to differ.
+    return isLocalDevelopmentUrl(parsedOrigin)
+      && isLocalDevelopmentUrl(new URL(request.url));
   } catch {
     return false;
   }

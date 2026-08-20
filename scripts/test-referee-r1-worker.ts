@@ -60,6 +60,7 @@ async function main() {
   `);
 
   await applyMigration(raw, "20260819120000_referee_admin_r1");
+  await applyMigration(raw, "20260820120000_referee_business_model_fix2");
   raw.close();
 
   const verifier = new PrismaClient({ adapter: new PrismaLibSql({ url }) });

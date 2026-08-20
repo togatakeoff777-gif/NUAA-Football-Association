@@ -79,6 +79,12 @@ export function readCapabilities(value: unknown) {
     return {
       format: readEnum(item.format, ["ELEVEN_A_SIDE", "FUTSAL"] as const, "比赛制式"),
       positionKey: readEnum(item.positionKey, positionKeys, "岗位能力"),
+      status: readEnum(item.status ?? "READY", ["NOT_ASSIGNED", "TRAINING", "READY"] as const, "岗位培养状态"),
     };
   });
+}
+
+export function readShortTextArray(value: unknown, label: string, maxLength = 64, maximumItems = 100) {
+  if (!Array.isArray(value) || value.length > maximumItems) throw new Error(`${label}格式不正确。`);
+  return [...new Set(value.map((item) => readShortText(item, label, maxLength)))];
 }

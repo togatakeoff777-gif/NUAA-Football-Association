@@ -6,6 +6,7 @@ import type {
   CompetitionFormat,
   DataSource,
   MatchStatus,
+  PositionCapabilityStatus,
   Prisma,
   RefereeStatus,
   TrainingStatus,
@@ -17,6 +18,7 @@ import {
   warningsRequiringOverride,
 } from "@/lib/referee-conflicts";
 import { getPositionTemplate } from "@/lib/referee-roles";
+import { isRefereeQualification, normalizeRefereeQualification } from "@/lib/referee-qualifications";
 import { hashPassword, verifyPassword } from "@/lib/referee-security";
 
 export class RefereeServiceError extends Error {
@@ -66,6 +68,7 @@ export async function createRefereeAccount(input: {
   elevenASide: boolean;
   futsal: boolean;
   certificateNote?: string;
+  qualificationNote?: string;
   trainingStatus: TrainingStatus;
   publicDirectoryEnabled: boolean;
   publicBio?: string;
@@ -77,12 +80,17 @@ export async function createRefereeAccount(input: {
   qq?: string;
   refereeLevel?: string;
   joinedAt?: Date;
-  capabilities?: Array<{ format: CompetitionFormat; positionKey: AppointmentPositionKey }>;
+  affiliationUnitIds?: string[];
+  capabilities?: Array<{ format: CompetitionFormat; positionKey: AppointmentPositionKey; status?: PositionCapabilityStatus }>;
 }, actor?: AdminActor) {
   const passwordHash = await hashPassword(input.initialPassword);
   const capabilities = normalizeCapabilities(input);
+  if (input.refereeLevel && !isRefereeQualification(input.refereeLevel)) {
+    throw new RefereeServiceError("裁判资质不在允许范围内。");
+  }
   try {
     return await prisma.$transaction(async (tx) => {
+      const affiliationUnitIds = await resolveRefereeAffiliationUnitIds(tx, input.collegeId, input.affiliationUnitIds);
       const referee = await tx.referee.create({
         data: {
           publicCode: input.publicCode,
@@ -95,16 +103,18 @@ export async function createRefereeAccount(input: {
           grade: input.grade || null,
           phone: input.phone || null,
           qq: input.qq || null,
-          refereeLevel: input.refereeLevel || null,
+          refereeLevel: normalizeRefereeQualification(input.refereeLevel),
           joinedAt: input.joinedAt ?? null,
-          elevenASide: capabilities.some((item) => item.format === "ELEVEN_A_SIDE"),
-          futsal: capabilities.some((item) => item.format === "FUTSAL"),
+          elevenASide: capabilities.some((item) => item.format === "ELEVEN_A_SIDE" && item.status !== "NOT_ASSIGNED"),
+          futsal: capabilities.some((item) => item.format === "FUTSAL" && item.status !== "NOT_ASSIGNED"),
           certificateNote: input.certificateNote || null,
+          qualificationNote: input.qualificationNote || null,
           trainingStatus: input.trainingStatus,
           publicDirectoryEnabled: input.publicDirectoryEnabled,
           publicBio: input.publicBio || null,
           internalNote: input.internalNote || null,
           capabilities: { create: capabilities },
+          affiliations: { create: affiliationUnitIds.map((unitId) => ({ unitId })) },
         },
       });
       await writeAudit({
@@ -133,6 +143,7 @@ export async function updateRefereeAccount(
     elevenASide: boolean;
     futsal: boolean;
     certificateNote?: string;
+    qualificationNote?: string;
     trainingStatus: TrainingStatus;
     publicDirectoryEnabled: boolean;
     publicBio?: string;
@@ -144,17 +155,23 @@ export async function updateRefereeAccount(
     qq?: string;
     refereeLevel?: string;
     joinedAt?: Date;
-    capabilities?: Array<{ format: CompetitionFormat; positionKey: AppointmentPositionKey }>;
+    affiliationUnitIds?: string[];
+    capabilities?: Array<{ format: CompetitionFormat; positionKey: AppointmentPositionKey; status?: PositionCapabilityStatus }>;
   },
   actor?: AdminActor,
 ) {
   const existing = await prisma.referee.findUnique({ where: { id } });
   if (!existing) throw new RefereeServiceError("裁判员账号不存在。", 404);
   const capabilities = normalizeCapabilities(input);
+  if (input.refereeLevel && !isRefereeQualification(input.refereeLevel)) {
+    throw new RefereeServiceError("裁判资质不在允许范围内。");
+  }
   let referee;
   try {
     referee = await prisma.$transaction(async (tx) => {
+      const affiliationUnitIds = await resolveRefereeAffiliationUnitIds(tx, input.collegeId, input.affiliationUnitIds, id);
       await tx.refereePositionCapability.deleteMany({ where: { refereeId: id } });
+      await tx.refereeAffiliation.deleteMany({ where: { refereeId: id } });
       const updated = await tx.referee.update({
         where: { id },
         data: {
@@ -166,16 +183,18 @@ export async function updateRefereeAccount(
           grade: input.grade || null,
           phone: input.phone || null,
           qq: input.qq || null,
-          refereeLevel: input.refereeLevel || null,
+          refereeLevel: normalizeRefereeQualification(input.refereeLevel),
           joinedAt: input.joinedAt ?? null,
-          elevenASide: capabilities.some((item) => item.format === "ELEVEN_A_SIDE"),
-          futsal: capabilities.some((item) => item.format === "FUTSAL"),
+          elevenASide: capabilities.some((item) => item.format === "ELEVEN_A_SIDE" && item.status !== "NOT_ASSIGNED"),
+          futsal: capabilities.some((item) => item.format === "FUTSAL" && item.status !== "NOT_ASSIGNED"),
           certificateNote: input.certificateNote || null,
+          qualificationNote: input.qualificationNote || null,
           trainingStatus: input.trainingStatus,
           publicDirectoryEnabled: input.publicDirectoryEnabled,
           publicBio: input.publicBio || null,
           internalNote: input.internalNote || null,
           capabilities: { create: capabilities },
+          affiliations: { create: affiliationUnitIds.map((unitId) => ({ unitId })) },
           ...(input.status === "ACTIVE" ? {} : { sessions: { deleteMany: {} } }),
         },
       });
@@ -200,14 +219,14 @@ export async function updateRefereeAccount(
 function normalizeCapabilities(input: {
   elevenASide: boolean;
   futsal: boolean;
-  capabilities?: Array<{ format: CompetitionFormat; positionKey: AppointmentPositionKey }>;
+  capabilities?: Array<{ format: CompetitionFormat; positionKey: AppointmentPositionKey; status?: PositionCapabilityStatus }>;
 }) {
   const source = input.capabilities ?? [
     ...(input.elevenASide
-      ? getPositionTemplate("ELEVEN_A_SIDE").map((item) => ({ format: "ELEVEN_A_SIDE" as const, positionKey: item.key }))
+      ? getPositionTemplate("ELEVEN_A_SIDE").map((item) => ({ format: "ELEVEN_A_SIDE" as const, positionKey: item.key, status: "READY" as const }))
       : []),
     ...(input.futsal
-      ? getPositionTemplate("FUTSAL").map((item) => ({ format: "FUTSAL" as const, positionKey: item.key }))
+      ? getPositionTemplate("FUTSAL").map((item) => ({ format: "FUTSAL" as const, positionKey: item.key, status: "READY" as const }))
       : []),
   ];
   const allowed = new Set([
@@ -219,7 +238,29 @@ function normalizeCapabilities(input: {
       allowed.has(`${item.format}:${item.positionKey}`) &&
       all.findIndex((candidate) =>
         candidate.format === item.format && candidate.positionKey === item.positionKey) === index,
-  );
+  ).map((item) => ({ ...item, status: item.status ?? "READY" }));
+}
+
+async function resolveRefereeAffiliationUnitIds(
+  tx: Prisma.TransactionClient,
+  collegeId?: string,
+  requestedIds?: string[],
+  refereeId?: string,
+) {
+  let ids = requestedIds ? [...new Set(requestedIds)] : [];
+  if (!requestedIds && refereeId) {
+    const existing = await tx.refereeAffiliation.findMany({
+      where: { refereeId, unit: { type: "SHUYUAN" } },
+      select: { unitId: true },
+    });
+    ids = existing.map((item) => item.unitId);
+  }
+  if (collegeId) ids.push(collegeId);
+  ids = [...new Set(ids)];
+  if (!ids.length) return ids;
+  const count = await tx.affiliationUnit.count({ where: { id: { in: ids } } });
+  if (count !== ids.length) throw new RefereeServiceError("裁判员组织归属包含无效单位。");
+  return ids;
 }
 
 export async function resetRefereePassword(id: string, initialPassword: string) {
@@ -432,12 +473,12 @@ function refereeSupportsFormat(
   referee: {
     elevenASide: boolean;
     futsal: boolean;
-    capabilities: Array<{ format: CompetitionFormat }>;
+    capabilities: Array<{ format: CompetitionFormat; status?: PositionCapabilityStatus }>;
   },
   format: CompetitionFormat,
 ) {
   if (referee.capabilities.length) {
-    return referee.capabilities.some((item) => item.format === format);
+    return referee.capabilities.some((item) => item.format === format && item.status !== "NOT_ASSIGNED");
   }
   return format === "ELEVEN_A_SIDE" ? referee.elevenASide : referee.futsal;
 }
@@ -671,24 +712,9 @@ export async function saveAppointmentDraft(input: {
     if (refereeIds.length) {
       const referees = await tx.referee.findMany({
         where: { id: { in: refereeIds }, status: "ACTIVE" },
-        include: { capabilities: true },
       });
       if (referees.length !== refereeIds.length) {
         throw new RefereeServiceError("岗位中包含无效或已停用裁判员。");
-      }
-      const refereeById = new Map(referees.map((referee) => [referee.id, referee]));
-      const incompatible = normalized.some((position) => {
-        if (!position.refereeId) return false;
-        const referee = refereeById.get(position.refereeId);
-        if (!referee || !refereeSupportsFormat(referee, match.competition.format)) return true;
-        return referee.capabilities.length > 0 && !referee.capabilities.some(
-          (capability) =>
-            capability.format === match.competition.format &&
-            capability.positionKey === position.key,
-        );
-      });
-      if (incompatible) {
-        throw new RefereeServiceError("岗位中包含未登记对应赛制或岗位能力的人员。", 409);
       }
     }
 

@@ -4,8 +4,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { refereeStatusLabels, trainingStatusLabels } from "@/components/referees/admin/admin-ui";
+import { refereeQualifications } from "@/lib/referee-qualifications";
 
 export type CollegeOption = { id: string; name: string };
+export type AffiliationUnitOption = { id: string; name: string; type: "COLLEGE" | "SHUYUAN" };
 export type AdminRefereeRecord = {
   id: string;
   publicCode: string;
@@ -21,12 +23,14 @@ export type AdminRefereeRecord = {
   elevenASide: boolean;
   futsal: boolean;
   certificateNote: string;
+  qualificationNote: string;
   trainingStatus: string;
   publicDirectoryEnabled: boolean;
   publicBio: string;
   internalNote: string;
   mustChangePassword: boolean;
   capabilities: string[];
+  affiliationUnitIds: string[];
 };
 
 const capabilities = {
@@ -41,6 +45,7 @@ const capabilities = {
     ["REFEREE", "裁判员"],
     ["SECOND_REFEREE", "第二裁判员"],
     ["THIRD_REFEREE", "第三裁判员"],
+    ["FOURTH_REFEREE", "第四裁判员"],
     ["TIMEKEEPER", "计时员"],
   ],
 } as const;
@@ -51,8 +56,8 @@ function text(form: FormData, key: string) {
 
 function capabilityPayload(form: FormData) {
   return form.getAll("capability").map((value) => {
-    const [format, positionKey] = String(value).split(":");
-    return { format, positionKey };
+    const [format, positionKey, status] = String(value).split(":");
+    return { format, positionKey, status };
   });
 }
 
@@ -63,17 +68,19 @@ function fullPayload(form: FormData) {
     studentId: text(form, "studentId"), collegeId: text(form, "collegeId"), grade: text(form, "grade"),
     phone: text(form, "phone"), qq: text(form, "qq"), refereeLevel: text(form, "refereeLevel"),
     joinedAt: text(form, "joinedAt"), initialPassword: text(form, "initialPassword"), status: text(form, "status"),
-    elevenASide: selectedCapabilities.some((item) => item.format === "ELEVEN_A_SIDE"),
-    futsal: selectedCapabilities.some((item) => item.format === "FUTSAL"),
-    certificateNote: text(form, "certificateNote"), trainingStatus: text(form, "trainingStatus"),
+    elevenASide: selectedCapabilities.some((item) => item.format === "ELEVEN_A_SIDE" && item.status !== "NOT_ASSIGNED"),
+    futsal: selectedCapabilities.some((item) => item.format === "FUTSAL" && item.status !== "NOT_ASSIGNED"),
+    certificateNote: text(form, "certificateNote"), qualificationNote: text(form, "qualificationNote"), trainingStatus: text(form, "trainingStatus"),
     publicDirectoryEnabled: form.get("publicDirectoryEnabled") === "on",
     publicBio: text(form, "publicBio"), internalNote: text(form, "internalNote"),
     capabilities: selectedCapabilities,
+    affiliationUnitIds: form.getAll("affiliationUnitIds"),
   };
 }
 
 function CapabilityGroups({ selected }: { selected: string[] }) {
-  return <div className="admin-checkbox-groups">{Object.entries(capabilities).map(([format, items]) => <section className="admin-checkbox-group" key={format}><strong>{format === "ELEVEN_A_SIDE" ? "十一人制" : "五人制"}</strong><div className="admin-checkbox-list">{items.map(([key, label]) => { const value = `${format}:${key}`; return <label key={value}><input defaultChecked={selected.includes(value)} name="capability" type="checkbox" value={value} /><span>{label}</span></label>; })}</div></section>)}</div>;
+  const statusFor = (format: string, key: string) => selected.find((value) => value.startsWith(`${format}:${key}:`))?.split(":")[2] ?? "NOT_ASSIGNED";
+  return <div className="admin-capability-groups">{Object.entries(capabilities).map(([format, items]) => <section className="admin-capability-group" key={format}><strong>{format === "ELEVEN_A_SIDE" ? "十一人制" : "五人制"}</strong><div>{items.map(([key, label]) => <label className="admin-capability-row" key={`${format}:${key}`}><span>{label}</span><select defaultValue={`${format}:${key}:${statusFor(format, key)}`} name="capability"><option value={`${format}:${key}:NOT_ASSIGNED`}>暂不安排</option><option value={`${format}:${key}:TRAINING`}>培养中</option><option value={`${format}:${key}:READY`}>可正式选派</option></select></label>)}</div></section>)}</div>;
 }
 
 export function RefereeCreateForm({ colleges }: { colleges: CollegeOption[] }) {
@@ -89,9 +96,9 @@ export function RefereeCreateForm({ colleges }: { colleges: CollegeOption[] }) {
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({
         publicCode: text(form, "publicCode"), name: text(form, "name"), studentId: text(form, "studentId"),
-        collegeId: text(form, "collegeId"), grade: "", phone: "", qq: "", refereeLevel: "", joinedAt: "",
+        collegeId: text(form, "collegeId"), grade: "", phone: "", qq: "", refereeLevel: refereeQualifications[0], joinedAt: "",
         initialPassword: text(form, "initialPassword"), status: text(form, "status"), elevenASide: false, futsal: false,
-        certificateNote: "", trainingStatus: "NOT_STARTED", publicDirectoryEnabled: false,
+        certificateNote: "", qualificationNote: "", trainingStatus: "NOT_STARTED", publicDirectoryEnabled: false,
         publicBio: "", internalNote: "", capabilities: [],
       }),
     });
@@ -121,7 +128,7 @@ const tabs = [
   ["public", "公开资料"], ["internal", "内部备注"],
 ] as const;
 
-export function RefereeEditForm({ account, colleges }: { account: AdminRefereeRecord; colleges: CollegeOption[] }) {
+export function RefereeEditForm({ account, colleges, affiliationUnits }: { account: AdminRefereeRecord; colleges: CollegeOption[]; affiliationUnits: AffiliationUnitOption[] }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number][0]>("profile");
   const [message, setMessage] = useState("");
@@ -156,18 +163,20 @@ export function RefereeEditForm({ account, colleges }: { account: AdminRefereeRe
         <label><span>裁判员编号</span><input defaultValue={account.publicCode} name="publicCode" required /></label>
         <label><span>学号</span><input defaultValue={account.studentId} name="studentId" /></label>
         <label><span>学院</span><select defaultValue={account.collegeId} name="collegeId"><option value="">待确认</option>{colleges.map((college) => <option key={college.id} value={college.id}>{college.name}</option>)}</select></label>
+        <label><span>直接书院归属</span><select defaultValue={account.affiliationUnitIds.filter((id) => affiliationUnits.some((unit) => unit.id === id && unit.type === "SHUYUAN"))} multiple name="affiliationUnitIds">{affiliationUnits.filter((unit) => unit.type === "SHUYUAN").map((unit) => <option key={unit.id} value={unit.id}>{unit.name}</option>)}</select><small>仅记录管理员确认的直接归属，不会根据学院自动推断。</small></label>
         <label><span>年级</span><input defaultValue={account.grade} name="grade" /></label>
         <label><span>手机号</span><input defaultValue={account.phone} name="phone" /></label>
         <label><span>QQ</span><input defaultValue={account.qq} name="qq" /></label>
         <label><span>账号状态</span><select defaultValue={account.status} name="status">{Object.entries(refereeStatusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
       </div></section>
-      <section className="admin-form-section" hidden={activeTab !== "qualification"}><header><h2>裁判资质</h2><p>等级、加入时间、培训与证书登记。</p></header><div className="admin-form-grid">
-        <label><span>裁判等级</span><input defaultValue={account.refereeLevel} name="refereeLevel" /></label>
+      <section className="admin-form-section" hidden={activeTab !== "qualification"}><header><h2>裁判资质</h2><p>正式裁判资质、协会培训状态和岗位培养能力分别维护，互不替代。</p></header><div className="admin-form-grid">
+        <label><span>裁判资质</span><select defaultValue={account.refereeLevel || refereeQualifications[0]} name="refereeLevel">{refereeQualifications.map((qualification) => <option key={qualification} value={qualification}>{qualification}</option>)}</select></label>
         <label><span>加入日期</span><input defaultValue={account.joinedAt} name="joinedAt" type="date" /></label>
         <label><span>培训状态</span><select defaultValue={account.trainingStatus} name="trainingStatus">{Object.entries(trainingStatusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-        <label><span>证书或登记说明</span><input defaultValue={account.certificateNote} name="certificateNote" /></label>
+        <label><span>证书 / 登记编号</span><input defaultValue={account.certificateNote} name="certificateNote" /></label>
+        <label className="admin-form-span-2"><span>资质备注</span><textarea defaultValue={account.qualificationNote} maxLength={500} name="qualificationNote" /></label>
       </div></section>
-      <section className="admin-form-section" hidden={activeTab !== "capabilities"}><header><h2>岗位能力</h2><p>按比赛制式登记可承担的系统岗位。</p></header><CapabilityGroups selected={account.capabilities} /></section>
+      <section className="admin-form-section" hidden={activeTab !== "capabilities"}><header><h2>岗位培养状态</h2><p>按比赛制式和具体岗位记录培养进度；状态不由正式裁判资质自动决定。</p></header><CapabilityGroups selected={account.capabilities} /></section>
       <section className="admin-form-section" hidden={activeTab !== "public"}><header><h2>公开资料</h2><p>只有明确授权的字段会进入公共裁判名录。</p></header><label className="admin-inline-check"><input defaultChecked={account.publicDirectoryEnabled} name="publicDirectoryEnabled" type="checkbox" />允许进入公开名录</label><label><span>公开简介</span><textarea defaultValue={account.publicBio} maxLength={300} name="publicBio" /></label></section>
       <section className="admin-form-section" hidden={activeTab !== "internal"}><header><h2>内部备注</h2><p>不通过公共 DTO 返回。</p></header><label><span>内部备注</span><textarea defaultValue={account.internalNote} maxLength={500} name="internalNote" /></label></section>
       <p aria-live="polite" className="admin-form-message">{message}</p>

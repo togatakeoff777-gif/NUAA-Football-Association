@@ -429,13 +429,9 @@ async function main() {
       publicationNote: "",
       positions: [{ key: "REFEREE", slot: 1, refereeId: referees[0].id }],
     });
-    const adjacentWarning = adjacentResult.warnings.find(
-      (warning) => warning.code === "ADJACENT_MATCH",
-    );
-    assert(adjacentWarning, "相邻比赛未返回结构化提醒。");
     assert(
-      adjacentWarning.details.gapMinutes === 60 && !adjacentWarning.overridable,
-      "相邻比赛未按实际间隔提示，或仍被错误视为硬性冲突。",
+      !adjacentResult.warnings.some((warning) => warning.code === "ADJACENT_MATCH"),
+      "缺少计划结束时间时错误推测了比赛间隔。",
     );
 
     const publicDirectory = await publicQueries.getPublicRefereeDirectory();
@@ -589,7 +585,7 @@ async function main() {
       positionOverageBlocked: overageBlocked,
       publishWithdrawRepublish: true,
       versionHistoryRetained: true,
-      adjacentMatchWarning: true,
+      missingEndNotInferred: true,
       disabledAccountBlocked: disabledApplicationBlocked,
       loginRateLimited: rateLimited,
       csvAuthorizationGuard: true,

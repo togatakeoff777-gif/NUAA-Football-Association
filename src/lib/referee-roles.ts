@@ -1,4 +1,4 @@
-import type { AppointmentPositionKey, CompetitionFormat } from "@/generated/prisma-v29/client";
+import type { AppointmentPositionKey, CompetitionFormat, PositionCapabilityStatus } from "@/generated/prisma-v29/client";
 
 export type PositionDefinition = { key: AppointmentPositionKey; label: string; order: number };
 
@@ -14,7 +14,8 @@ export const positionTemplates: Record<CompetitionFormat, readonly PositionDefin
     { key: "REFEREE", label: "裁判员", order: 1 },
     { key: "SECOND_REFEREE", label: "第二裁判员", order: 2 },
     { key: "THIRD_REFEREE", label: "第三裁判员", order: 3 },
-    { key: "TIMEKEEPER", label: "计时员", order: 4 },
+    { key: "FOURTH_REFEREE", label: "第四裁判员", order: 4 },
+    { key: "TIMEKEEPER", label: "计时员", order: 5 },
   ],
 };
 
@@ -26,3 +27,9 @@ export const formatLabels: Record<CompetitionFormat, string> = {
 export function getPositionTemplate(format: CompetitionFormat) {
   return positionTemplates[format];
 }
+
+export const capabilityStatusLabels: Record<PositionCapabilityStatus, string> = {
+  NOT_ASSIGNED: "暂不安排",
+  TRAINING: "培养中",
+  READY: "可正式选派",
+};

@@ -66,6 +66,23 @@ enum DataSource {
   FOOTBALL_CHINA
 }
 
+enum AffiliationUnitType {
+  COLLEGE
+  SHUYUAN
+}
+
+enum TeamType {
+  ORGANIZATION
+  JOINT
+  FREEFORM
+}
+
+enum PositionCapabilityStatus {
+  NOT_ASSIGNED
+  TRAINING
+  READY
+}
+
 enum AvailabilityKind {
   AVAILABLE
   UNAVAILABLE
@@ -115,15 +132,21 @@ model Competition {
 }
 
 model Team {
-  id            String            @id @default(cuid())
-  competitionId String
-  name          String
-  competition   Competition       @relation(fields: [competitionId], references: [id], onDelete: Cascade)
-  homeMatches   Match[]           @relation("HomeTeam")
-  awayMatches   Match[]           @relation("AwayTeam")
-  affiliations  TeamAffiliation[]
+  id               String                @id @default(cuid())
+  competitionId    String
+  name             String
+  teamType         TeamType              @default(FREEFORM)
+  source           DataSource            @default(MANUAL)
+  externalTeamId   String?
+  lastSyncedAt     DateTime?
+  competition      Competition           @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  homeMatches      Match[]               @relation("HomeTeam")
+  awayMatches      Match[]               @relation("AwayTeam")
+  affiliations     TeamAffiliation[]
+  unitAffiliations TeamUnitAffiliation[]
 
   @@unique([competitionId, name])
+  @@unique([source, externalTeamId])
   @@index([competitionId])
 }
 
@@ -183,6 +206,7 @@ model Referee {
   passwordHash           String?
   mustChangePassword     Boolean                      @default(true)
   certificateNote        String?
+  qualificationNote      String?
   trainingStatus         TrainingStatus               @default(NOT_STARTED)
   publicDirectoryEnabled Boolean                      @default(false)
   publicBio              String?
@@ -198,6 +222,7 @@ model Referee {
   sessions               RefereeSession[]
   college                College?                     @relation(fields: [collegeId], references: [id], onDelete: SetNull)
   capabilities           RefereePositionCapability[]
+  affiliations           RefereeAffiliation[]
   availability           RefereeAvailability[]
   acknowledgements       AppointmentAcknowledgement[]
   conflictReports        AppointmentConflictReport[]
@@ -206,13 +231,14 @@ model Referee {
 }
 
 model College {
-  id           String               @id @default(cuid())
-  name         String               @unique
-  createdAt    DateTime             @default(now())
-  updatedAt    DateTime             @updatedAt
-  referees     Referee[]
-  codeMappings CollegeCodeMapping[]
-  teams        TeamAffiliation[]
+  id              String               @id @default(cuid())
+  name            String               @unique
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  referees        Referee[]
+  codeMappings    CollegeCodeMapping[]
+  teams           TeamAffiliation[]
+  affiliationUnit AffiliationUnit?
 }
 
 model CollegeCodeMapping {
@@ -240,14 +266,70 @@ model TeamAffiliation {
   @@index([collegeId])
 }
 
+model AffiliationUnit {
+  id              String                    @id @default(cuid())
+  name            String                    @unique
+  type            AffiliationUnitType
+  legacyCollegeId String?                   @unique
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+  legacyCollege   College?                  @relation(fields: [legacyCollegeId], references: [id], onDelete: SetNull)
+  parentRelations AffiliationUnitRelation[] @relation("AffiliationParent")
+  childRelations  AffiliationUnitRelation[] @relation("AffiliationChild")
+  refereeLinks    RefereeAffiliation[]
+  teamLinks       TeamUnitAffiliation[]
+
+  @@index([type, name])
+}
+
+model AffiliationUnitRelation {
+  id           String          @id @default(cuid())
+  parentUnitId String
+  childUnitId  String
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  parentUnit   AffiliationUnit @relation("AffiliationParent", fields: [parentUnitId], references: [id], onDelete: Cascade)
+  childUnit    AffiliationUnit @relation("AffiliationChild", fields: [childUnitId], references: [id], onDelete: Cascade)
+
+  @@unique([parentUnitId, childUnitId])
+  @@index([childUnitId])
+}
+
+model RefereeAffiliation {
+  id        String          @id @default(cuid())
+  refereeId String
+  unitId    String
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  referee   Referee         @relation(fields: [refereeId], references: [id], onDelete: Cascade)
+  unit      AffiliationUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  @@unique([refereeId, unitId])
+  @@index([unitId])
+}
+
+model TeamUnitAffiliation {
+  id        String          @id @default(cuid())
+  teamId    String
+  unitId    String
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  team      Team            @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  unit      AffiliationUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, unitId])
+  @@index([unitId])
+}
+
 model RefereePositionCapability {
-  id          String                 @id @default(cuid())
+  id          String                   @id @default(cuid())
   refereeId   String
   format      CompetitionFormat
   positionKey AppointmentPositionKey
-  createdAt   DateTime               @default(now())
-  updatedAt   DateTime               @updatedAt
-  referee     Referee                @relation(fields: [refereeId], references: [id], onDelete: Cascade)
+  status      PositionCapabilityStatus @default(READY)
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+  referee     Referee                  @relation(fields: [refereeId], references: [id], onDelete: Cascade)
 
   @@unique([refereeId, format, positionKey])
   @@index([format, positionKey])

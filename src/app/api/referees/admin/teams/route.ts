@@ -1,0 +1,35 @@
+import { NextResponse } from "next/server";
+
+import { getAdminActor, getAdminSession, isSameOrigin } from "@/lib/referee-auth";
+import { createJointTeam, createTeamsBulk, createTeamsFromUnits } from "@/lib/referee-r1-service";
+import { RefereeServiceError } from "@/lib/referee-service";
+import { isRecord, readEnum, readShortText, readShortTextArray } from "@/lib/referee-validation";
+
+export async function POST(request: Request) {
+  if (!isSameOrigin(request)) return NextResponse.json({ error: "请求来源无效。" }, { status: 403 });
+  const session = await getAdminSession();
+  if (!session) return NextResponse.json({ error: "请先登录管理员后台。" }, { status: 401 });
+  const actor = getAdminActor(session)!;
+  try {
+    const body: unknown = await request.json();
+    if (!isRecord(body)) throw new Error("球队内容格式不正确。");
+    const action = readEnum(body.action, ["bulk", "from-units", "joint"] as const, "操作");
+    const competitionId = readShortText(body.competitionId, "赛事", 64);
+    const result = action === "bulk"
+      ? await createTeamsBulk({ competitionId, names: readShortTextArray(body.names, "球队名称", 80, 500), actor })
+      : action === "from-units"
+        ? await createTeamsFromUnits({ competitionId, unitIds: readShortTextArray(body.unitIds, "组织单位", 64, 100), actor })
+        : await createJointTeam({
+            competitionId,
+            name: readShortText(body.name, "联合队名称", 80),
+            unitIds: readShortTextArray(body.unitIds, "组织单位", 64, 30),
+            actor,
+          });
+    return NextResponse.json({ ok: true, result }, { status: 201 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "球队创建失败。" },
+      { status: error instanceof RefereeServiceError ? error.status : 400 },
+    );
+  }
+}

@@ -1,9 +1,11 @@
 import type {
   AdminRole,
+  AffiliationUnitType,
   AppointmentPositionKey,
   AvailabilityKind,
   CompetitionFormat,
   ConflictReportStatus,
+  TeamType,
 } from "@/generated/prisma-v29/client";
 import { prisma } from "@/lib/prisma";
 import type { AdminActor } from "@/lib/referee-service";
@@ -42,16 +44,62 @@ export async function inferCollegeSuggestion(studentId: string) {
 }
 
 export async function createCollege(name: string, actor: AdminActor) {
-  const college = await prisma.college.create({ data: { name } });
+  return createAffiliationUnit(name, "COLLEGE", actor);
+}
+
+export async function createAffiliationUnit(
+  name: string,
+  type: AffiliationUnitType,
+  actor: AdminActor,
+) {
+  const unit = await prisma.$transaction(async (tx) => {
+    if (type === "COLLEGE") {
+      const college = await tx.college.create({ data: { name } });
+      return tx.affiliationUnit.create({
+        data: { id: college.id, name, type, legacyCollegeId: college.id },
+      });
+    }
+    return tx.affiliationUnit.create({ data: { name, type } });
+  });
   await audit({
     actorType: "ADMIN",
     actorId: actor.id,
-    action: "COLLEGE_CREATED",
-    entityType: "College",
-    entityId: college.id,
-    summary: `创建学院 ${college.name}`,
+    action: "AFFILIATION_UNIT_CREATED",
+    entityType: "AffiliationUnit",
+    entityId: unit.id,
+    summary: `创建${type === "COLLEGE" ? "学院" : "书院"} ${unit.name}`,
+    metadata: { type },
   });
-  return college;
+  return unit;
+}
+
+export async function setAffiliationUnitChildren(
+  parentUnitId: string,
+  childUnitIds: string[],
+  actor: AdminActor,
+) {
+  const uniqueIds = [...new Set(childUnitIds)].filter((id) => id !== parentUnitId);
+  return prisma.$transaction(async (tx) => {
+    const parent = await tx.affiliationUnit.findUnique({ where: { id: parentUnitId } });
+    if (!parent || parent.type !== "SHUYUAN") throw new RefereeServiceError("组织关系上级必须是有效书院。");
+    const children = await tx.affiliationUnit.findMany({ where: { id: { in: uniqueIds }, type: "COLLEGE" } });
+    if (children.length !== uniqueIds.length) throw new RefereeServiceError("书院组成关系包含无效学院。");
+    await tx.affiliationUnitRelation.deleteMany({ where: { parentUnitId } });
+    if (uniqueIds.length) {
+      await tx.affiliationUnitRelation.createMany({
+        data: uniqueIds.map((childUnitId) => ({ parentUnitId, childUnitId })),
+      });
+    }
+    await tx.auditLog.create({
+      data: {
+        actorType: "ADMIN", actorId: actor.id, action: "AFFILIATION_RELATIONS_UPDATED",
+        entityType: "AffiliationUnit", entityId: parent.id,
+        summary: `更新书院 ${parent.name} 的组成单位`,
+        metadata: JSON.stringify({ childUnitIds: uniqueIds }),
+      },
+    });
+    return parent;
+  });
 }
 
 export async function upsertCollegeCodeMapping(
@@ -83,18 +131,41 @@ export async function setTeamAffiliations(
   collegeIds: string[],
   actor: AdminActor,
 ) {
-  const uniqueIds = [...new Set(collegeIds)];
+  const teamType: TeamType = collegeIds.length > 1 ? "JOINT" : collegeIds.length === 1 ? "ORGANIZATION" : "FREEFORM";
+  return setTeamUnitAffiliations(teamId, collegeIds, teamType, actor);
+}
+
+export async function setTeamUnitAffiliations(
+  teamId: string,
+  unitIds: string[],
+  teamType: TeamType,
+  actor: AdminActor,
+) {
+  const uniqueIds = [...new Set(unitIds)];
+  if (teamType === "ORGANIZATION" && uniqueIds.length !== 1) {
+    throw new RefereeServiceError("固定组织代表队须关联一个组织单位。");
+  }
+  if (teamType === "JOINT" && uniqueIds.length < 2) {
+    throw new RefereeServiceError("联合队须关联至少两个组织单位。");
+  }
   const result = await prisma.$transaction(async (tx) => {
     const team = await tx.team.findUnique({ where: { id: teamId }, select: { id: true, name: true } });
     if (!team) throw new RefereeServiceError("球队不存在。", 404);
-    const collegeCount = await tx.college.count({ where: { id: { in: uniqueIds } } });
-    if (collegeCount !== uniqueIds.length) throw new RefereeServiceError("球队学院关联包含无效学院。");
-    await tx.teamAffiliation.deleteMany({ where: { teamId } });
+    const units = await tx.affiliationUnit.findMany({ where: { id: { in: uniqueIds } }, select: { id: true, legacyCollegeId: true } });
+    if (units.length !== uniqueIds.length) throw new RefereeServiceError("球队组织关联包含无效单位。");
+    await tx.teamUnitAffiliation.deleteMany({ where: { teamId } });
     if (uniqueIds.length) {
+      await tx.teamUnitAffiliation.createMany({ data: uniqueIds.map((unitId) => ({ teamId, unitId })) });
+    }
+    // Keep the R1 college bridge synchronized for existing reads and rollback safety.
+    await tx.teamAffiliation.deleteMany({ where: { teamId } });
+    const legacyCollegeIds = units.flatMap((unit) => unit.legacyCollegeId ? [unit.legacyCollegeId] : []);
+    if (legacyCollegeIds.length) {
       await tx.teamAffiliation.createMany({
-        data: uniqueIds.map((collegeId) => ({ teamId, collegeId })),
+        data: legacyCollegeIds.map((collegeId) => ({ teamId, collegeId })),
       });
     }
+    await tx.team.update({ where: { id: teamId }, data: { teamType } });
     await tx.auditLog.create({
       data: {
         actorType: "ADMIN",
@@ -102,13 +173,106 @@ export async function setTeamAffiliations(
         action: "TEAM_AFFILIATIONS_UPDATED",
         entityType: "Team",
         entityId: teamId,
-        summary: `更新球队 ${team.name} 的学院关联`,
-        metadata: JSON.stringify({ collegeIds: uniqueIds }),
+        summary: `更新球队 ${team.name} 的组织关联`,
+        metadata: JSON.stringify({ unitIds: uniqueIds, teamType }),
       },
     });
     return team;
   });
   return result;
+}
+
+function normalizedTeamNames(names: string[]) {
+  const seen = new Set<string>();
+  return names.map((name) => name.trim()).filter((name) => {
+    if (!name || name.length > 80) return false;
+    const key = name.toLocaleLowerCase("zh-CN");
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+export async function createTeamsBulk(input: {
+  competitionId: string;
+  names: string[];
+  actor: AdminActor;
+}) {
+  const names = normalizedTeamNames(input.names);
+  if (!names.length) throw new RefereeServiceError("没有可创建的球队。");
+  return prisma.$transaction(async (tx) => {
+    const competition = await tx.competition.findUnique({ where: { id: input.competitionId }, select: { id: true, name: true } });
+    if (!competition) throw new RefereeServiceError("赛事不存在。", 404);
+    const existing = await tx.team.findMany({ where: { competitionId: input.competitionId }, select: { name: true } });
+    const existingKeys = new Set(existing.map((item) => item.name.toLocaleLowerCase("zh-CN")));
+    const createNames = names.filter((name) => !existingKeys.has(name.toLocaleLowerCase("zh-CN")));
+    if (createNames.length) {
+      await tx.team.createMany({ data: createNames.map((name) => ({ competitionId: input.competitionId, name, teamType: "FREEFORM" })) });
+    }
+    await tx.auditLog.create({
+      data: {
+        actorType: "ADMIN", actorId: input.actor.id, action: "TEAMS_BULK_CREATED",
+        entityType: "Competition", entityId: input.competitionId,
+        summary: `为赛事 ${competition.name} 批量创建 ${createNames.length} 支自由组队球队`,
+        metadata: JSON.stringify({ createdNames: createNames, skippedExisting: names.filter((name) => !createNames.includes(name)) }),
+      },
+    });
+    return { createdNames: createNames, skippedExisting: names.filter((name) => !createNames.includes(name)) };
+  });
+}
+
+export async function createTeamsFromUnits(input: {
+  competitionId: string;
+  unitIds: string[];
+  actor: AdminActor;
+}) {
+  const unitIds = [...new Set(input.unitIds)];
+  if (!unitIds.length) throw new RefereeServiceError("请选择至少一个组织单位。");
+  return prisma.$transaction(async (tx) => {
+    const competition = await tx.competition.findUnique({ where: { id: input.competitionId } });
+    if (!competition) throw new RefereeServiceError("赛事不存在。", 404);
+    const units = await tx.affiliationUnit.findMany({ where: { id: { in: unitIds } }, select: { id: true, name: true, legacyCollegeId: true } });
+    if (units.length !== unitIds.length) throw new RefereeServiceError("包含无效组织单位。");
+    const existing = await tx.team.findMany({ where: { competitionId: input.competitionId }, select: { name: true } });
+    const existingKeys = new Set(existing.map((item) => item.name.toLocaleLowerCase("zh-CN")));
+    const createdNames: string[] = [];
+    for (const unit of units) {
+      if (existingKeys.has(unit.name.toLocaleLowerCase("zh-CN"))) continue;
+      const team = await tx.team.create({ data: { competitionId: input.competitionId, name: unit.name, teamType: "ORGANIZATION" } });
+      await tx.teamUnitAffiliation.create({ data: { teamId: team.id, unitId: unit.id } });
+      if (unit.legacyCollegeId) await tx.teamAffiliation.create({ data: { teamId: team.id, collegeId: unit.legacyCollegeId } });
+      createdNames.push(unit.name);
+    }
+    await tx.auditLog.create({
+      data: {
+        actorType: "ADMIN", actorId: input.actor.id, action: "ORGANIZATION_TEAMS_CREATED",
+        entityType: "Competition", entityId: input.competitionId,
+        summary: `从组织单位创建 ${createdNames.length} 支代表队`,
+        metadata: JSON.stringify({ unitIds, createdNames }),
+      },
+    });
+    return { createdNames };
+  });
+}
+
+export async function createJointTeam(input: {
+  competitionId: string;
+  name: string;
+  unitIds: string[];
+  actor: AdminActor;
+}) {
+  const unitIds = [...new Set(input.unitIds)];
+  if (unitIds.length < 2) throw new RefereeServiceError("联合队须选择至少两个组织单位。");
+  return prisma.$transaction(async (tx) => {
+    const units = await tx.affiliationUnit.findMany({ where: { id: { in: unitIds } }, select: { id: true, legacyCollegeId: true } });
+    if (units.length !== unitIds.length) throw new RefereeServiceError("包含无效组织单位。");
+    const team = await tx.team.create({ data: { competitionId: input.competitionId, name: input.name.trim(), teamType: "JOINT" } });
+    await tx.teamUnitAffiliation.createMany({ data: unitIds.map((unitId) => ({ teamId: team.id, unitId })) });
+    const collegeIds = units.flatMap((unit) => unit.legacyCollegeId ? [unit.legacyCollegeId] : []);
+    if (collegeIds.length) await tx.teamAffiliation.createMany({ data: collegeIds.map((collegeId) => ({ teamId: team.id, collegeId })) });
+    await tx.auditLog.create({ data: { actorType: "ADMIN", actorId: input.actor.id, action: "JOINT_TEAM_CREATED", entityType: "Team", entityId: team.id, summary: `创建联合队 ${team.name}`, metadata: JSON.stringify({ unitIds }) } });
+    return team;
+  });
 }
 
 export async function saveRefereeAvailability(input: {
@@ -466,7 +630,11 @@ export async function getCompletedRefereeStatistics() {
 }
 
 export function capabilityInput(
-  values: Array<{ format: CompetitionFormat; positionKey: AppointmentPositionKey }>,
+  values: Array<{
+    format: CompetitionFormat;
+    positionKey: AppointmentPositionKey;
+    status: "NOT_ASSIGNED" | "TRAINING" | "READY";
+  }>,
 ) {
   return values;
 }

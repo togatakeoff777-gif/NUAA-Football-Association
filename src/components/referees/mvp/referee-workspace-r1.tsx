@@ -126,7 +126,7 @@ export function RefereeWorkspaceR1({
             <div><dt>学号</dt><dd>{profile.studentId || "待管理员维护"}</dd></div>
             <div><dt>学院</dt><dd>{profile.college || "待管理员维护"}</dd></div>
             <div><dt>年级</dt><dd>{profile.grade || "待管理员维护"}</dd></div>
-            <div><dt>裁判等级</dt><dd>{profile.refereeLevel || "待管理员维护"}</dd></div>
+            <div><dt>裁判资质</dt><dd>{profile.refereeLevel || "暂无正式裁判资质"}</dd></div>
           </dl>
           <form onSubmit={(event) => {
             event.preventDefault();

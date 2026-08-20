@@ -8,9 +8,10 @@ import { prisma } from "@/lib/prisma";
 
 export default async function AdminRefereeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [referee, colleges, availability, history] = await Promise.all([
+  const [referee, colleges, affiliationUnits, availability, history] = await Promise.all([
     prisma.referee.findUnique({ where: { id }, select: adminRefereeSelect }),
     prisma.college.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    prisma.affiliationUnit.findMany({ select: { id: true, name: true, type: true }, orderBy: [{ type: "asc" }, { name: "asc" }] }),
     prisma.refereeAvailability.findMany({ where: { refereeId: id }, orderBy: { startAt: "desc" }, take: 30 }),
     prisma.appointmentPosition.findMany({
       where: { refereeId: id, appointment: { status: "COMPLETED" } },
@@ -40,12 +41,14 @@ export default async function AdminRefereeDetailPage({ params }: { params: Promi
     grade: referee.grade ?? "", phone: referee.phone ?? "", qq: referee.qq ?? "", refereeLevel: referee.refereeLevel ?? "",
     joinedAt: referee.joinedAt ? referee.joinedAt.toISOString().slice(0, 10) : "", status: referee.status,
     elevenASide: referee.elevenASide, futsal: referee.futsal, certificateNote: referee.certificateNote ?? "", trainingStatus: referee.trainingStatus,
+    qualificationNote: referee.qualificationNote ?? "",
     publicDirectoryEnabled: referee.publicDirectoryEnabled, publicBio: referee.publicBio ?? "", internalNote: referee.internalNote ?? "",
-    mustChangePassword: referee.mustChangePassword, capabilities: referee.capabilities.map((item) => `${item.format}:${item.positionKey}`),
+    mustChangePassword: referee.mustChangePassword, capabilities: referee.capabilities.map((item) => `${item.format}:${item.positionKey}:${item.status}`),
+    affiliationUnitIds: referee.affiliations.map((item) => item.unit.id),
   };
   return <>
-    <section className="admin-detail-hero"><div><span>{referee.publicCode}</span><h1>{referee.name}</h1><p>{referee.college?.name ?? "学院待确认"} · {referee.refereeLevel || "裁判等级未登记"}</p><dl className="admin-detail-meta"><div><dt>账号状态</dt><dd>{refereeStatusLabels[referee.status]}</dd></div><div><dt>岗位能力</dt><dd>{referee.capabilities.length} 项</dd></div><div><dt>最近登录</dt><dd>{referee.lastLoginAt ? formatRefereeDateTime(referee.lastLoginAt) : "从未登录"}</dd></div><div><dt>执裁历史</dt><dd>{history.length} 条岗位记录</dd></div></dl></div><AdminStatusBadge status={referee.status} label={refereeStatusLabels[referee.status]} /></section>
-    <AdminPanel title="裁判员档案" description="通过分区编辑完整资料；保存时沿用现有管理员 API。"><RefereeEditForm account={record} colleges={colleges} /></AdminPanel>
+    <section className="admin-detail-hero"><div><span>{referee.publicCode}</span><h1>{referee.name}</h1><p>{referee.college?.name ?? "学院待确认"} · {referee.refereeLevel || "暂无正式裁判资质"}</p><dl className="admin-detail-meta"><div><dt>账号状态</dt><dd>{refereeStatusLabels[referee.status]}</dd></div><div><dt>可正式选派岗位</dt><dd>{referee.capabilities.filter((item) => item.status === "READY").length} 项</dd></div><div><dt>最近登录</dt><dd>{referee.lastLoginAt ? formatRefereeDateTime(referee.lastLoginAt) : "从未登录"}</dd></div><div><dt>执裁历史</dt><dd>{history.length} 条岗位记录</dd></div></dl></div><AdminStatusBadge status={referee.status} label={refereeStatusLabels[referee.status]} /></section>
+    <AdminPanel title="裁判员档案" description="正式资质、培训状态与岗位培养状态分别维护。"><RefereeEditForm account={record} affiliationUnits={affiliationUnits} colleges={colleges} /></AdminPanel>
     <div className="admin-two-column">
       <AdminPanel title="可执裁时间" description="最近 30 条，可到可执裁时间页代为维护。">{availability.length ? <div className="admin-compact-list">{availability.map((item) => <article className="admin-compact-row" key={item.id}><div><strong>{item.kind === "AVAILABLE" ? "可执裁" : "不可执裁"}</strong><span>{formatRefereeDateTime(item.startAt)} — {formatRefereeDateTime(item.endAt)}</span></div><p>{item.note || "—"}</p></article>)}</div> : <AdminEmptyState title="暂无可执裁时间" description="裁判员或管理员尚未添加记录。" />}</AdminPanel>
       <AdminPanel title="执裁历史" description="只显示已完成的正式选派。">{history.length ? <div className="admin-compact-list">{history.map((item) => <article className="admin-compact-row" key={item.id}><div><strong>{item.appointment.match.homeTeam.name} vs {item.appointment.match.awayTeam.name}</strong><span>{item.appointment.match.competition.name} · {formatRefereeDateTime(item.appointment.match.kickoff)}</span></div><p>{item.label}</p></article>)}</div> : <AdminEmptyState title="暂无已完成执裁" description="选派完成后会进入这里。" />}</AdminPanel>

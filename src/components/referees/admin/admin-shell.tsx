@@ -11,7 +11,7 @@ const primaryNavigation = [
   { href: "/referees/admin/matches", label: "比赛与选派", english: "Matches & Appointments" },
   { href: "/referees/admin/referees", label: "裁判员", english: "Referees" },
   { href: "/referees/admin/availability", label: "可执裁时间", english: "Availability" },
-  { href: "/referees/admin/affiliations", label: "学院与球队", english: "Colleges & Teams" },
+  { href: "/referees/admin/affiliations", label: "组织与球队", english: "Organizations & Teams" },
   { href: "/referees/admin/conflicts", label: "冲突报告", english: "Conflict Reports" },
   { href: "/referees/admin/statistics", label: "执裁统计", english: "Statistics" },
 ] as const;

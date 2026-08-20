@@ -27,7 +27,15 @@ async function jsonApi(url: string, method: string, body: unknown) {
 }
 
 function warningLabel(code: string) {
-  return ({ COLLEGE_CONFLICT: "同院回避", UNAVAILABLE: "已填写不可执裁", MATCH_OVERLAP: "与另一场比赛时间重叠", ADJACENT_MATCH: "相邻比赛间隔提醒" } as Record<string,string>)[code] ?? code;
+  return ({ COLLEGE_CONFLICT: "组织关联回避", UNAVAILABLE: "已填写不可执裁", MATCH_OVERLAP: "与另一场比赛时间重叠", ADJACENT_MATCH: "连续执裁提醒", CAPABILITY_TRAINING: "岗位培养中", CAPABILITY_NOT_ASSIGNED: "岗位暂不安排" } as Record<string,string>)[code] ?? code;
+}
+
+function capabilityStatus(referee: AppointmentRefereeOption, format: string, positionKey: string) {
+  return referee.capabilities.find((value) => value.startsWith(`${format}:${positionKey}:`))?.split(":")[2] ?? "NOT_ASSIGNED";
+}
+
+function capabilityText(status: string) {
+  return ({ READY: "可正式选派", TRAINING: "培养中", NOT_ASSIGNED: "暂不安排" } as Record<string, string>)[status] ?? "暂不安排";
 }
 
 export function AdminAppointmentEditor({
@@ -98,15 +106,17 @@ export function AdminAppointmentEditor({
 
   return <>
     <section className="admin-panel admin-assignment-panel">
-      <header className="admin-panel-header"><div><h2>裁判岗位</h2><p>{match.format === "ELEVEN_A_SIDE" ? "十一人制" : "五人制"}岗位模板 · 选择器仅展示具备相应岗位能力的裁判员</p></div><span className="admin-status-badge" data-status={currentStatus}>{appointmentStatusLabels[currentStatus] ?? currentStatus}</span></header>
+      <header className="admin-panel-header"><div><h2>裁判岗位</h2><p>{match.format === "ELEVEN_A_SIDE" ? "十一人制" : "五人制"}岗位模板 · 可正式选派优先，培养中和暂不安排人员保留供负责人判断</p></div><span className="admin-status-badge" data-status={currentStatus}>{appointmentStatusLabels[currentStatus] ?? currentStatus}</span></header>
       <form className="admin-form admin-assignment-form" onSubmit={save}>
         <div className="admin-position-assignment-list">{match.template.map((position) => {
           const key = identity(position);
           const refereeId = assigned[key];
           const positionWarnings = warnings.filter((warning) => warning.refereeId === refereeId);
+          const selectedReferee = referees.find((referee) => referee.id === refereeId);
+          const selectedCapability = selectedReferee ? capabilityStatus(selectedReferee, match.format, position.key) : "NOT_ASSIGNED";
           return <div className="admin-position-assignment" key={key}>
             <label className="admin-position-toggle"><input checked={enabled[key]} disabled={!canEditDraft} onChange={(event) => setEnabled((current) => ({ ...current, [key]: event.target.checked }))} type="checkbox" /><span><strong>{position.label}</strong>{position.slot > 1 ? <small>岗位序号 {position.slot}</small> : null}</span></label>
-            <div className="admin-position-select"><select disabled={!enabled[key] || !canEditDraft} onChange={(event) => updateAssignment(key, event.target.value)} value={refereeId}><option value="">待分配</option>{referees.filter((referee) => referee.capabilities.length ? referee.capabilities.includes(`${match.format}:${position.key}`) : (match.format === "ELEVEN_A_SIDE" ? referee.elevenASide : referee.futsal)).map((referee) => <option key={referee.id} value={referee.id}>{referee.label} · 已完成 {referee.completedCount} 场</option>)}</select>{refereeId ? <div className={`admin-candidate-health${positionWarnings.length ? " has-warning" : ""}`}>{positionWarnings.length ? positionWarnings.map((warning) => <span key={`${warning.code}-${warning.refereeId}`}>⚠ {warningLabel(warning.code)}</span>) : <><span>✓ 岗位能力匹配</span><span>✓ 当前未发现冲突</span></>}</div> : <small>选择裁判员后，保存或发布时由服务端执行完整冲突检测。</small>}</div>
+            <div className="admin-position-select"><select disabled={!enabled[key] || !canEditDraft} onChange={(event) => updateAssignment(key, event.target.value)} value={refereeId}><option value="">待分配</option>{[...referees].sort((left, right) => ["READY", "TRAINING", "NOT_ASSIGNED"].indexOf(capabilityStatus(left, match.format, position.key)) - ["READY", "TRAINING", "NOT_ASSIGNED"].indexOf(capabilityStatus(right, match.format, position.key))).map((referee) => { const status = capabilityStatus(referee, match.format, position.key); return <option key={referee.id} value={referee.id}>{capabilityText(status)} · {referee.label} · 已完成 {referee.completedCount} 场</option>; })}</select>{refereeId ? <div className={`admin-candidate-health${positionWarnings.length || selectedCapability !== "READY" ? " has-warning" : ""}`}><span>{selectedCapability === "READY" ? "✓" : "⚠"} {capabilityText(selectedCapability)}</span>{positionWarnings.length ? positionWarnings.filter((warning) => !warning.code.startsWith("CAPABILITY_")).map((warning) => <span key={`${warning.code}-${warning.refereeId}`}>⚠ {warningLabel(warning.code)}</span>) : <span>✓ 当前未发现其他冲突</span>}</div> : <small>选择裁判员后，保存或发布时由服务端执行完整冲突检测。</small>}</div>
           </div>;
         })}</div>
         {warnings.length ? <div className="admin-warning-panel"><strong>冲突与相邻任务提醒</strong><ul>{warnings.map((warning, index) => <li key={`${warning.code}-${warning.refereeId}-${index}`}><b>{warningLabel(warning.code)}</b>：{warning.message}</li>)}</ul></div> : null}

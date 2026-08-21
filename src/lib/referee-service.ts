@@ -725,6 +725,111 @@ export async function updateMatch(
   return match;
 }
 
+const matchDeletionProtectedMessage =
+  "该比赛已经存在正式选派或历史记录，不能直接删除。请使用“取消比赛”保留业务历史。";
+
+export async function deleteMatchSafely(
+  id: string,
+  reason: string,
+  actor?: AdminActor,
+) {
+  const normalizedReason = reason.trim();
+  if (!normalizedReason) throw new RefereeServiceError("请填写删除原因。");
+
+  return prisma.$transaction(async (tx) => {
+    const match = await tx.match.findUnique({
+      where: { id },
+      include: {
+        competition: { select: { id: true, name: true } },
+        homeTeam: { select: { id: true, name: true } },
+        awayTeam: { select: { id: true, name: true } },
+        applications: { select: { status: true } },
+        appointment: {
+          select: {
+            id: true,
+            status: true,
+            revision: true,
+            publishedAt: true,
+            withdrawnAt: true,
+            completedAt: true,
+            cancelledAt: true,
+            _count: {
+              select: {
+                positions: true,
+                versions: true,
+                acknowledgements: true,
+                conflictReports: true,
+              },
+            },
+          },
+        },
+        _count: { select: { positionRequirements: true } },
+      },
+    });
+    if (!match) throw new RefereeServiceError("比赛不存在。", 404);
+
+    const appointment = match.appointment;
+    const hasFormalApplicationHistory = match.applications.some(
+      (application) => application.status === "APPOINTED" || application.status === "NOT_SELECTED",
+    );
+    const hasFormalAppointmentHistory = Boolean(
+      appointment && (
+        appointment.status !== "DRAFT" ||
+        appointment.revision > 0 ||
+        appointment.publishedAt ||
+        appointment.withdrawnAt ||
+        appointment.completedAt ||
+        appointment.cancelledAt ||
+        appointment._count.versions > 0 ||
+        appointment._count.acknowledgements > 0 ||
+        appointment._count.conflictReports > 0
+      ),
+    );
+    if (match.status !== "SCHEDULED" || hasFormalApplicationHistory || hasFormalAppointmentHistory) {
+      throw new RefereeServiceError(matchDeletionProtectedMessage, 409);
+    }
+
+    const draftAppointmentId = appointment?.id ?? null;
+    const draftPositionCount = appointment?._count.positions ?? 0;
+    if (draftAppointmentId) {
+      await tx.appointmentPosition.deleteMany({ where: { appointmentId: draftAppointmentId } });
+      await tx.refereeAppointment.delete({ where: { id: draftAppointmentId } });
+    }
+    const deletedApplications = await tx.refereeApplication.deleteMany({ where: { matchId: id } });
+    await tx.matchPositionRequirement.deleteMany({ where: { matchId: id } });
+    await tx.match.delete({ where: { id } });
+
+    const matchLabel = `${match.homeTeam.name} vs ${match.awayTeam.name}`;
+    await writeAudit({
+      action: "MATCH_DELETED",
+      entityType: "Match",
+      entityId: match.id,
+      summary: `删除比赛 ${matchLabel}`,
+      actorId: actor?.id ?? undefined,
+      metadata: {
+        reason: normalizedReason,
+        deletedAt: new Date().toISOString(),
+        match: {
+          id: match.id,
+          slug: match.slug,
+          label: matchLabel,
+          competitionId: match.competition.id,
+          competitionName: match.competition.name,
+          homeTeamId: match.homeTeam.id,
+          awayTeamId: match.awayTeam.id,
+          kickoff: match.kickoff.toISOString(),
+        },
+        cleanedDraftAppointmentId: draftAppointmentId,
+        cleanedDraftPositionCount: draftPositionCount,
+        cleanedApplicationCount: deletedApplications.count,
+        cleanedPositionRequirementCount: match._count.positionRequirements,
+      },
+    }, tx);
+
+    return { id: match.id, label: matchLabel };
+  });
+}
+
 function buildPositionRequirements(
   format: CompetitionFormat,
   counts: Partial<Record<AppointmentPositionKey, number>>,

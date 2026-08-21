@@ -187,6 +187,19 @@
 .admin-detail-hero p { margin-top: 7px; color: var(--admin-muted); font-size: 12px; }
 .admin-detail-hero > div:first-child { flex: 1; }
 .admin-detail-actions { display: flex; align-items: center; gap: 9px; }
+.admin-action-menu { position: relative; }
+.admin-action-menu > summary { list-style: none; }
+.admin-action-menu > summary::-webkit-details-marker { display: none; }
+.admin-action-menu > summary::after { content: "⌄"; margin-left: 2px; color: var(--admin-muted); }
+.admin-action-menu > div { position: absolute; top: calc(100% + 7px); right: 0; z-index: 25; width: 170px; padding: 6px; border: 1px solid var(--admin-line); background: white; box-shadow: 0 14px 36px rgba(22,39,68,.16); }
+.admin-action-menu > div button { width: 100%; min-height: 39px; padding: 0 11px; border: 0; background: white; color: #a43d4d; font-size: var(--admin-type-action); font-weight: 600; text-align: left; cursor: pointer; }
+.admin-action-menu > div button:hover, .admin-action-menu > div button:focus-visible { background: #fbeef0; outline: none; }
+.admin-match-delete-form { padding: 18px; }
+.admin-match-delete-form > p { color: #31455d; font-size: 14px; line-height: 1.6; }
+.admin-danger-notice { padding: 13px 14px; border: 1px solid #e1aab2; border-left: 4px solid #a43d4d; background: #fdf1f3; }
+.admin-danger-notice strong { color: #8d2f3e; font-size: 13px; }
+.admin-danger-notice p { margin-top: 5px; color: #75414a; font-size: 12px; line-height: 1.6; }
+.admin-danger-message { color: #9b3142; font-size: 13px; font-weight: 650; line-height: 1.5; }
 .admin-detail-meta { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 1px; margin-top: 16px; background: var(--admin-line); }
 .admin-detail-meta div { padding: 12px; background: #f8fafc; }
 .admin-detail-meta dt { color: #586a7f; font-size: 12px; font-weight: 600; }

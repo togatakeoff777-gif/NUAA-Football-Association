@@ -4,6 +4,7 @@ import { getAdminActor, getAdminSession, isSameOrigin } from "@/lib/referee-auth
 import { prisma } from "@/lib/prisma";
 import {
   createMatch,
+  deleteMatchSafely,
   RefereeServiceError,
   updateMatch,
 } from "@/lib/referee-service";
@@ -128,6 +129,31 @@ export async function POST(
     const status = error instanceof RefereeServiceError ? error.status : 400;
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "场次复制失败。" },
+      { status },
+    );
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  context: { params: Promise<{ id: string }> },
+) {
+  const authorization = await authorize(request);
+  if (authorization instanceof Response) return authorization;
+  try {
+    const body: unknown = await request.json();
+    if (!isRecord(body)) throw new Error("删除内容格式不正确。");
+    const { id } = await context.params;
+    await deleteMatchSafely(
+      id,
+      readShortText(body.reason, "删除原因", 240),
+      authorization,
+    );
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    const status = error instanceof RefereeServiceError ? error.status : 400;
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "比赛删除失败。" },
       { status },
     );
   }

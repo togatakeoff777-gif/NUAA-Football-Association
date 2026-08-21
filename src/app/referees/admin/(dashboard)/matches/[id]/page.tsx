@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AdminAppointmentEditor, type AppointmentMatchView } from "@/components/referees/admin/admin-appointment-editor";
+import { AdminMatchDangerActions } from "@/components/referees/admin/admin-match-danger-actions";
 import { AdminStatusBadge, appointmentStatusLabels, matchStatusLabels } from "@/components/referees/admin/admin-ui";
 import { adminRefereeSelect } from "@/lib/referee-dto";
 import { detectAppointmentWarnings } from "@/lib/referee-conflicts";
@@ -23,6 +24,7 @@ export default async function AdminMatchDetailPage({ params }: { params: Promise
           include: {
             positions: { orderBy: [{ sortOrder: "asc" }, { slot: "asc" }] },
             versions: { include: { createdByAdmin: { select: { displayName: true, username: true } }, acknowledgements: { select: { refereeId: true } } }, orderBy: { revision: "desc" } },
+            _count: { select: { acknowledgements: true, conflictReports: true } },
           },
         },
       },
@@ -40,12 +42,33 @@ export default async function AdminMatchDetailPage({ params }: { params: Promise
     id: match.id, appointmentId: match.appointment?.id ?? null, statusKey: match.appointment?.status ?? "NONE",
     format: match.competition.format, publicationNote: match.appointment?.publicationNote ?? "", template, positions: currentPositions,
   };
+  const deletionProtected = match.status !== "SCHEDULED" ||
+    match.applications.some((application) => application.status === "APPOINTED" || application.status === "NOT_SELECTED") ||
+    Boolean(match.appointment && (
+      match.appointment.status !== "DRAFT" ||
+      match.appointment.revision > 0 ||
+      match.appointment.publishedAt ||
+      match.appointment.withdrawnAt ||
+      match.appointment.completedAt ||
+      match.appointment.cancelledAt ||
+      match.appointment.versions.length > 0 ||
+      match.appointment._count.acknowledgements > 0 ||
+      match.appointment._count.conflictReports > 0
+    ));
+  const matchLabel = `${match.homeTeam.name} vs ${match.awayTeam.name}`;
   return <>
     <section className="admin-detail-hero">
       <div><span>{match.competition.name}</span><h1>{match.homeTeam.name} vs {match.awayTeam.name}</h1><p>{match.round ? `${match.round} · ` : ""}{match.stage}</p>
         <dl className="admin-detail-meta"><div><dt>开球时间</dt><dd>{formatRefereeDateTime(match.kickoff)}</dd></div><div><dt>比赛场地</dt><dd>{match.venue}</dd></div><div><dt>比赛状态</dt><dd>{matchStatusLabels[match.status]}</dd></div><div><dt>当前选派</dt><dd>{appointmentStatusLabels[match.appointment?.status ?? "NONE"]}</dd></div></dl>
       </div>
-      <div className="admin-detail-actions"><Link className="admin-button admin-button-secondary" href={`/referees/admin/matches/${match.id}/edit`}>编辑比赛</Link></div>
+      <div className="admin-detail-actions">
+        <Link className="admin-button admin-button-secondary" href={`/referees/admin/matches/${match.id}/edit`}>编辑比赛</Link>
+        <AdminMatchDangerActions
+          matchId={match.id}
+          matchLabel={matchLabel}
+          protectedReason={deletionProtected ? "该比赛已经存在正式选派或历史记录，不能直接删除。请使用“取消比赛”保留业务历史。" : undefined}
+        />
+      </div>
     </section>
     <AdminAppointmentEditor
       applications={match.applications.map((item) => ({ id: item.id, referee: `${item.referee.publicCode} · ${item.referee.name}`, status: item.status, statusLabel: applicationStatusLabels[item.status], preferred: parsePreferredPositions(item.preferredPositions).map((key) => getPositionTemplate(match.competition.format).find((position) => position.key === key)?.label ?? key).join(" / "), note: item.note, createdAt: formatRefereeDateTime(item.createdAt) }))}

@@ -15,6 +15,7 @@
     "test:referee-r1": "tsx scripts/test-referee-r1.ts",
     "test:referee-fix2": "tsx scripts/test-referee-fix2.ts",
     "test:referee-fix3": "tsx scripts/test-referee-fix3.ts",
+    "test:referee-fix5": "tsx scripts/test-referee-fix5.ts",
     "security:hash-password": "node scripts/hash-password.mjs",
     "admin:create": "tsx scripts/create-admin-account.ts",
     "db:backup": "node scripts/backup-database.mjs",

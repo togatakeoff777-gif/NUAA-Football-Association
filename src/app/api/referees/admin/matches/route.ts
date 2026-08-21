@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getAdminActor, getAdminSession, isSameOrigin } from "@/lib/referee-auth";
-import { createMatch, RefereeServiceError } from "@/lib/referee-service";
+import { createMatchFromSelections, RefereeServiceError } from "@/lib/referee-service";
 import {
   isRecord,
   positionKeys,
@@ -33,7 +33,9 @@ export async function POST(request: Request) {
   try {
     const body: unknown = await request.json();
     if (!isRecord(body)) throw new Error("场次内容格式不正确。");
-    const match = await createMatch({
+    const legacyHomeTeamId = readShortText(body.homeTeamId, "主队", 64, false);
+    const legacyAwayTeamId = readShortText(body.awayTeamId, "客队", 64, false);
+    const match = await createMatchFromSelections({
       slug: readShortText(body.slug, "页面标识", 80),
       competitionId: readShortText(body.competitionId, "赛事", 64),
       stage: readShortText(body.stage, "比赛名称或轮次", 80),
@@ -43,8 +45,16 @@ export async function POST(request: Request) {
       round: readShortText(body.round, "轮次", 80, false),
       source: readEnum(body.source ?? "MANUAL", ["MANUAL", "FOOTBALL_CHINA"] as const, "数据来源"),
       externalMatchId: readShortText(body.externalMatchId, "外部比赛 ID", 120, false),
-      homeTeamId: readShortText(body.homeTeamId, "主队", 64),
-      awayTeamId: readShortText(body.awayTeamId, "客队", 64),
+      homeTeamSelection: readShortText(
+        body.homeTeamSelection ?? (legacyHomeTeamId ? `team:${legacyHomeTeamId}` : undefined),
+        "主队",
+        80,
+      ),
+      awayTeamSelection: readShortText(
+        body.awayTeamSelection ?? (legacyAwayTeamId ? `team:${legacyAwayTeamId}` : undefined),
+        "客队",
+        80,
+      ),
       status: readEnum(
         body.status,
         ["SCHEDULED", "COMPLETED", "CANCELLED"] as const,

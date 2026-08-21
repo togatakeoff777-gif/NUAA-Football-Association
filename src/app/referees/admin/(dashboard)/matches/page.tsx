@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AdminMatchNavigation } from "@/components/referees/admin/admin-match-navigation";
 import { AdminEmptyState, AdminPageHeader, AdminPanel, AdminStatusBadge, appointmentStatusLabels, matchStatusLabels } from "@/components/referees/admin/admin-ui";
 import { prisma } from "@/lib/prisma";
 import { formatRefereeDateTime } from "@/lib/referee-presenters";
@@ -27,7 +28,8 @@ export default async function AdminMatchesPage({ searchParams }: { searchParams:
     }),
   ]);
   return <>
-    <AdminPageHeader eyebrow="MATCHES & APPOINTMENTS" title="比赛与选派" description="先从比赛列表进入具体场次，再维护岗位与正式选派。" actions={<Link className="admin-button" href="/referees/admin/matches/new">+ 新建比赛</Link>} />
+    <AdminPageHeader eyebrow="MATCHES & APPOINTMENTS" title="比赛与选派" description="先从比赛列表进入具体场次，再维护岗位与正式选派。" actions={<><Link className="admin-button admin-button-secondary" href="/referees/admin/matches/competitions">赛事管理</Link><Link className="admin-button" href="/referees/admin/matches/new">+ 新建比赛</Link></>} />
+    <AdminMatchNavigation active="matches" />
     <form className="admin-filter-bar">
       <label><span>赛事</span><select defaultValue={competitionId} name="competition"><option value="">全部赛事</option>{competitions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
       <label><span>日期</span><input defaultValue={date} name="date" type="date" /></label>

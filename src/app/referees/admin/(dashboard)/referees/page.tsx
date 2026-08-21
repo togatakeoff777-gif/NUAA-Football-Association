@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { AdminEmptyState, AdminPageHeader, AdminPanel, AdminStatusBadge, refereeStatusLabels } from "@/components/referees/admin/admin-ui";
 import { prisma } from "@/lib/prisma";
+import { affiliationOptionLabel, sortAffiliationOptions } from "@/lib/referee-affiliation-options";
 
 export default async function AdminRefereesPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const query = await searchParams;
@@ -12,7 +13,7 @@ export default async function AdminRefereesPage({ searchParams }: { searchParams
   const rawFormat = typeof query.format === "string" ? query.format : "";
   const format = ["ELEVEN_A_SIDE", "FUTSAL"].includes(rawFormat) ? rawFormat : "";
   const [colleges, referees] = await Promise.all([
-    prisma.college.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    prisma.college.findMany({ select: { id: true, name: true, codeMappings: { select: { prefix: true } } } }),
     prisma.referee.findMany({
       where: {
         ...(q ? { OR: [{ name: { contains: q } }, { publicCode: { contains: q } }, { studentId: { contains: q } }] } : {}),
@@ -24,11 +25,12 @@ export default async function AdminRefereesPage({ searchParams }: { searchParams
       orderBy: { publicCode: "asc" }, take: 300,
     }),
   ]);
+  const collegeOptions = sortAffiliationOptions(colleges.map((college) => ({ ...college, type: "COLLEGE" as const, prefixes: college.codeMappings.map((mapping) => mapping.prefix) })));
   return <>
     <AdminPageHeader eyebrow="REFEREES" title="裁判员管理" description="名录优先展示；敏感联系方式只在个人详情中查看。" actions={<Link className="admin-button" href="/referees/admin/referees/new">+ 新建裁判员</Link>} />
     <form className="admin-filter-bar">
       <label className="admin-filter-search"><span>搜索</span><input defaultValue={q} name="q" placeholder="姓名 / 编号 / 学号" /></label>
-      <label><span>学院</span><select defaultValue={collegeId} name="college"><option value="">全部学院</option>{colleges.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+      <label><span>学院</span><select defaultValue={collegeId} name="college"><option value="">全部学院</option>{collegeOptions.map((item) => <option key={item.id} value={item.id}>{affiliationOptionLabel(item)}</option>)}</select></label>
       <label><span>账号状态</span><select defaultValue={status} name="status"><option value="">全部状态</option>{Object.entries(refereeStatusLabels).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
       <label><span>岗位制式</span><select defaultValue={format} name="format"><option value="">全部制式</option><option value="ELEVEN_A_SIDE">十一人制</option><option value="FUTSAL">五人制</option></select></label>
       <button className="admin-button admin-button-secondary" type="submit">筛选</button><Link className="admin-filter-reset" href="/referees/admin/referees">清除</Link>

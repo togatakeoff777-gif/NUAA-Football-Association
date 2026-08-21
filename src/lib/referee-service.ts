@@ -14,23 +14,15 @@ import type {
 import { prisma } from "@/lib/prisma";
 import {
   detectAppointmentWarnings,
-  type AppointmentWarning,
   warningsRequiringOverride,
 } from "@/lib/referee-conflicts";
 import { getPositionTemplate } from "@/lib/referee-roles";
 import { isRefereeQualification, normalizeRefereeQualification } from "@/lib/referee-qualifications";
 import { isRefereeGrade } from "@/lib/referee-profile-options";
 import { hashPassword, verifyPassword } from "@/lib/referee-security";
-
-export class RefereeServiceError extends Error {
-  constructor(
-    message: string,
-    public status = 400,
-    public warnings: AppointmentWarning[] = [],
-  ) {
-    super(message);
-  }
-}
+import { RefereeServiceError } from "@/lib/referee-service-error";
+import { resolveCompetitionTeamSelection } from "@/lib/referee-team-service";
+export { RefereeServiceError } from "@/lib/referee-service-error";
 
 export type AdminActor = {
   id: string | null;
@@ -589,6 +581,79 @@ export async function createMatch(input: {
     actorId: actor?.id ?? undefined,
   });
   return match;
+}
+
+export async function createMatchFromSelections(
+  input: Omit<Parameters<typeof createMatch>[0], "homeTeamId" | "awayTeamId"> & {
+    homeTeamSelection: string;
+    awayTeamSelection: string;
+  },
+  actor?: AdminActor,
+) {
+  if (input.endAt && input.endAt <= input.kickoff) {
+    throw new RefereeServiceError("比赛结束时间必须晚于开球时间。");
+  }
+  if (
+    input.applicationWindowStatus === "OPEN" &&
+    (!input.applicationDeadline ||
+      input.applicationDeadline <= new Date() ||
+      input.applicationDeadline >= input.kickoff)
+  ) {
+    throw new RefereeServiceError("开放报名时，截止时间须晚于当前时间且早于开球时间。");
+  }
+  return prisma.$transaction(async (tx) => {
+    const competition = await tx.competition.findUnique({
+      where: { id: input.competitionId },
+      select: { id: true, format: true },
+    });
+    if (!competition) throw new RefereeServiceError("赛事不存在。", 404);
+    const home = await resolveCompetitionTeamSelection(tx, {
+      competitionId: input.competitionId,
+      selection: input.homeTeamSelection,
+    });
+    const away = await resolveCompetitionTeamSelection(tx, {
+      competitionId: input.competitionId,
+      selection: input.awayTeamSelection,
+    });
+    if (home.team.id === away.team.id) {
+      throw new RefereeServiceError("比赛双方不能相同。");
+    }
+    const match = await tx.match.create({
+      data: {
+        slug: input.slug,
+        competitionId: input.competitionId,
+        stage: input.stage,
+        kickoff: input.kickoff,
+        endAt: input.endAt ?? null,
+        venue: input.venue,
+        round: input.round || null,
+        source: input.source ?? "MANUAL",
+        externalMatchId: input.externalMatchId || null,
+        homeTeamId: home.team.id,
+        awayTeamId: away.team.id,
+        status: input.status,
+        applicationWindowStatus: input.applicationWindowStatus,
+        applicationDeadline: input.applicationDeadline,
+        publicNote: input.publicNote || null,
+        internalNote: input.internalNote || null,
+        positionRequirements: {
+          create: buildPositionRequirements(competition.format, input.positionCounts),
+        },
+      },
+    });
+    await writeAudit({
+      action: "MATCH_CREATED",
+      entityType: "Match",
+      entityId: match.id,
+      summary: `创建裁判开放场次 ${match.slug}`,
+      actorId: actor?.id ?? undefined,
+      metadata: {
+        homeTeamCreatedOnDemand: home.created,
+        awayTeamCreatedOnDemand: away.created,
+      },
+    }, tx);
+    return match;
+  });
 }
 
 export async function updateMatch(

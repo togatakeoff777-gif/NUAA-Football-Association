@@ -11,6 +11,7 @@ import { prisma } from "@/lib/prisma";
 import type { AdminActor } from "@/lib/referee-service";
 import { RefereeServiceError } from "@/lib/referee-service";
 import { hashPassword, verifyPassword } from "@/lib/referee-security";
+import { ensureOrganizationTeam } from "@/lib/referee-team-service";
 
 async function audit(input: {
   actorType: "ADMIN" | "REFEREE";
@@ -232,17 +233,15 @@ export async function createTeamsFromUnits(input: {
   return prisma.$transaction(async (tx) => {
     const competition = await tx.competition.findUnique({ where: { id: input.competitionId } });
     if (!competition) throw new RefereeServiceError("赛事不存在。", 404);
-    const units = await tx.affiliationUnit.findMany({ where: { id: { in: unitIds } }, select: { id: true, name: true, legacyCollegeId: true } });
+    const units = await tx.affiliationUnit.findMany({ where: { id: { in: unitIds } }, select: { id: true, name: true } });
     if (units.length !== unitIds.length) throw new RefereeServiceError("包含无效组织单位。");
-    const existing = await tx.team.findMany({ where: { competitionId: input.competitionId }, select: { name: true } });
-    const existingKeys = new Set(existing.map((item) => item.name.toLocaleLowerCase("zh-CN")));
     const createdNames: string[] = [];
     for (const unit of units) {
-      if (existingKeys.has(unit.name.toLocaleLowerCase("zh-CN"))) continue;
-      const team = await tx.team.create({ data: { competitionId: input.competitionId, name: unit.name, teamType: "ORGANIZATION" } });
-      await tx.teamUnitAffiliation.create({ data: { teamId: team.id, unitId: unit.id } });
-      if (unit.legacyCollegeId) await tx.teamAffiliation.create({ data: { teamId: team.id, collegeId: unit.legacyCollegeId } });
-      createdNames.push(unit.name);
+      const result = await ensureOrganizationTeam(tx, {
+        competitionId: input.competitionId,
+        unitId: unit.id,
+      });
+      if (result.created) createdNames.push(unit.name);
     }
     await tx.auditLog.create({
       data: {

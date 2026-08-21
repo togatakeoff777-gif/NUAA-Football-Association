@@ -10,8 +10,14 @@ export type CompetitionOption = {
   id: string;
   name: string;
   format: "ELEVEN_A_SIDE" | "FUTSAL";
-  teams: Array<{ id: string; name: string }>;
+  teams: Array<{ id: string; name: string; teamType: "ORGANIZATION" | "JOINT" | "FREEFORM"; unitIds: string[] }>;
   positions: PositionDefinition[];
+};
+export type OrganizationUnitOption = {
+  id: string;
+  name: string;
+  label: string;
+  type: "COLLEGE" | "SHUYUAN";
 };
 export type AdminMatchRecord = {
   id: string; slug: string; competitionId: string; stage: string; kickoff: string; endAt: string;
@@ -27,29 +33,59 @@ function payload(form: FormData, definitions: PositionDefinition[]) {
     slug: formText(form, "slug"), competitionId: formText(form, "competitionId"), stage: formText(form, "stage"),
     kickoff: formText(form, "kickoff"), endAt: formText(form, "endAt"), venue: formText(form, "venue"),
     round: formText(form, "round"), source: formText(form, "source") || "MANUAL", externalMatchId: formText(form, "externalMatchId"),
-    homeTeamId: formText(form, "homeTeamId"), awayTeamId: formText(form, "awayTeamId"), status: formText(form, "status"),
+    status: formText(form, "status"),
     applicationWindowStatus: formText(form, "applicationWindowStatus"), applicationDeadline: formText(form, "applicationDeadline"),
     publicNote: formText(form, "publicNote"), internalNote: formText(form, "internalNote"), cancellationReason: formText(form, "cancellationReason"),
     positionCounts: Object.fromEntries(definitions.map((position) => [position.key, Number(form.get(`position-${position.key}`) ?? 0)])),
   };
 }
 
+function existingTeamId(selection: string) {
+  return selection.startsWith("team:") ? selection.slice(5) : "";
+}
+
 function PositionCounts({ definitions, defaults = {} }: { definitions: PositionDefinition[]; defaults?: Record<string, number> }) {
   return <div className="admin-position-count-grid">{definitions.map((position) => <label key={position.key}><span>{position.label}</span><input defaultValue={defaults[position.key] ?? 0} max={5} min={0} name={`position-${position.key}`} type="number" /></label>)}</div>;
 }
 
-export function AdminMatchForm({ competitions, match }: { competitions: CompetitionOption[]; match?: AdminMatchRecord }) {
+export function AdminMatchForm({
+  competitions,
+  organizationUnits,
+  initialCompetitionId = "",
+  match,
+}: {
+  competitions: CompetitionOption[];
+  organizationUnits: OrganizationUnitOption[];
+  initialCompetitionId?: string;
+  match?: AdminMatchRecord;
+}) {
   const router = useRouter();
-  const [competitionId, setCompetitionId] = useState(match?.competitionId ?? competitions[0]?.id ?? "");
+  const [competitionId, setCompetitionId] = useState(
+    match?.competitionId
+      ?? (competitions.some((item) => item.id === initialCompetitionId) ? initialCompetitionId : ""),
+  );
+  const [homeTeamSelection, setHomeTeamSelection] = useState(match ? `team:${match.homeTeamId}` : "");
+  const [awayTeamSelection, setAwayTeamSelection] = useState(match ? `team:${match.awayTeamId}` : "");
   const [tab, setTab] = useState<"basic" | "assignment" | "notes">("basic");
   const [message, setMessage] = useState("");
   const competition = competitions.find((item) => item.id === competitionId);
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!competition) return;
+    if (!homeTeamSelection || !awayTeamSelection) {
+      setMessage("请选择主队和客队。");
+      return;
+    }
+    if (homeTeamSelection === awayTeamSelection) {
+      setMessage("比赛双方不能相同。");
+      return;
+    }
+    const basePayload = payload(new FormData(event.currentTarget), competition.positions);
     const response = await fetch(match ? `/api/referees/admin/matches/${match.id}` : "/api/referees/admin/matches", {
       method: match ? "PATCH" : "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify(payload(new FormData(event.currentTarget), competition.positions)),
+      body: JSON.stringify(match
+        ? { ...basePayload, homeTeamId: existingTeamId(homeTeamSelection), awayTeamId: existingTeamId(awayTeamSelection) }
+        : { ...basePayload, homeTeamSelection, awayTeamSelection }),
     });
     const result = (await response.json()) as { error?: string; id?: string; matchId?: string };
     if (!response.ok) { setMessage(result.error ?? "保存失败。"); return; }
@@ -69,19 +105,36 @@ export function AdminMatchForm({ competitions, match }: { competitions: Competit
     setMessage(response.ok ? "场次副本已创建并保持关闭报名。" : result.error ?? "复制失败。");
     if (response.ok) router.push("/referees/admin/matches");
   }
+  const representedUnitIds = new Set(
+    competition?.teams
+      .filter((team) => team.teamType === "ORGANIZATION")
+      .flatMap((team) => team.unitIds) ?? [],
+  );
+  const availableUnits = organizationUnits.filter((unit) => !representedUnitIds.has(unit.id));
+  const collegeUnits = availableUnits.filter((unit) => unit.type === "COLLEGE");
+  const shuyuanUnits = availableUnits.filter((unit) => unit.type === "SHUYUAN");
+  function teamOptions() {
+    if (!competition) return <option value="">请先选择赛事</option>;
+    return <>
+      <option value="">请选择球队</option>
+      {competition.teams.length ? <optgroup label="本赛事已有球队">{competition.teams.map((team) => <option key={team.id} value={`team:${team.id}`}>{team.name}</option>)}</optgroup> : null}
+      {collegeUnits.length ? <optgroup label="学院代表队">{collegeUnits.map((unit) => <option key={unit.id} value={`unit:${unit.id}`}>{unit.label}</option>)}</optgroup> : null}
+      {shuyuanUnits.length ? <optgroup label="书院代表队">{shuyuanUnits.map((unit) => <option key={unit.id} value={`unit:${unit.id}`}>{unit.label}</option>)}</optgroup> : null}
+    </>;
+  }
   return <>
     <form className="admin-form" onSubmit={submit}>
       <nav aria-label="比赛表单分区" className="admin-tabs"><button aria-selected={tab === "basic"} onClick={() => setTab("basic")} role="tab" type="button">比赛信息</button><button aria-selected={tab === "assignment"} onClick={() => setTab("assignment")} role="tab" type="button">报名与岗位</button><button aria-selected={tab === "notes"} onClick={() => setTab("notes")} role="tab" type="button">说明与来源</button></nav>
       <section className="admin-form-section" hidden={tab !== "basic"}><header><h2>比赛信息</h2><p>维护赛程、双方、场地与当前比赛状态。</p></header><div className="admin-form-grid admin-form-grid-3">
-        <label><span>赛事</span><select disabled={Boolean(match)} name="competitionId" onChange={(event) => setCompetitionId(event.target.value)} value={competitionId}>{competitions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>{match ? <input name="competitionId" type="hidden" value={competitionId} /> : null}</label>
+        <label><span>赛事</span><select disabled={Boolean(match)} name="competitionId" onChange={(event) => { setCompetitionId(event.target.value); setHomeTeamSelection(""); setAwayTeamSelection(""); }} required value={competitionId}><option value="">请选择赛事</option>{competitions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>{match ? <input name="competitionId" type="hidden" value={competitionId} /> : <small>选择赛事后再选择参赛球队。</small>}</label>
         <label><span>页面标识</span><input defaultValue={match?.slug} name="slug" required /></label>
         <label><span>阶段</span><input defaultValue={match?.stage} name="stage" required /></label>
         <label><span>标准轮次</span><input defaultValue={match?.round} name="round" /></label>
         <label><span>开球时间</span><input defaultValue={match?.kickoff} name="kickoff" required type="datetime-local" /></label>
         <label><span>预计结束</span><input defaultValue={match?.endAt} name="endAt" type="datetime-local" /></label>
         <label><span>比赛场地</span><input defaultValue={match?.venue} name="venue" required /></label>
-        <label><span>主队</span><select defaultValue={match?.homeTeamId} name="homeTeamId" required><option value="">请选择</option>{competition?.teams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label>
-        <label><span>客队</span><select defaultValue={match?.awayTeamId} name="awayTeamId" required><option value="">请选择</option>{competition?.teams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label>
+        <label><span>主队</span><select disabled={!competition} onChange={(event) => setHomeTeamSelection(event.target.value)} required value={homeTeamSelection}>{teamOptions()}</select><small>{competition ? "可选择已有球队，或按需建立学院/书院代表队。" : "请先选择赛事"}</small></label>
+        <label><span>客队</span><select disabled={!competition} onChange={(event) => setAwayTeamSelection(event.target.value)} required value={awayTeamSelection}>{teamOptions()}</select><small>{competition ? "正式球队名称不会包含学院代码。" : "请先选择赛事"}</small></label>
         <label><span>比赛状态</span><select defaultValue={match?.status ?? "SCHEDULED"} name="status">{Object.entries(matchStatusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
         <label><span>取消原因</span><input defaultValue={match?.cancellationReason} name="cancellationReason" /></label>
       </div></section>

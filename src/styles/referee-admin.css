@@ -85,6 +85,7 @@
 .admin-filter-search { grid-column: auto; }
 .admin-filter-bar label, .admin-form label { display: grid; gap: 5px; }
 .admin-filter-bar label > span, .admin-form label > span, .admin-field-label { color: #45566a; font-size: 10px; font-weight: 800; }
+.admin-form label > small { color: var(--admin-muted); font-size: 9px; line-height: 1.45; }
 .admin-filter-bar input, .admin-filter-bar select, .admin-form input, .admin-form select, .admin-form textarea { width: 100%; min-height: 38px; padding: 7px 10px; border: 1px solid #cbd6e2; border-radius: 2px; background: white; color: #172235; font-size: 12px; }
 .admin-form textarea { min-height: 84px; resize: vertical; }
 .admin-form { display: grid; gap: 16px; }
@@ -96,6 +97,11 @@
 .admin-form-section header p { margin-top: 4px; color: var(--admin-muted); font-size: 11px; }
 .admin-form-message { min-height: 18px; color: var(--admin-blue); font-size: 11px; font-weight: 750; }
 .admin-form footer { display: flex; justify-content: flex-end; gap: 9px; }
+.admin-form-readonly { display: flex; flex-wrap: wrap; gap: 10px 22px; padding: 13px 14px; border: 1px solid var(--admin-line); background: #f8fafc; }
+.admin-form-readonly div { display: grid; gap: 3px; }
+.admin-form-readonly span { color: var(--admin-muted); font-size: 9px; font-weight: 800; }
+.admin-form-readonly strong { color: #30445c; font-size: 11px; }
+.admin-form-readonly p { flex-basis: 100%; color: var(--admin-muted); font-size: 10px; }
 .admin-checkbox-groups { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .admin-checkbox-group { padding: 14px; border: 1px solid var(--admin-line); background: #f8fafc; }
 .admin-checkbox-group > strong { display: block; margin-bottom: 10px; font-size: 12px; }
@@ -153,6 +159,7 @@
 .admin-empty-state { padding: 34px 20px; color: var(--admin-muted); text-align: center; }
 .admin-empty-state strong { color: #34465b; font-size: 13px; }
 .admin-empty-state p { margin-top: 5px; font-size: 11px; }
+.admin-empty-state .admin-button { margin-top: 13px; }
 .admin-modal-backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 24px; background: rgba(5,17,35,.55); }
 .admin-modal { width: min(760px,100%); max-height: calc(100vh - 48px); overflow: auto; border: 1px solid var(--admin-line); background: var(--admin-bg); box-shadow: 0 28px 80px rgba(0,0,0,.24); }
 .admin-modal-compact { width: min(480px,100%); }

@@ -11,6 +11,23 @@ export const matchStatusLabels: Record<string, string> = {
   CANCELLED: "已取消",
 };
 
+export const competitionStatusLabels: Record<string, string> = {
+  PREPARING: "准备中",
+  REGISTRATION: "报名中",
+  ONGOING: "进行中",
+  COMPLETED: "已结束",
+};
+
+export const competitionFormatLabels: Record<string, string> = {
+  ELEVEN_A_SIDE: "十一人制",
+  FUTSAL: "五人制",
+};
+
+export const dataSourceLabels: Record<string, string> = {
+  MANUAL: "手工维护",
+  FOOTBALL_CHINA: "足球中国",
+};
+
 export const appointmentStatusLabels: Record<string, string> = {
   NONE: "待选派",
   DRAFT: "草稿",

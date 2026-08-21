@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 
+import { AdminAffiliationOptionGroups } from "@/components/referees/admin/admin-affiliation-options";
 import { refereeStatusLabels, trainingStatusLabels } from "@/components/referees/admin/admin-ui";
 import {
   applyCapabilityBatch,
@@ -11,10 +12,11 @@ import {
 } from "@/lib/referee-profile-options";
 import { refereeQualifications } from "@/lib/referee-qualifications";
 
-export type CollegeOption = { id: string; name: string };
+export type CollegeOption = { id: string; name: string; label: string };
 export type AffiliationUnitOption = {
   id: string;
   name: string;
+  label: string;
   type: "COLLEGE" | "SHUYUAN";
   childUnitIds: string[];
 };
@@ -147,7 +149,7 @@ export function RefereeCreateForm({ colleges }: { colleges: CollegeOption[] }) {
       <label><span>姓名</span><input autoFocus maxLength={48} name="name" required /></label>
       <label><span>裁判员编号</span><input maxLength={32} name="publicCode" required /></label>
       <label><span>学号</span><input maxLength={32} name="studentId" /></label>
-      <label><span>学院背景</span><select name="collegeId"><option value="">待确认</option>{colleges.map((college) => <option key={college.id} value={college.id}>{college.name}</option>)}</select></label>
+      <label><span>学院背景</span><select name="collegeId"><option value="">待确认</option>{colleges.map((college) => <option key={college.id} value={college.id}>{college.label}</option>)}</select></label>
       <label><span>初始密码</span><input minLength={12} name="initialPassword" required type="password" /></label>
       <label><span>账号状态</span><select defaultValue="PENDING" name="status">{Object.entries(refereeStatusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
     </div>
@@ -238,8 +240,8 @@ export function RefereeEditForm({ account, colleges, affiliationUnits }: { accou
         <label><span>裁判员编号</span><input defaultValue={account.publicCode} name="publicCode" required /></label>
         <label><span>学号</span><input defaultValue={account.studentId} name="studentId" /></label>
         <label><span>年级</span><select name="grade" onChange={(event) => { setGrade(event.target.value); markDirty(); }} value={grade}><option value="">待确认</option>{refereeGrades.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
-        <label><span>学院背景</span><select name="collegeId" onChange={(event) => { setCollegeId(event.target.value); markDirty(); }} value={collegeId}><option value="">待确认</option>{colleges.map((college) => <option key={college.id} value={college.id}>{college.name}</option>)}</select></label>
-        <label><span>当前组织归属</span><select name="currentAffiliationUnitId" onChange={(event) => { setCurrentUnitId(event.target.value); markDirty(); }} value={currentUnitId}><option value="">待管理员确认</option><optgroup label="书院">{affiliationUnits.filter((unit) => unit.type === "SHUYUAN").map((unit) => <option key={unit.id} value={unit.id}>{unit.name}</option>)}</optgroup><optgroup label="学院">{affiliationUnits.filter((unit) => unit.type === "COLLEGE").map((unit) => <option key={unit.id} value={unit.id}>{unit.name}</option>)}</optgroup></select>{recommendedUnit && recommendedUnit.id !== currentUnitId ? <small className="admin-field-suggestion">根据年级和学院背景建议：{recommendedUnit.name} <button onClick={() => { setCurrentUnitId(recommendedUnit.id); markDirty(); }} type="button">采用建议</button></small> : <small>已有归属不会因年级变化被自动覆盖。</small>}</label>
+        <label><span>学院背景</span><select name="collegeId" onChange={(event) => { setCollegeId(event.target.value); markDirty(); }} value={collegeId}><option value="">待确认</option>{colleges.map((college) => <option key={college.id} value={college.id}>{college.label}</option>)}</select></label>
+        <label><span>当前组织归属</span><select name="currentAffiliationUnitId" onChange={(event) => { setCurrentUnitId(event.target.value); markDirty(); }} value={currentUnitId}><option value="">待管理员确认</option><AdminAffiliationOptionGroups options={affiliationUnits} /></select>{recommendedUnit && recommendedUnit.id !== currentUnitId ? <small className="admin-field-suggestion">根据年级和学院背景建议：{recommendedUnit.name} <button onClick={() => { setCurrentUnitId(recommendedUnit.id); markDirty(); }} type="button">采用建议</button></small> : <small>已有归属不会因年级变化被自动覆盖。</small>}</label>
         <label><span>手机号</span><input defaultValue={account.phone} name="phone" /></label>
         <label><span>QQ</span><input defaultValue={account.qq} name="qq" /></label>
         <label><span>账号状态</span><select defaultValue={account.status} name="status">{Object.entries(refereeStatusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>

@@ -4,8 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { appointmentStatusLabels } from "@/components/referees/admin/admin-ui";
-
 type PositionKey = "REFEREE" | "ASSISTANT_REFEREE_1" | "ASSISTANT_REFEREE_2" | "FOURTH_OFFICIAL" | "RESERVE_ASSISTANT_REFEREE" | "SECOND_REFEREE" | "THIRD_REFEREE" | "TIMEKEEPER" | "FOURTH_REFEREE";
 export type AppointmentWarningView = { code: string; refereeId: string; refereeName: string; message: string; overridable: boolean };
 export type AppointmentMatchView = {
@@ -58,6 +56,9 @@ export function AdminAppointmentEditor({
   const [reason, setReason] = useState("");
   const [overrideReason, setOverrideReason] = useState("");
   const [warnings, setWarnings] = useState(initialWarnings);
+  const [moreOpen, setMoreOpen] = useState(
+    match.statusKey === "PUBLISHED" || initialWarnings.some((warning) => warning.overridable),
+  );
   const [manualOpen, setManualOpen] = useState(false);
   const [manualMessage, setManualMessage] = useState("");
   const currentStatus = match.statusKey;
@@ -75,6 +76,7 @@ export function AdminAppointmentEditor({
     const positions = match.template.filter((item) => enabled[identity(item)]).map((item) => ({ key: item.key, slot: item.slot, refereeId: assigned[identity(item)] || null }));
     const { response, result } = await jsonApi(`/api/referees/admin/appointments/${match.id}`, "PUT", { positions, publicationNote: form.get("publicationNote"), changeReason: reason, overrideReason });
     setWarnings(result.warnings ?? []);
+    if (result.warnings?.some((warning) => warning.overridable)) setMoreOpen(true);
     setMessage(response.ok ? "选派草稿已保存。" : result.error ?? "保存失败。");
     if (response.ok) router.refresh();
   }
@@ -82,6 +84,7 @@ export function AdminAppointmentEditor({
   async function action(actionName: "publish" | "withdraw" | "complete" | "cancel") {
     const { response, result } = await jsonApi(`/api/referees/admin/appointments/${match.id}`, "POST", { action: actionName, reason, overrideReason });
     setWarnings(result.warnings ?? []);
+    if (result.warnings?.some((warning) => warning.overridable)) setMoreOpen(true);
     const labels = { publish: "选派已发布。", withdraw: "选派已撤回，可进入修改。", complete: "选派已标记完成。", cancel: "选派已取消。" };
     setMessage(response.ok ? labels[actionName] : result.error ?? "操作失败。");
     if (response.ok) router.refresh();
@@ -104,38 +107,44 @@ export function AdminAppointmentEditor({
     if (response.ok) { setManualOpen(false); router.refresh(); }
   }
 
+  const assignedCount = match.template.filter((item) => enabled[identity(item)] && assigned[identity(item)]).length;
+
   return <>
     <section className="admin-panel admin-assignment-panel">
-      <header className="admin-panel-header"><div><h2>裁判岗位</h2><p>{match.format === "ELEVEN_A_SIDE" ? "十一人制" : "五人制"}岗位模板 · 可正式选派优先，培养中和暂不安排人员保留供负责人判断</p></div><span className="admin-status-badge" data-status={currentStatus}>{appointmentStatusLabels[currentStatus] ?? currentStatus}</span></header>
+      <header className="admin-panel-header admin-workbench-header"><div><h2>裁判选派工作台</h2><p>{match.format === "ELEVEN_A_SIDE" ? "十一人制" : "五人制"}岗位模板 · 可正式选派优先，培养中和暂不安排人员保留供负责人判断</p></div><div className="admin-assignment-summary"><span><strong>{assignedCount}</strong> / {match.template.length} 已分配</span><span data-warning={warnings.length > 0}><strong>{warnings.length}</strong> 个提醒</span></div></header>
       <form className="admin-form admin-assignment-form" onSubmit={save}>
-        <div className="admin-position-assignment-list">{match.template.map((position) => {
+        <div aria-label="裁判岗位分配" className="admin-workbench-table" role="table">
+          <div className="admin-workbench-table-head" role="row"><span role="columnheader">岗位</span><span role="columnheader">裁判员</span><span role="columnheader">岗位能力</span><span role="columnheader">状态检查</span></div>
+          <div className="admin-position-assignment-list">{match.template.map((position) => {
           const key = identity(position);
           const refereeId = assigned[key];
           const positionWarnings = warnings.filter((warning) => warning.refereeId === refereeId);
+          const nonCapabilityWarnings = positionWarnings.filter((warning) => !warning.code.startsWith("CAPABILITY_"));
           const selectedReferee = referees.find((referee) => referee.id === refereeId);
           const selectedCapability = selectedReferee ? capabilityStatus(selectedReferee, match.format, position.key) : "NOT_ASSIGNED";
-          return <div className="admin-position-assignment" key={key}>
-            <label className="admin-position-toggle"><input checked={enabled[key]} disabled={!canEditDraft} onChange={(event) => setEnabled((current) => ({ ...current, [key]: event.target.checked }))} type="checkbox" /><span><strong>{position.label}</strong>{position.slot > 1 ? <small>岗位序号 {position.slot}</small> : null}</span></label>
-            <div className="admin-position-select"><select disabled={!enabled[key] || !canEditDraft} onChange={(event) => updateAssignment(key, event.target.value)} value={refereeId}><option value="">待分配</option>{[...referees].sort((left, right) => ["READY", "TRAINING", "NOT_ASSIGNED"].indexOf(capabilityStatus(left, match.format, position.key)) - ["READY", "TRAINING", "NOT_ASSIGNED"].indexOf(capabilityStatus(right, match.format, position.key))).map((referee) => { const status = capabilityStatus(referee, match.format, position.key); return <option key={referee.id} value={referee.id}>{capabilityText(status)} · {referee.label} · 已完成 {referee.completedCount} 场</option>; })}</select>{refereeId ? <div className={`admin-candidate-health${positionWarnings.length || selectedCapability !== "READY" ? " has-warning" : ""}`}><span>{selectedCapability === "READY" ? "✓" : "⚠"} {capabilityText(selectedCapability)}</span>{positionWarnings.length ? positionWarnings.filter((warning) => !warning.code.startsWith("CAPABILITY_")).map((warning) => <span key={`${warning.code}-${warning.refereeId}`}>⚠ {warningLabel(warning.code)}</span>) : <span>✓ 当前未发现其他冲突</span>}</div> : <small>选择裁判员后，保存或发布时由服务端执行完整冲突检测。</small>}</div>
+          return <div className={`admin-position-assignment${enabled[key] ? "" : " is-disabled"}`} key={key} role="row">
+            <div className="admin-workbench-role" data-label="岗位" role="cell"><label className="admin-position-toggle"><input aria-label={`启用${position.label}`} checked={enabled[key]} disabled={!canEditDraft} onChange={(event) => setEnabled((current) => ({ ...current, [key]: event.target.checked }))} type="checkbox" /><span><strong>{position.label}</strong>{position.slot > 1 ? <small>岗位序号 {position.slot}</small> : null}</span></label></div>
+            <div className="admin-position-select" data-label="裁判员" role="cell"><select aria-label={`${position.label}裁判员`} disabled={!enabled[key] || !canEditDraft} onChange={(event) => updateAssignment(key, event.target.value)} value={refereeId}><option value="">待分配</option>{[...referees].sort((left, right) => ["READY", "TRAINING", "NOT_ASSIGNED"].indexOf(capabilityStatus(left, match.format, position.key)) - ["READY", "TRAINING", "NOT_ASSIGNED"].indexOf(capabilityStatus(right, match.format, position.key))).map((referee) => { const status = capabilityStatus(referee, match.format, position.key); return <option key={referee.id} value={referee.id}>{capabilityText(status)} · {referee.label} · 已完成 {referee.completedCount} 场</option>; })}</select></div>
+            <div className="admin-workbench-capability" data-label="岗位能力" role="cell">{refereeId ? <span data-state={selectedCapability}>{selectedCapability === "READY" ? "✓" : "⚠"} {capabilityText(selectedCapability)}</span> : <span>—</span>}</div>
+            <div className={`admin-workbench-checks${nonCapabilityWarnings.length ? " has-warning" : ""}`} data-label="状态检查" role="cell">{refereeId ? nonCapabilityWarnings.length ? nonCapabilityWarnings.map((warning) => <span key={`${warning.code}-${warning.refereeId}`}>⚠ {warning.message}</span>) : <span>✓ 无冲突</span> : <span>—</span>}</div>
           </div>;
-        })}</div>
+        })}</div></div>
         {warnings.length ? <div className="admin-warning-panel"><strong>冲突与相邻任务提醒</strong><ul>{warnings.map((warning, index) => <li key={`${warning.code}-${warning.refereeId}-${index}`}><b>{warningLabel(warning.code)}</b>：{warning.message}</li>)}</ul></div> : null}
-        <div className="admin-form-grid">
+        <details className="admin-more-options" onToggle={(event) => setMoreOpen(event.currentTarget.open)} open={moreOpen}><summary><span>更多选项</span><small>公示备注、修改原因与冲突留痕</small></summary><div className="admin-more-options-content"><div className="admin-form-grid">
           <label><span>公示备注</span><input defaultValue={match.publicationNote} maxLength={240} name="publicationNote" readOnly={!canEditDraft} /></label>
           {currentStatus !== "NONE" ? <label><span>{currentStatus === "PUBLISHED" ? "操作原因" : "修改 / 重新发布原因"}</span><input maxLength={240} onChange={(event) => setReason(event.target.value)} placeholder="撤回、修改或重新发布时填写" value={reason} /></label> : null}
-        </div>
-        {needsOverride ? <label className="admin-override-field"><span>冲突覆盖原因</span><textarea maxLength={500} onChange={(event) => setOverrideReason(event.target.value)} placeholder="存在可覆盖冲突时必须填写，内容将进入版本与操作日志" value={overrideReason} /></label> : null}
+        </div>{needsOverride ? <label className="admin-override-field"><span>冲突覆盖原因</span><textarea maxLength={500} onChange={(event) => setOverrideReason(event.target.value)} placeholder="存在可覆盖冲突时必须填写，内容将进入版本与操作日志" value={overrideReason} /></label> : null}</div></details>
         <p aria-live="polite" className="admin-form-message">{message}</p>
         <footer className="admin-assignment-actions">
-          {canEditDraft ? <><button className="admin-button admin-button-secondary" type="submit">保存草稿</button><button className="admin-button" onClick={() => action("publish")} type="button">{currentStatus === "WITHDRAWN" ? "重新发布" : "发布选派"}</button></> : null}
-          {currentStatus === "PUBLISHED" ? <><button className="admin-button admin-button-secondary" onClick={() => action("withdraw")} type="button">撤回并修改</button><button className="admin-button" onClick={() => action("complete")} type="button">完成</button><button className="admin-button admin-button-danger" onClick={() => action("cancel")} type="button">取消</button></> : null}
-          {match.appointmentId ? <Link className="admin-button admin-button-secondary" href={`/referees/assignments/${match.appointmentId}/print`}>打印选派单</Link> : null}
+          <div className="admin-assignment-secondary-actions">{match.appointmentId ? <Link className="admin-button admin-button-quiet" href={`/referees/assignments/${match.appointmentId}/print`}>打印选派单</Link> : null}</div>
+          <div className="admin-assignment-primary-actions">{canEditDraft ? <><button className="admin-button admin-button-secondary" type="submit">保存草稿</button><button className="admin-button admin-primary-cta" onClick={() => action("publish")} type="button">{currentStatus === "WITHDRAWN" ? "重新发布" : "发布选派"}</button></> : null}
+          {currentStatus === "PUBLISHED" ? <><button className="admin-button admin-button-secondary" onClick={() => action("withdraw")} type="button">撤回并修改</button><button className="admin-button" onClick={() => action("complete")} type="button">完成</button><button className="admin-button admin-button-danger" onClick={() => action("cancel")} type="button">取消</button></> : null}</div>
         </footer>
       </form>
     </section>
-    <section className="admin-panel">
-      <header className="admin-panel-header"><div><h2>报名意向</h2><p>本场比赛的裁判员报名与人工例外补录。</p></div><div className="admin-page-actions"><Link className="admin-button admin-button-quiet" href={`/api/referees/admin/exports/applications?matchId=${match.id}`}>导出 CSV</Link><button className="admin-button" onClick={() => setManualOpen(true)} type="button">+ 人工补录</button></div></header>
-      {applications.length ? <div className="admin-table-scroll"><table className="admin-data-table"><thead><tr><th>裁判员</th><th>意向岗位</th><th>说明</th><th>提交时间</th><th>状态</th><th>审核</th></tr></thead><tbody>{applications.map((application) => <ApplicationRow application={application} key={application.id} onReview={review} />)}</tbody></table></div> : <div className="admin-empty-state"><strong>暂无报名意向</strong><p>裁判员报名或管理员人工补录后会显示在这里。</p></div>}
+    <section className="admin-panel admin-applications-panel">
+      <header className="admin-panel-header"><div><h2>报名意向（{applications.length}）</h2><p>本场比赛的裁判员报名与人工例外补录。</p></div>{applications.length ? <div className="admin-page-actions"><Link className="admin-button admin-button-quiet" href={`/api/referees/admin/exports/applications?matchId=${match.id}`}>导出 CSV</Link><button className="admin-button admin-button-secondary" onClick={() => setManualOpen(true)} type="button">+ 人工补录</button></div> : null}</header>
+      {applications.length ? <div className="admin-table-scroll"><table className="admin-data-table"><thead><tr><th>裁判员</th><th>意向岗位</th><th>说明</th><th>提交时间</th><th>状态</th><th>审核</th></tr></thead><tbody>{applications.map((application) => <ApplicationRow application={application} key={application.id} onReview={review} />)}</tbody></table></div> : <div className="admin-compact-empty"><span>暂无裁判员报名本场比赛。</span><button className="admin-button admin-button-quiet" onClick={() => setManualOpen(true)} type="button">人工补录</button></div>}
       <p aria-live="polite" className="admin-form-message admin-inline-message">{manualMessage}</p>
     </section>
     {manualOpen ? <div aria-modal="true" className="admin-modal-backdrop" role="dialog"><div className="admin-modal"><header><div><span>MANUAL APPLICATION</span><h2>人工例外补录</h2></div><button aria-label="关闭" onClick={() => setManualOpen(false)} type="button">×</button></header><form className="admin-form" onSubmit={manualApplication}><div className="admin-form-grid"><label><span>裁判员</span><select name="refereeId" required><option value="">请选择</option>{referees.map((referee) => <option key={referee.id} value={referee.id}>{referee.label}</option>)}</select></label><label><span>人工例外原因</span><input maxLength={240} name="exceptionReason" required /></label></div><div><span className="admin-field-label">意向岗位</span><div className="admin-checkbox-list admin-manual-position-list">{match.template.filter((item) => item.slot === 1).map((position) => <label key={position.key}><input name="preferredPositions" type="checkbox" value={position.key} />{position.label}</label>)}</div></div><label><span>补充说明</span><textarea maxLength={240} name="note" /></label><footer><button className="admin-button admin-button-secondary" onClick={() => setManualOpen(false)} type="button">取消</button><button className="admin-button" type="submit">确认补录</button></footer></form></div></div> : null}

@@ -19,6 +19,7 @@ import {
 } from "@/lib/referee-conflicts";
 import { getPositionTemplate } from "@/lib/referee-roles";
 import { isRefereeQualification, normalizeRefereeQualification } from "@/lib/referee-qualifications";
+import { isRefereeGrade } from "@/lib/referee-profile-options";
 import { hashPassword, verifyPassword } from "@/lib/referee-security";
 
 export class RefereeServiceError extends Error {
@@ -81,6 +82,7 @@ export async function createRefereeAccount(input: {
   refereeLevel?: string;
   joinedAt?: Date;
   affiliationUnitIds?: string[];
+  currentAffiliationUnitId?: string;
   capabilities?: Array<{ format: CompetitionFormat; positionKey: AppointmentPositionKey; status?: PositionCapabilityStatus }>;
 }, actor?: AdminActor) {
   const passwordHash = await hashPassword(input.initialPassword);
@@ -88,9 +90,10 @@ export async function createRefereeAccount(input: {
   if (input.refereeLevel && !isRefereeQualification(input.refereeLevel)) {
     throw new RefereeServiceError("裁判资质不在允许范围内。");
   }
+  if (input.grade && !isRefereeGrade(input.grade)) throw new RefereeServiceError("年级不在允许范围内。");
   try {
     return await prisma.$transaction(async (tx) => {
-      const affiliationUnitIds = await resolveRefereeAffiliationUnitIds(tx, input.collegeId, input.affiliationUnitIds);
+      const currentAffiliationUnitId = await resolveCurrentAffiliationUnitId(tx, input);
       const referee = await tx.referee.create({
         data: {
           publicCode: input.publicCode,
@@ -100,6 +103,7 @@ export async function createRefereeAccount(input: {
           status: input.status,
           studentId: input.studentId || null,
           collegeId: input.collegeId || null,
+          currentAffiliationUnitId,
           grade: input.grade || null,
           phone: input.phone || null,
           qq: input.qq || null,
@@ -114,7 +118,7 @@ export async function createRefereeAccount(input: {
           publicBio: input.publicBio || null,
           internalNote: input.internalNote || null,
           capabilities: { create: capabilities },
-          affiliations: { create: affiliationUnitIds.map((unitId) => ({ unitId })) },
+          affiliations: currentAffiliationUnitId ? { create: [{ unitId: currentAffiliationUnitId }] } : undefined,
         },
       });
       await writeAudit({
@@ -156,6 +160,7 @@ export async function updateRefereeAccount(
     refereeLevel?: string;
     joinedAt?: Date;
     affiliationUnitIds?: string[];
+    currentAffiliationUnitId?: string;
     capabilities?: Array<{ format: CompetitionFormat; positionKey: AppointmentPositionKey; status?: PositionCapabilityStatus }>;
   },
   actor?: AdminActor,
@@ -166,12 +171,16 @@ export async function updateRefereeAccount(
   if (input.refereeLevel && !isRefereeQualification(input.refereeLevel)) {
     throw new RefereeServiceError("裁判资质不在允许范围内。");
   }
+  if (input.grade && !isRefereeGrade(input.grade)) throw new RefereeServiceError("年级不在允许范围内。");
   let referee;
   try {
     referee = await prisma.$transaction(async (tx) => {
-      const affiliationUnitIds = await resolveRefereeAffiliationUnitIds(tx, input.collegeId, input.affiliationUnitIds, id);
+      const currentAffiliationUnitId = await resolveCurrentAffiliationUnitId(
+        tx,
+        input,
+        existing.currentAffiliationUnitId,
+      );
       await tx.refereePositionCapability.deleteMany({ where: { refereeId: id } });
-      await tx.refereeAffiliation.deleteMany({ where: { refereeId: id } });
       const updated = await tx.referee.update({
         where: { id },
         data: {
@@ -180,6 +189,7 @@ export async function updateRefereeAccount(
           status: input.status,
           studentId: input.studentId || null,
           collegeId: input.collegeId || null,
+          currentAffiliationUnitId,
           grade: input.grade || null,
           phone: input.phone || null,
           qq: input.qq || null,
@@ -194,10 +204,16 @@ export async function updateRefereeAccount(
           publicBio: input.publicBio || null,
           internalNote: input.internalNote || null,
           capabilities: { create: capabilities },
-          affiliations: { create: affiliationUnitIds.map((unitId) => ({ unitId })) },
           ...(input.status === "ACTIVE" ? {} : { sessions: { deleteMany: {} } }),
         },
       });
+      if (currentAffiliationUnitId) {
+        await tx.refereeAffiliation.upsert({
+          where: { refereeId_unitId: { refereeId: id, unitId: currentAffiliationUnitId } },
+          update: {},
+          create: { refereeId: id, unitId: currentAffiliationUnitId },
+        });
+      }
       await writeAudit({
         action: "REFEREE_ACCOUNT_UPDATED",
         entityType: "Referee",
@@ -241,26 +257,23 @@ function normalizeCapabilities(input: {
   ).map((item) => ({ ...item, status: item.status ?? "READY" }));
 }
 
-async function resolveRefereeAffiliationUnitIds(
+async function resolveCurrentAffiliationUnitId(
   tx: Prisma.TransactionClient,
-  collegeId?: string,
-  requestedIds?: string[],
-  refereeId?: string,
+  input: {
+    currentAffiliationUnitId?: string;
+    affiliationUnitIds?: string[];
+  },
+  existingCurrentAffiliationUnitId?: string | null,
 ) {
-  let ids = requestedIds ? [...new Set(requestedIds)] : [];
-  if (!requestedIds && refereeId) {
-    const existing = await tx.refereeAffiliation.findMany({
-      where: { refereeId, unit: { type: "SHUYUAN" } },
-      select: { unitId: true },
-    });
-    ids = existing.map((item) => item.unitId);
-  }
-  if (collegeId) ids.push(collegeId);
-  ids = [...new Set(ids)];
-  if (!ids.length) return ids;
-  const count = await tx.affiliationUnit.count({ where: { id: { in: ids } } });
-  if (count !== ids.length) throw new RefereeServiceError("裁判员组织归属包含无效单位。");
-  return ids;
+  const requested = input.currentAffiliationUnitId !== undefined
+    ? input.currentAffiliationUnitId || null
+    : input.affiliationUnitIds !== undefined
+      ? input.affiliationUnitIds[0] || null
+      : existingCurrentAffiliationUnitId ?? null;
+  if (!requested) return null;
+  const exists = await tx.affiliationUnit.count({ where: { id: requested } });
+  if (!exists) throw new RefereeServiceError("裁判员当前组织归属无效。");
+  return requested;
 }
 
 export async function resetRefereePassword(id: string, initialPassword: string) {

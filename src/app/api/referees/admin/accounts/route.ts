@@ -15,6 +15,7 @@ import {
   readShortTextArray,
 } from "@/lib/referee-validation";
 import { refereeQualifications } from "@/lib/referee-qualifications";
+import { refereeGrades } from "@/lib/referee-profile-options";
 
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) {
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
       name: readShortText(body.name, "姓名", 48),
       studentId: readShortText(body.studentId, "学号", 32, false),
       collegeId: readShortText(body.collegeId, "学院", 64, false),
-      grade: readShortText(body.grade, "年级", 32, false),
+      grade: body.grade ? readEnum(body.grade, refereeGrades, "年级") : "",
       phone: readShortText(body.phone, "手机号", 32, false),
       qq: readShortText(body.qq, "QQ", 32, false),
       refereeLevel: readEnum(body.refereeLevel || refereeQualifications[0], refereeQualifications, "裁判资质"),
@@ -58,6 +59,9 @@ export async function POST(request: Request) {
       internalNote: readShortText(body.internalNote, "内部备注", 500, false),
       capabilities: body.capabilities === undefined ? undefined : readCapabilities(body.capabilities),
       affiliationUnitIds: body.affiliationUnitIds === undefined ? undefined : readShortTextArray(body.affiliationUnitIds, "组织归属", 64, 30),
+      currentAffiliationUnitId: body.currentAffiliationUnitId === undefined
+        ? undefined
+        : readShortText(body.currentAffiliationUnitId, "当前组织归属", 64, false),
     }, actor);
     return NextResponse.json({ ok: true, refereeId: referee.id }, { status: 201 });
   } catch (error) {

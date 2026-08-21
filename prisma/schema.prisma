@@ -189,45 +189,48 @@ model Match {
 }
 
 model Referee {
-  id                     String                       @id @default(cuid())
-  publicCode             String                       @unique
-  name                   String
-  status                 RefereeStatus                @default(ACTIVE)
-  studentId              String?                      @unique
-  collegeId              String?
-  grade                  String?
-  phone                  String?
-  qq                     String?
-  refereeLevel           String?
-  joinedAt               DateTime?
-  elevenASide            Boolean                      @default(false)
-  futsal                 Boolean                      @default(false)
-  sourceNote             String?
-  passwordHash           String?
-  mustChangePassword     Boolean                      @default(true)
-  certificateNote        String?
-  qualificationNote      String?
-  trainingStatus         TrainingStatus               @default(NOT_STARTED)
-  publicDirectoryEnabled Boolean                      @default(false)
-  publicBio              String?
-  internalNote           String?
-  failedLoginCount       Int                          @default(0)
-  lockedUntil            DateTime?
-  lastLoginAt            DateTime?
-  passwordChangedAt      DateTime?
-  createdAt              DateTime                     @default(now())
-  updatedAt              DateTime                     @updatedAt
-  applications           RefereeApplication[]
-  positions              AppointmentPosition[]
-  sessions               RefereeSession[]
-  college                College?                     @relation(fields: [collegeId], references: [id], onDelete: SetNull)
-  capabilities           RefereePositionCapability[]
-  affiliations           RefereeAffiliation[]
-  availability           RefereeAvailability[]
-  acknowledgements       AppointmentAcknowledgement[]
-  conflictReports        AppointmentConflictReport[]
+  id                       String                       @id @default(cuid())
+  publicCode               String                       @unique
+  name                     String
+  status                   RefereeStatus                @default(ACTIVE)
+  studentId                String?                      @unique
+  collegeId                String?
+  currentAffiliationUnitId String?
+  grade                    String?
+  phone                    String?
+  qq                       String?
+  refereeLevel             String?
+  joinedAt                 DateTime?
+  elevenASide              Boolean                      @default(false)
+  futsal                   Boolean                      @default(false)
+  sourceNote               String?
+  passwordHash             String?
+  mustChangePassword       Boolean                      @default(true)
+  certificateNote          String?
+  qualificationNote        String?
+  trainingStatus           TrainingStatus               @default(NOT_STARTED)
+  publicDirectoryEnabled   Boolean                      @default(false)
+  publicBio                String?
+  internalNote             String?
+  failedLoginCount         Int                          @default(0)
+  lockedUntil              DateTime?
+  lastLoginAt              DateTime?
+  passwordChangedAt        DateTime?
+  createdAt                DateTime                     @default(now())
+  updatedAt                DateTime                     @updatedAt
+  applications             RefereeApplication[]
+  positions                AppointmentPosition[]
+  sessions                 RefereeSession[]
+  college                  College?                     @relation(fields: [collegeId], references: [id], onDelete: SetNull)
+  currentAffiliationUnit   AffiliationUnit?             @relation("RefereeCurrentAffiliation", fields: [currentAffiliationUnitId], references: [id], onDelete: SetNull)
+  capabilities             RefereePositionCapability[]
+  affiliations             RefereeAffiliation[]
+  availability             RefereeAvailability[]
+  acknowledgements         AppointmentAcknowledgement[]
+  conflictReports          AppointmentConflictReport[]
 
   @@index([collegeId])
+  @@index([currentAffiliationUnitId])
 }
 
 model College {
@@ -277,6 +280,7 @@ model AffiliationUnit {
   parentRelations AffiliationUnitRelation[] @relation("AffiliationParent")
   childRelations  AffiliationUnitRelation[] @relation("AffiliationChild")
   refereeLinks    RefereeAffiliation[]
+  currentReferees Referee[]                 @relation("RefereeCurrentAffiliation")
   teamLinks       TeamUnitAffiliation[]
 
   @@index([type, name])

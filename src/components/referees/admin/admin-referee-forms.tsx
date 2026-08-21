@@ -1,19 +1,30 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { refereeStatusLabels, trainingStatusLabels } from "@/components/referees/admin/admin-ui";
+import {
+  applyCapabilityBatch,
+  refereeGrades,
+  type RefereeCapabilityStatus,
+} from "@/lib/referee-profile-options";
 import { refereeQualifications } from "@/lib/referee-qualifications";
 
 export type CollegeOption = { id: string; name: string };
-export type AffiliationUnitOption = { id: string; name: string; type: "COLLEGE" | "SHUYUAN" };
+export type AffiliationUnitOption = {
+  id: string;
+  name: string;
+  type: "COLLEGE" | "SHUYUAN";
+  childUnitIds: string[];
+};
 export type AdminRefereeRecord = {
   id: string;
   publicCode: string;
   name: string;
   studentId: string;
   collegeId: string;
+  currentAffiliationUnitId: string;
   grade: string;
   phone: string;
   qq: string;
@@ -29,8 +40,8 @@ export type AdminRefereeRecord = {
   publicBio: string;
   internalNote: string;
   mustChangePassword: boolean;
+  lastLoginAt: string;
   capabilities: string[];
-  affiliationUnitIds: string[];
 };
 
 const capabilities = {
@@ -50,6 +61,9 @@ const capabilities = {
   ],
 } as const;
 
+type CapabilityFormat = keyof typeof capabilities;
+type CapabilityStatus = RefereeCapabilityStatus;
+
 function text(form: FormData, key: string) {
   return String(form.get(key) ?? "");
 }
@@ -66,21 +80,40 @@ function fullPayload(form: FormData) {
   return {
     publicCode: text(form, "publicCode"), name: text(form, "name"),
     studentId: text(form, "studentId"), collegeId: text(form, "collegeId"), grade: text(form, "grade"),
+    currentAffiliationUnitId: text(form, "currentAffiliationUnitId"),
     phone: text(form, "phone"), qq: text(form, "qq"), refereeLevel: text(form, "refereeLevel"),
-    joinedAt: text(form, "joinedAt"), initialPassword: text(form, "initialPassword"), status: text(form, "status"),
+    joinedAt: text(form, "joinedAt"), initialPassword: "", status: text(form, "status"),
     elevenASide: selectedCapabilities.some((item) => item.format === "ELEVEN_A_SIDE" && item.status !== "NOT_ASSIGNED"),
     futsal: selectedCapabilities.some((item) => item.format === "FUTSAL" && item.status !== "NOT_ASSIGNED"),
     certificateNote: text(form, "certificateNote"), qualificationNote: text(form, "qualificationNote"), trainingStatus: text(form, "trainingStatus"),
     publicDirectoryEnabled: form.get("publicDirectoryEnabled") === "on",
     publicBio: text(form, "publicBio"), internalNote: text(form, "internalNote"),
     capabilities: selectedCapabilities,
-    affiliationUnitIds: form.getAll("affiliationUnitIds"),
   };
 }
 
-function CapabilityGroups({ selected }: { selected: string[] }) {
-  const statusFor = (format: string, key: string) => selected.find((value) => value.startsWith(`${format}:${key}:`))?.split(":")[2] ?? "NOT_ASSIGNED";
-  return <div className="admin-capability-groups">{Object.entries(capabilities).map(([format, items]) => <section className="admin-capability-group" key={format}><strong>{format === "ELEVEN_A_SIDE" ? "十一人制" : "五人制"}</strong><div>{items.map(([key, label]) => <label className="admin-capability-row" key={`${format}:${key}`}><span>{label}</span><select defaultValue={`${format}:${key}:${statusFor(format, key)}`} name="capability"><option value={`${format}:${key}:NOT_ASSIGNED`}>暂不安排</option><option value={`${format}:${key}:TRAINING`}>培养中</option><option value={`${format}:${key}:READY`}>可正式选派</option></select></label>)}</div></section>)}</div>;
+function initialCapabilityValues(selected: string[]) {
+  return Object.fromEntries(Object.entries(capabilities).flatMap(([format, items]) => items.map(([key]) => {
+    const status = selected.find((value) => value.startsWith(`${format}:${key}:`))?.split(":")[2] ?? "NOT_ASSIGNED";
+    return [`${format}:${key}`, status as CapabilityStatus];
+  })));
+}
+
+function CapabilityGroups({
+  values,
+  onChange,
+}: {
+  values: Record<string, CapabilityStatus>;
+  onChange: (values: Record<string, CapabilityStatus>) => void;
+}) {
+  const [batch, setBatch] = useState<Record<CapabilityFormat, CapabilityStatus>>({ ELEVEN_A_SIDE: "TRAINING", FUTSAL: "TRAINING" });
+  function applyBatch(format: CapabilityFormat) {
+    onChange(applyCapabilityBatch(values, format, capabilities[format].map(([key]) => key), batch[format]));
+  }
+  return <div className="admin-capability-groups">{(Object.entries(capabilities) as Array<[CapabilityFormat, typeof capabilities[CapabilityFormat]]>).map(([format, items]) => <section className="admin-capability-group" key={format}>
+    <header className="admin-capability-header"><strong>{format === "ELEVEN_A_SIDE" ? "十一人制" : "五人制"}</strong><div><span>批量设置</span><select aria-label={`${format === "ELEVEN_A_SIDE" ? "十一人制" : "五人制"}批量状态`} onChange={(event) => setBatch((current) => ({ ...current, [format]: event.target.value as CapabilityStatus }))} value={batch[format]}><option value="NOT_ASSIGNED">暂不安排</option><option value="TRAINING">培养中</option><option value="READY">可正式选派</option></select><button className="admin-button admin-button-quiet" onClick={() => applyBatch(format)} type="button">应用</button></div></header>
+    <div>{items.map(([key, label]) => { const identity = `${format}:${key}`; return <label className="admin-capability-row" key={identity}><span>{label}</span><select name="capability" onChange={(event) => onChange({ ...values, [identity]: event.target.value.split(":")[2] as CapabilityStatus })} value={`${identity}:${values[identity]}`}><option value={`${identity}:NOT_ASSIGNED`}>暂不安排</option><option value={`${identity}:TRAINING`}>培养中</option><option value={`${identity}:READY`}>可正式选派</option></select></label>; })}</div>
+  </section>)}</div>;
 }
 
 export function RefereeCreateForm({ colleges }: { colleges: CollegeOption[] }) {
@@ -96,7 +129,7 @@ export function RefereeCreateForm({ colleges }: { colleges: CollegeOption[] }) {
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({
         publicCode: text(form, "publicCode"), name: text(form, "name"), studentId: text(form, "studentId"),
-        collegeId: text(form, "collegeId"), grade: "", phone: "", qq: "", refereeLevel: refereeQualifications[0], joinedAt: "",
+        collegeId: text(form, "collegeId"), currentAffiliationUnitId: "", grade: "", phone: "", qq: "", refereeLevel: refereeQualifications[0], joinedAt: "",
         initialPassword: text(form, "initialPassword"), status: text(form, "status"), elevenASide: false, futsal: false,
         certificateNote: "", qualificationNote: "", trainingStatus: "NOT_STARTED", publicDirectoryEnabled: false,
         publicBio: "", internalNote: "", capabilities: [],
@@ -114,7 +147,7 @@ export function RefereeCreateForm({ colleges }: { colleges: CollegeOption[] }) {
       <label><span>姓名</span><input autoFocus maxLength={48} name="name" required /></label>
       <label><span>裁判员编号</span><input maxLength={32} name="publicCode" required /></label>
       <label><span>学号</span><input maxLength={32} name="studentId" /></label>
-      <label><span>学院</span><select name="collegeId"><option value="">待确认</option>{colleges.map((college) => <option key={college.id} value={college.id}>{college.name}</option>)}</select></label>
+      <label><span>学院背景</span><select name="collegeId"><option value="">待确认</option>{colleges.map((college) => <option key={college.id} value={college.id}>{college.name}</option>)}</select></label>
       <label><span>初始密码</span><input minLength={12} name="initialPassword" required type="password" /></label>
       <label><span>账号状态</span><select defaultValue="PENDING" name="status">{Object.entries(refereeStatusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
     </div>
@@ -125,14 +158,55 @@ export function RefereeCreateForm({ colleges }: { colleges: CollegeOption[] }) {
 
 const tabs = [
   ["profile", "基本资料"], ["qualification", "裁判资质"], ["capabilities", "岗位能力"],
-  ["public", "公开资料"], ["internal", "内部备注"],
+  ["public", "公开展示"], ["internal", "内部备注"], ["security", "账号与安全"],
 ] as const;
 
 export function RefereeEditForm({ account, colleges, affiliationUnits }: { account: AdminRefereeRecord; colleges: CollegeOption[]; affiliationUnits: AffiliationUnitOption[] }) {
   const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
+  const startingCapabilities = useMemo(() => initialCapabilityValues(account.capabilities), [account.capabilities]);
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number][0]>("profile");
   const [message, setMessage] = useState("");
+  const [passwordMessage, setPasswordMessage] = useState("");
   const [resetOpen, setResetOpen] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [grade, setGrade] = useState(account.grade);
+  const [collegeId, setCollegeId] = useState(account.collegeId);
+  const [currentUnitId, setCurrentUnitId] = useState(account.currentAffiliationUnitId);
+  const [capabilityValues, setCapabilityValues] = useState<Record<string, CapabilityStatus>>(startingCapabilities);
+  const [publicEnabled, setPublicEnabled] = useState(account.publicDirectoryEnabled);
+  const [publicBio, setPublicBio] = useState(account.publicBio);
+
+  const recommendedUnit = useMemo(() => {
+    if (!collegeId) return null;
+    if (["大一", "大二"].includes(grade)) {
+      return affiliationUnits.find((unit) => unit.type === "SHUYUAN" && unit.childUnitIds.includes(collegeId)) ?? null;
+    }
+    if (["大三", "大四", "已毕业"].includes(grade)) {
+      return affiliationUnits.find((unit) => unit.id === collegeId) ?? null;
+    }
+    return null;
+  }, [affiliationUnits, collegeId, grade]);
+
+  function markDirty() {
+    setDirty(true);
+    setMessage("");
+  }
+  function changeTab(value: (typeof tabs)[number][0]) {
+    setActiveTab(value);
+    if (value !== "security") setPasswordMessage("");
+  }
+  function cancelChanges() {
+    formRef.current?.reset();
+    setGrade(account.grade);
+    setCollegeId(account.collegeId);
+    setCurrentUnitId(account.currentAffiliationUnitId);
+    setCapabilityValues(startingCapabilities);
+    setPublicEnabled(account.publicDirectoryEnabled);
+    setPublicBio(account.publicBio);
+    setDirty(false);
+    setMessage("已取消未保存修改。");
+  }
   async function update(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const response = await fetch(`/api/referees/admin/accounts/${account.id}`, {
@@ -141,7 +215,7 @@ export function RefereeEditForm({ account, colleges, affiliationUnits }: { accou
     });
     const result = (await response.json()) as { error?: string };
     setMessage(response.ok ? "裁判员档案已保存。" : result.error ?? "保存失败。");
-    if (response.ok) router.refresh();
+    if (response.ok) { setDirty(false); router.refresh(); }
   }
   async function resetPassword(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -151,24 +225,26 @@ export function RefereeEditForm({ account, colleges, affiliationUnits }: { accou
       body: JSON.stringify({ initialPassword: form.get("initialPassword") }),
     });
     const result = (await response.json()) as { error?: string };
-    setMessage(response.ok ? "密码已重置，原有会话已失效。" : result.error ?? "重置失败。");
+    setPasswordMessage(response.ok ? "密码已重置，原有会话已失效。" : result.error ?? "重置失败。");
     if (response.ok) { event.currentTarget.reset(); setResetOpen(false); router.refresh(); }
   }
+
   return <>
-    <form className="admin-form" onSubmit={update}>
-      <input name="initialPassword" type="hidden" value="" />
-      <nav aria-label="裁判员详情分区" className="admin-tabs">{tabs.map(([value, label]) => <button aria-selected={activeTab === value} key={value} onClick={() => setActiveTab(value)} role="tab" type="button">{label}</button>)}</nav>
-      <section className="admin-form-section" hidden={activeTab !== "profile"}><header><h2>基本资料</h2><p>身份、学院和联系方式，仅管理员与本人可访问敏感字段。</p></header><div className="admin-form-grid admin-form-grid-3">
+    <form className="admin-form" onChange={markDirty} onSubmit={update} ref={formRef}>
+      <nav aria-label="裁判员详情分区" className="admin-tabs">{tabs.map(([value, label]) => <button aria-selected={activeTab === value} key={value} onClick={() => changeTab(value)} role="tab" type="button">{label}</button>)}</nav>
+
+      <section className="admin-form-section admin-profile-section" hidden={activeTab !== "profile"}><header><h2>基本资料</h2><p>学院背景用于专业身份；当前组织归属是本阶段组织关系判断的主要单位。</p></header><div className="admin-form-grid admin-form-grid-3 admin-profile-grid">
         <label><span>姓名</span><input defaultValue={account.name} name="name" required /></label>
         <label><span>裁判员编号</span><input defaultValue={account.publicCode} name="publicCode" required /></label>
         <label><span>学号</span><input defaultValue={account.studentId} name="studentId" /></label>
-        <label><span>学院</span><select defaultValue={account.collegeId} name="collegeId"><option value="">待确认</option>{colleges.map((college) => <option key={college.id} value={college.id}>{college.name}</option>)}</select></label>
-        <label><span>直接书院归属</span><select defaultValue={account.affiliationUnitIds.filter((id) => affiliationUnits.some((unit) => unit.id === id && unit.type === "SHUYUAN"))} multiple name="affiliationUnitIds">{affiliationUnits.filter((unit) => unit.type === "SHUYUAN").map((unit) => <option key={unit.id} value={unit.id}>{unit.name}</option>)}</select><small>仅记录管理员确认的直接归属，不会根据学院自动推断。</small></label>
-        <label><span>年级</span><input defaultValue={account.grade} name="grade" /></label>
+        <label><span>年级</span><select name="grade" onChange={(event) => { setGrade(event.target.value); markDirty(); }} value={grade}><option value="">待确认</option>{refereeGrades.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+        <label><span>学院背景</span><select name="collegeId" onChange={(event) => { setCollegeId(event.target.value); markDirty(); }} value={collegeId}><option value="">待确认</option>{colleges.map((college) => <option key={college.id} value={college.id}>{college.name}</option>)}</select></label>
+        <label><span>当前组织归属</span><select name="currentAffiliationUnitId" onChange={(event) => { setCurrentUnitId(event.target.value); markDirty(); }} value={currentUnitId}><option value="">待管理员确认</option><optgroup label="书院">{affiliationUnits.filter((unit) => unit.type === "SHUYUAN").map((unit) => <option key={unit.id} value={unit.id}>{unit.name}</option>)}</optgroup><optgroup label="学院">{affiliationUnits.filter((unit) => unit.type === "COLLEGE").map((unit) => <option key={unit.id} value={unit.id}>{unit.name}</option>)}</optgroup></select>{recommendedUnit && recommendedUnit.id !== currentUnitId ? <small className="admin-field-suggestion">根据年级和学院背景建议：{recommendedUnit.name} <button onClick={() => { setCurrentUnitId(recommendedUnit.id); markDirty(); }} type="button">采用建议</button></small> : <small>已有归属不会因年级变化被自动覆盖。</small>}</label>
         <label><span>手机号</span><input defaultValue={account.phone} name="phone" /></label>
         <label><span>QQ</span><input defaultValue={account.qq} name="qq" /></label>
         <label><span>账号状态</span><select defaultValue={account.status} name="status">{Object.entries(refereeStatusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
       </div></section>
+
       <section className="admin-form-section" hidden={activeTab !== "qualification"}><header><h2>裁判资质</h2><p>正式裁判资质、协会培训状态和岗位培养能力分别维护，互不替代。</p></header><div className="admin-form-grid">
         <label><span>裁判资质</span><select defaultValue={account.refereeLevel || refereeQualifications[0]} name="refereeLevel">{refereeQualifications.map((qualification) => <option key={qualification} value={qualification}>{qualification}</option>)}</select></label>
         <label><span>加入日期</span><input defaultValue={account.joinedAt} name="joinedAt" type="date" /></label>
@@ -176,11 +252,16 @@ export function RefereeEditForm({ account, colleges, affiliationUnits }: { accou
         <label><span>证书 / 登记编号</span><input defaultValue={account.certificateNote} name="certificateNote" /></label>
         <label className="admin-form-span-2"><span>资质备注</span><textarea defaultValue={account.qualificationNote} maxLength={500} name="qualificationNote" /></label>
       </div></section>
-      <section className="admin-form-section" hidden={activeTab !== "capabilities"}><header><h2>岗位培养状态</h2><p>按比赛制式和具体岗位记录培养进度；状态不由正式裁判资质自动决定。</p></header><CapabilityGroups selected={account.capabilities} /></section>
-      <section className="admin-form-section" hidden={activeTab !== "public"}><header><h2>公开资料</h2><p>只有明确授权的字段会进入公共裁判名录。</p></header><label className="admin-inline-check"><input defaultChecked={account.publicDirectoryEnabled} name="publicDirectoryEnabled" type="checkbox" />允许进入公开名录</label><label><span>公开简介</span><textarea defaultValue={account.publicBio} maxLength={300} name="publicBio" /></label></section>
-      <section className="admin-form-section" hidden={activeTab !== "internal"}><header><h2>内部备注</h2><p>不通过公共 DTO 返回。</p></header><label><span>内部备注</span><textarea defaultValue={account.internalNote} maxLength={500} name="internalNote" /></label></section>
-      <p aria-live="polite" className="admin-form-message">{message}</p>
-      <footer><button className="admin-button admin-button-secondary" onClick={() => setResetOpen(true)} type="button">重置登录密码</button><button className="admin-button" type="submit">保存当前档案</button></footer>
+
+      <section className="admin-form-section" hidden={activeTab !== "capabilities"}><header><h2>岗位培养状态</h2><p>批量设置只修改当前表单，仍需点击“保存修改”后持久化。</p></header><CapabilityGroups onChange={(values) => { setCapabilityValues(values); markDirty(); }} values={capabilityValues} /></section>
+
+      <section className="admin-form-section" hidden={activeTab !== "public"}><header><h2>公开展示</h2><p>管理官网公开裁判名录授权；关闭展示不会删除已有简介。</p></header><div className="admin-public-layout"><div className="admin-public-settings"><section><h3>公开名录设置</h3><label className="admin-switch-row"><span><strong>进入公开裁判名录</strong><small>只会公开 Public DTO 明确允许的姓名、编号、制式资格与简介。</small></span><input checked={publicEnabled} name="publicDirectoryEnabled" onChange={(event) => { setPublicEnabled(event.target.checked); markDirty(); }} role="switch" type="checkbox" /><b>{publicEnabled ? "已公开" : "未公开"}</b></label></section><section><h3>公开简介</h3><label><span>官网展示文字</span><textarea maxLength={300} name="publicBio" onChange={(event) => { setPublicBio(event.target.value); markDirty(); }} rows={5} value={publicBio} /></label></section></div><aside className={`admin-public-preview${publicEnabled ? "" : " is-disabled"}`}><span>PUBLIC PREVIEW</span><h3>{account.name}</h3><b>{account.publicCode}</b><p>{publicBio || "尚未填写公开简介。"}</p><div>{Object.entries(capabilityValues).some(([key, status]) => key.startsWith("ELEVEN_A_SIDE:") && status !== "NOT_ASSIGNED") ? <em>十一人制</em> : null}{Object.entries(capabilityValues).some(([key, status]) => key.startsWith("FUTSAL:") && status !== "NOT_ASSIGNED") ? <em>五人制</em> : null}</div><small>{publicEnabled ? "当前将进入公开名录" : "当前未进入公开名录"}</small></aside></div></section>
+
+      <section className="admin-form-section" hidden={activeTab !== "internal"}><header><h2>内部备注</h2><p>仅管理员可见，不通过 Public DTO 返回。</p></header><label><span>内部备注</span><textarea defaultValue={account.internalNote} maxLength={500} name="internalNote" /></label></section>
+
+      <section className="admin-form-section" hidden={activeTab !== "security"}><header><h2>账号与安全</h2><p>登录信息与密码操作集中在此处，不与普通档案字段混排。</p></header><dl className="admin-security-grid"><div><dt>账号状态</dt><dd>{refereeStatusLabels[account.status] ?? account.status}</dd></div><div><dt>最近登录</dt><dd>{account.lastLoginAt || "从未登录"}</dd></div><div><dt>下次登录修改密码</dt><dd>{account.mustChangePassword ? "需要" : "不需要"}</dd></div></dl><div className="admin-security-action"><div><strong>重置登录密码</strong><p>重置后原有裁判员会话全部失效，并要求下次登录修改密码。</p></div><button className="admin-button admin-button-secondary" onClick={() => { setPasswordMessage(""); setResetOpen(true); }} type="button">重置登录密码</button></div><p aria-live="polite" className="admin-form-message">{passwordMessage}</p></section>
+
+      <div className="admin-form-savebar"><span>{dirty ? "存在未保存修改" : message || "当前档案已同步"}</span><div><button className="admin-button admin-button-secondary" disabled={!dirty} onClick={cancelChanges} type="button">取消修改</button><button className="admin-button" type="submit">保存修改</button></div></div>
     </form>
     {resetOpen ? <div aria-modal="true" className="admin-modal-backdrop" role="dialog"><div className="admin-modal admin-modal-compact"><header><div><span>ACCOUNT SECURITY</span><h2>重置裁判员密码</h2></div><button aria-label="关闭" onClick={() => setResetOpen(false)} type="button">×</button></header><form className="admin-form" onSubmit={resetPassword}><p>重置后，该裁判员已有会话将全部失效，下一次登录须修改密码。</p><label><span>新的初始密码</span><input minLength={12} name="initialPassword" required type="password" /></label><footer><button className="admin-button admin-button-secondary" onClick={() => setResetOpen(false)} type="button">取消</button><button className="admin-button" type="submit">确认重置</button></footer></form></div></div> : null}
   </>;

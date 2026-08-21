@@ -50,9 +50,10 @@ async function main() {
     );
 
     const unitCounts = await verifier.affiliationUnit.groupBy({ by: ["type"], _count: true });
-    assert(unitCounts.find((item) => item.type === "COLLEGE")?._count === 24, "未初始化 24 个学院。");
+    assert(unitCounts.find((item) => item.type === "COLLEGE")?._count === 23, "学院权威名单不是 23 个。");
     assert(unitCounts.find((item) => item.type === "SHUYUAN")?._count === 4, "未初始化 4 个书院。");
     assert(await verifier.affiliationUnit.count({ where: { name: "牧星学院" } }) === 0, "错误初始化了牧星学院。");
+    assert(await verifier.affiliationUnit.count({ where: { name: "国家卓越工程师学院" } }) === 0, "未移除国家卓越工程师学院。");
 
     const competition = await verifier.competition.create({
       data: { slug: "fix2-competition", name: "Fix2 校园赛事", campus: "天目湖校区", format: "ELEVEN_A_SIDE", status: "ONGOING" },
@@ -100,7 +101,9 @@ async function main() {
       return conflicts.detectAppointmentWarnings(target.id, [{ key: "REFEREE", refereeId: referee.id }], verifier);
     }
     assert(!(await timeWarnings("GAP30", 30)).some((item) => item.code === "ADJACENT_MATCH"), "30 分钟间隔被错误警告。");
+    assert((await timeWarnings("GAP9", 9)).some((item) => item.code === "ADJACENT_MATCH" && item.details.gapMinutes === 9), "9 分钟间隔未产生连续执裁提醒。");
     assert(!(await timeWarnings("GAP10", 10)).some((item) => item.code === "ADJACENT_MATCH"), "10 分钟间隔被错误警告。");
+    assert(!(await timeWarnings("GAP11", 11)).some((item) => item.code === "ADJACENT_MATCH"), "11 分钟间隔被错误警告。");
     assert((await timeWarnings("GAP5", 5)).some((item) => item.code === "ADJACENT_MATCH" && item.details.gapMinutes === 5), "5 分钟间隔未产生连续执裁提醒。");
     assert((await timeWarnings("GAP0", 0)).some((item) => item.code === "ADJACENT_MATCH" && item.message.includes("无休息时间")), "0 分钟间隔提示不正确。");
     assert((await timeWarnings("OVERLAP", 0, true)).some((item) => item.code === "MATCH_OVERLAP" && item.details.overlapMinutes === 10), "时间重叠未按 endAt 计算。");
@@ -111,8 +114,22 @@ async function main() {
     const aviation = await verifier.affiliationUnit.findUniqueOrThrow({ where: { name: "航空学院" } });
     const energy = await verifier.affiliationUnit.findUniqueOrThrow({ where: { name: "能源与动力学院" } });
     const zhihui = await verifier.affiliationUnit.findUniqueOrThrow({ where: { name: "致慧书院" } });
-    assert(await verifier.affiliationUnitRelation.count({ where: { parentUnitId: zhihui.id } }) === 3, "致慧书院组成关系不完整。");
-    assert(await verifier.affiliationUnitRelation.count({ where: { parentUnit: { name: { in: ["致微书院", "致元书院", "致和书院"] } } } }) === 0, "自行补全了未提供的书院组成关系。");
+    const expectedRelations: Record<string, string[]> = {
+      致慧书院: ["民航学院", "自动化学院", "通用航空与飞行学院"],
+      致元书院: ["材料科学与技术学院", "数学学院", "计算机科学与技术学院/软件学院", "人工智能学院"],
+      致微书院: ["电子信息工程学院", "物理学院", "集成电路学院"],
+      致和书院: ["经济与管理学院", "人文与社会科学学院", "艺术学院", "外国语学院"],
+    };
+    for (const [parentName, children] of Object.entries(expectedRelations)) {
+      const actual = await verifier.affiliationUnitRelation.findMany({
+        where: { parentUnit: { name: parentName } },
+        select: { childUnit: { select: { name: true } } },
+      });
+      assert(
+        actual.map((item) => item.childUnit.name).sort().join("|") === children.sort().join("|"),
+        `${parentName}组成关系不正确。`,
+      );
+    }
 
     const civilTeam = await verifier.team.create({ data: { competitionId: competition.id, name: "民航学院代表队", teamType: "ORGANIZATION" } });
     await r1.setTeamUnitAffiliations(civilTeam.id, [civil.id], "ORGANIZATION", actor);
@@ -144,11 +161,11 @@ async function main() {
 
     console.log(JSON.stringify({
       futsalFourthReferee: true, qualificationOptions: true, capabilityThreeStates: true,
-      gap30NoWarning: true, gap10NoWarning: true, gap5AdjacentWarning: true, zeroGapWarning: true,
+      gap30NoWarning: true, gap9AdjacentWarning: true, gap10NoWarning: true, gap11NoWarning: true, gap5AdjacentWarning: true, zeroGapWarning: true,
       matchOverlap: true, missingEndNotInferred: true, directOrganizationConflict: true,
       shuyuanCompositionConflict: true, jointTeamConflict: true, freeformWithoutAffiliation: true,
       pastedImportDeduplicates: true, csvImport: true, publicDtoBoundary: true,
-      colleges: 24, shuyuan: 4, zhihuiRelations: 3,
+      colleges: 23, shuyuan: 4, allShuyuanRelations: true,
     }, null, 2));
   } finally {
     await verifier.$disconnect();

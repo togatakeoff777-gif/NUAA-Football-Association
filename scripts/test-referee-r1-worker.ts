@@ -61,6 +61,7 @@ async function main() {
 
   await applyMigration(raw, "20260819120000_referee_admin_r1");
   await applyMigration(raw, "20260820120000_referee_business_model_fix2");
+  await applyMigration(raw, "20260820160000_referee_acceptance_fix3");
   raw.close();
 
   const verifier = new PrismaClient({ adapter: new PrismaLibSql({ url }) });
@@ -102,11 +103,10 @@ async function main() {
     const confirmedMappings = await verifier.collegeCodeMapping.findMany({
       include: { college: true },
     });
+    const civilMapping = confirmedMappings.find((item) => item.prefix === "07");
     assert(
-      confirmedMappings.length === 1 &&
-        confirmedMappings[0].prefix === "07" &&
-        confirmedMappings[0].college.name === "民航学院",
-      "migration 初始化了未确认学院映射，或漏掉已确认的 07 映射。",
+      confirmedMappings.length === 24 && civilMapping?.college.name === "民航学院",
+      "Fix #3 权威学号映射未完整初始化。",
     );
 
     const adminPassword = "R1-Test-Super-Password-2026";
@@ -175,7 +175,7 @@ async function main() {
       "管理员改密或其他会话失效逻辑不正确。",
     );
 
-    const college = confirmedMappings[0].college;
+    const college = civilMapping.college;
     await verifier.referee.update({
       where: { id: legacyReferee.id },
       data: {
@@ -354,7 +354,7 @@ async function main() {
       additiveMigrationPreservedIdsAndHistory: true,
       legacySessionsPreserved: true,
       normalizedCapabilitiesBackfilled: true,
-      onlyConfirmedCollegeMappingSeeded: true,
+      authoritativeCollegeMappingsSeeded: true,
       persistentAdminAuthentication: true,
       adminRoleAuthorization: true,
       adminPasswordChangeInvalidatesOtherSessions: true,

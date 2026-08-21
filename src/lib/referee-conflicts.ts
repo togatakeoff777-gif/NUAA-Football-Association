@@ -75,6 +75,7 @@ export async function detectAppointmentWarnings(
         name: true,
         collegeId: true,
         college: { select: { id: true, name: true } },
+        currentAffiliationUnit: { select: { id: true, name: true, type: true } },
         affiliations: { select: { unit: { select: { id: true, name: true, type: true } } } },
         capabilities: {
           where: { format: match.competition.format },
@@ -136,7 +137,9 @@ export async function detectAppointmentWarnings(
 
   for (const referee of referees) {
     const directUnits = distinctUnits([
-      ...referee.affiliations.map((item) => item.unit),
+      ...(referee.currentAffiliationUnit
+        ? [referee.currentAffiliationUnit]
+        : referee.affiliations.map((item) => item.unit)),
       ...(referee.college ? [{ ...referee.college, type: "COLLEGE" as const }] : []),
     ]);
     const organizationSignatures = new Set<string>();

@@ -35,7 +35,7 @@ async function audit(input: {
 }
 
 export async function inferCollegeSuggestion(studentId: string) {
-  const prefix = studentId.trim().slice(0, 2);
+  const prefix = studentId.trim().slice(0, 2).toUpperCase();
   if (prefix.length !== 2) return null;
   return prisma.collegeCodeMapping.findUnique({
     where: { prefix },
@@ -108,11 +108,12 @@ export async function upsertCollegeCodeMapping(
   note: string,
   actor: AdminActor,
 ) {
-  if (!/^\d{2}$/.test(prefix)) throw new RefereeServiceError("学号前缀必须是两位数字。");
+  const normalizedPrefix = prefix.trim().toUpperCase();
+  if (!/^[0-9A-Z]{2}$/.test(normalizedPrefix)) throw new RefereeServiceError("学号前缀必须是两位数字或字母。");
   const mapping = await prisma.collegeCodeMapping.upsert({
-    where: { prefix },
+    where: { prefix: normalizedPrefix },
     update: { collegeId, note: note || null },
-    create: { prefix, collegeId, note: note || null },
+    create: { prefix: normalizedPrefix, collegeId, note: note || null },
   });
   await audit({
     actorType: "ADMIN",
@@ -120,7 +121,7 @@ export async function upsertCollegeCodeMapping(
     action: "COLLEGE_CODE_MAPPING_UPDATED",
     entityType: "CollegeCodeMapping",
     entityId: mapping.id,
-    summary: `更新学号前缀映射 ${prefix}`,
+    summary: `更新学号前缀映射 ${normalizedPrefix}`,
     metadata: { collegeId },
   });
   return mapping;

@@ -8,17 +8,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "请求来源无效。" }, { status: 403 });
   }
 
+  let body: unknown;
   try {
-    const application = await submitRefereeAdmissionApplication(await request.json());
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "提交内容格式不正确。" }, { status: 400 });
+  }
+
+  try {
+    const application = await submitRefereeAdmissionApplication(body);
     return NextResponse.json(
       { ok: true, applicationId: application.id, status: application.status },
       { status: 201 },
     );
   } catch (error) {
-    const status = error instanceof RefereeServiceError ? error.status : 400;
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "申请提交失败，请稍后重试。" },
-      { status },
-    );
+    if (error instanceof RefereeServiceError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    console.error(error);
+    return NextResponse.json({ error: "申请提交失败，请稍后重试。" }, { status: 500 });
   }
 }

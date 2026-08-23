@@ -32,6 +32,18 @@ async function main() {
 
   const verifier = new PrismaClient({ adapter: new PrismaLibSql({ url }) });
   const route = await import("../src/app/api/referees/admission-applications/route");
+  const endpoint = "http://localhost/api/referees/admission-applications";
+
+  const postJson = (body: unknown, origin = "http://localhost") => route.POST(new Request(endpoint, {
+    method: "POST",
+    headers: { "content-type": "application/json", origin },
+    body: JSON.stringify(body),
+  }));
+  const postRaw = (body: string) => route.POST(new Request(endpoint, {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: "http://localhost" },
+    body,
+  }));
 
   try {
     const before = {
@@ -41,83 +53,127 @@ async function main() {
       referees: await verifier.referee.count(),
     };
 
-    const validResponse = await route.POST(new Request(
-      "http://localhost/api/referees/admission-applications",
-      {
-        method: "POST",
-        headers: { "content-type": "application/json", origin: "http://localhost" },
-        body: JSON.stringify({
-          name: "  新裁判申请人  ",
-          studentId: "  16260001  ",
-          phone: "  13800000000  ",
-          qq: "",
-          note: "  希望参加协会裁判培训  ",
-        }),
-      },
-    ));
-    const validBody = await validResponse.json() as {
-      ok?: boolean;
-      applicationId?: string;
-      status?: string;
+    const assertAccepted = async (
+      input: Record<string, unknown>,
+      expected: { phone: string | null; qq: string | null },
+      message: string,
+    ) => {
+      const response = await postJson(input);
+      const body = await response.json() as {
+        ok?: boolean;
+        applicationId?: string;
+        status?: string;
+      };
+      assert(response.status === 201 && body.ok, `${message}未成功提交。`);
+      assert(body.status === "PENDING", `${message}未返回 PENDING 状态。`);
+      const applicationId = body.applicationId;
+      assert(typeof applicationId === "string", `${message}未返回申请 ID。`);
+      const persisted = await verifier.refereeAdmissionApplication.findUnique({
+        where: { id: applicationId },
+      });
+      assert(persisted, `${message}未持久化。`);
+      assert(persisted.status === "PENDING", `${message}未以 PENDING 状态持久化。`);
+      assert(
+        persisted.phone === expected.phone && persisted.qq === expected.qq,
+        `${message}的联系方式未正确持久化。`,
+      );
+      return persisted;
     };
-    assert(validResponse.status === 201 && validBody.ok, "有效准入申请未成功提交。");
-    assert(validBody.status === "PENDING", "API 未返回初始 PENDING 状态。");
-    assert(typeof validBody.applicationId === "string", "API 未返回准入申请 ID。");
+    const assertRejected = async (input: unknown, message: string) => {
+      const count = await verifier.refereeAdmissionApplication.count();
+      const response = await postJson(input);
+      const body = await response.json() as { error?: string };
+      assert(response.status === 400, `${message}未返回 400。`);
+      assert(typeof body.error === "string" && body.error.length > 0, `${message}未返回可读错误。`);
+      assert(
+        await verifier.refereeAdmissionApplication.count() === count,
+        `${message}仍写入了数据库。`,
+      );
+    };
 
-    const persisted = await verifier.refereeAdmissionApplication.findUnique({
-      where: { id: validBody.applicationId },
-    });
-    assert(persisted, "准入申请未持久化。");
-    assert(persisted.status === "PENDING", "准入申请未以 PENDING 状态创建。");
+    const phoneOnly = await assertAccepted(
+      {
+        name: "  新裁判申请人  ",
+        studentId: "  16260001  ",
+        phone: "  13800000000  ",
+        qq: "",
+        note: "  希望参加协会裁判培训  ",
+      },
+      { phone: "13800000000", qq: null },
+      "合法手机号申请",
+    );
     assert(
-      persisted.name === "新裁判申请人" &&
-        persisted.studentId === "16260001" &&
-        persisted.phone === "13800000000" &&
-        persisted.qq === null &&
-        persisted.note === "希望参加协会裁判培训",
+      phoneOnly.name === "新裁判申请人" &&
+        phoneOnly.studentId === "16260001" &&
+        phoneOnly.note === "希望参加协会裁判培训",
       "准入申请未按既有文本规则规范化保存。",
     );
+
+    await assertAccepted(
+      { name: "QQ申请人", phone: "", qq: "12345678" },
+      { phone: null, qq: "12345678" },
+      "仅 QQ 申请",
+    );
+    await assertAccepted(
+      { name: "QQ五位边界", qq: "12345" },
+      { phone: null, qq: "12345" },
+      "五位 QQ 申请",
+    );
+    await assertAccepted(
+      { name: "QQ十二位边界", qq: "123456789012" },
+      { phone: null, qq: "123456789012" },
+      "十二位 QQ 申请",
+    );
+    await assertAccepted(
+      { name: "双联系方式申请", phone: "18912345678", qq: "12345678" },
+      { phone: "18912345678", qq: "12345678" },
+      "双联系方式申请",
+    );
     assert(
-      await verifier.refereeAdmissionApplication.count() === before.admissions + 1,
-      "有效提交没有且仅创建一条准入申请。",
+      await verifier.refereeAdmissionApplication.count() === before.admissions + 5,
+      "有效场景没有且仅创建五条准入申请。",
     );
 
-    const invalidResponse = await route.POST(new Request(
-      "http://localhost/api/referees/admission-applications",
-      {
-        method: "POST",
-        headers: { "content-type": "application/json", origin: "http://localhost" },
-        body: JSON.stringify({ name: "", phone: "", qq: "" }),
-      },
-    ));
-    assert(invalidResponse.status === 400, "缺失必填数据的准入申请未被拒绝。");
+    await assertRejected({ name: "手机号十位", phone: "1380000000" }, "十位手机号");
+    await assertRejected({ name: "手机号十二位", phone: "138000000000" }, "十二位手机号");
+    await assertRejected({ name: "手机号含字母", phone: "13800abc000" }, "含字母手机号");
+    await assertRejected({ name: "手机号含区号", phone: "+8613800000000" }, "含 +86 手机号");
+    await assertRejected({ name: "QQ四位", qq: "1234" }, "四位 QQ");
+    await assertRejected({ name: "QQ十三位", qq: "1234567890123" }, "十三位 QQ");
+    await assertRejected({ name: "QQ含字母", qq: "12abc34" }, "含字母 QQ");
+    await assertRejected({ name: "无联系方式申请人" }, "无联系方式申请");
+    await assertRejected(
+      { name: "合法手机非法QQ", phone: "13800000000", qq: "abcde" },
+      "合法手机号与非法 QQ 组合",
+    );
+    await assertRejected(
+      { name: "非法手机合法QQ", phone: "abc", qq: "12345678" },
+      "非法手机号与合法 QQ 组合",
+    );
+    await assertRejected([], "非对象 body");
+    await assertRejected({ name: 123, phone: "13800000000" }, "字段类型错误");
+    await assertRejected({ name: "超".repeat(49), phone: "13800000000" }, "字段超长");
+
+    const malformedCount = await verifier.refereeAdmissionApplication.count();
+    const malformedResponse = await postRaw('{"name":');
+    const malformedBody = await malformedResponse.json() as { error?: string };
+    assert(malformedResponse.status === 400, "Malformed JSON 未返回 400。");
+    assert(malformedBody.error === "提交内容格式不正确。", "Malformed JSON 未返回固定错误。");
+    assert(Object.keys(malformedBody).length === 1, "Malformed JSON response 泄露了额外字段。");
     assert(
-      await verifier.refereeAdmissionApplication.count() === before.admissions + 1,
-      "无效提交仍创建了准入申请。",
+      await verifier.refereeAdmissionApplication.count() === malformedCount,
+      "Malformed JSON 仍写入了数据库。",
     );
 
-    const missingContactResponse = await route.POST(new Request(
-      "http://localhost/api/referees/admission-applications",
-      {
-        method: "POST",
-        headers: { "content-type": "application/json", origin: "http://localhost" },
-        body: JSON.stringify({ name: "无联系方式申请人" }),
-      },
-    ));
-    assert(missingContactResponse.status === 400, "无联系方式的准入申请未被拒绝。");
-
-    const badOriginResponse = await route.POST(new Request(
-      "http://localhost/api/referees/admission-applications",
-      {
-        method: "POST",
-        headers: { "content-type": "application/json", origin: "https://evil.example" },
-        body: JSON.stringify({ name: "外部来源", phone: "13800000001" }),
-      },
-    ));
+    const originCount = await verifier.refereeAdmissionApplication.count();
+    const badOriginResponse = await postJson(
+      { name: "外部来源", phone: "13800000001" },
+      "https://evil.example",
+    );
     assert(badOriginResponse.status === 403, "准入申请接口未拒绝非法 Origin。");
     assert(
-      await verifier.refereeAdmissionApplication.count() === before.admissions + 1,
-      "被拒绝的提交仍创建了准入申请。",
+      await verifier.refereeAdmissionApplication.count() === originCount,
+      "非法 Origin 仍写入了准入申请。",
     );
 
     assert(
@@ -133,7 +189,32 @@ async function main() {
       "准入提交错误创建或启用了 Referee 账号。",
     );
 
-    console.log("Referee admission application intake tests passed.");
+    await verifier.$executeRawUnsafe('DROP TABLE "RefereeAdmissionApplication"');
+    const originalConsoleError = console.error;
+    let internalErrorLogged = false;
+    console.error = () => {
+      internalErrorLogged = true;
+    };
+    const internalResponse = await (async () => {
+      try {
+        return await postJson({ name: "内部错误测试", phone: "13800000000" });
+      } finally {
+        console.error = originalConsoleError;
+      }
+    })();
+    const internalBody = await internalResponse.json() as { error?: string };
+    assert(internalResponse.status === 500, "Persistence failure 未返回 500。");
+    assert(internalErrorLogged, "Persistence failure 未按现有约定记录到服务端。");
+    assert(
+      internalBody.error === "申请提交失败，请稍后重试。" && Object.keys(internalBody).length === 1,
+      "Persistence failure 未返回固定安全错误。",
+    );
+    const serializedInternalBody = JSON.stringify(internalBody);
+    for (const forbidden of ["Prisma", "SQLite", "stack", databasePath]) {
+      assert(!serializedInternalBody.includes(forbidden), `500 response 泄露内部信息：${forbidden}`);
+    }
+
+    console.log("Referee admission application validation and error-boundary tests passed.");
   } finally {
     await verifier.$disconnect();
   }

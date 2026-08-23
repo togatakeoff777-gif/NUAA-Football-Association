@@ -19,6 +19,7 @@
     "test:referee-match-deletion": "tsx scripts/test-referee-match-deletion.ts",
     "test:unified-admin-r1": "tsx scripts/test-unified-admin-r1.ts",
     "test:unified-admin-migration": "tsx scripts/test-unified-admin-migration.ts",
+    "smoke:unified-admin:prepare": "tsx scripts/prepare-unified-admin-smoke.ts",
     "security:hash-password": "node scripts/hash-password.mjs",
     "admin:create": "tsx scripts/create-admin-account.ts",
     "db:backup": "node scripts/backup-database.mjs",

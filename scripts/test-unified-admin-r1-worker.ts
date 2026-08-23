@@ -83,7 +83,7 @@ async function main() {
       verifier.adminAccount.create({ data: { username: "r1-competition", displayName: "赛事管理员", passwordHash, role: "REFEREE_MANAGER" } }),
       verifier.adminAccount.create({ data: { username: "r1-referee", displayName: "裁判管理员", passwordHash, role: "REFEREE_MANAGER" } }),
     ]);
-    const [superAccount, contentAccount, competitionAccount, refereeAccount] = accounts;
+    const [, contentAccount, competitionAccount, refereeAccount] = accounts;
     await verifier.adminRoleAssignment.createMany({ data: [
       { adminAccountId: contentAccount.id, role: "CONTENT_EDITOR" },
       { adminAccountId: competitionAccount.id, role: "COMPETITION_ADMIN" },

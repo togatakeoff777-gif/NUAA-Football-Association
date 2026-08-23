@@ -7,6 +7,7 @@ import { AdminLoginForm } from "@/components/referees/mvp/admin-login-form";
 import {
   getAdminConfigurationIssue,
   getAdminSession,
+  getSafeAdminReturnTo,
 } from "@/lib/referee-auth";
 
 export const metadata: Metadata = {
@@ -17,8 +18,13 @@ export const metadata: Metadata = {
 };
 export const dynamic = "force-dynamic";
 
-export default async function RefereeAdminLoginPage() {
-  if (await getAdminSession()) redirect("/referees/admin");
+export default async function RefereeAdminLoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const returnTo = getSafeAdminReturnTo((await searchParams).next);
+  if (await getAdminSession()) redirect(returnTo);
   const adminAvailable = !getAdminConfigurationIssue();
 
   return (
@@ -40,7 +46,7 @@ export default async function RefereeAdminLoginPage() {
               <p>后台与公众信息页面相互独立，管理权限由协会统一开通。</p>
             </div>
             {adminAvailable ? (
-              <AdminLoginForm />
+              <AdminLoginForm returnTo={returnTo} />
             ) : (
               <div className="functional-empty functional-empty-compact" role="status">
                 <strong>裁判管理后台暂未开放</strong>

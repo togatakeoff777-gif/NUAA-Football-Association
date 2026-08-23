@@ -26,6 +26,16 @@ export function getAdminConfigurationIssue() {
   return null;
 }
 
+export function getSafeAdminReturnTo(value: string | string[] | undefined) {
+  const candidate = Array.isArray(value) ? value[0] : value;
+  if (!candidate || candidate.includes("\\") || candidate.startsWith("//")) {
+    return "/referees/admin";
+  }
+  return /^\/(?:admin|referees\/admin)(?:\/|$)/.test(candidate)
+    ? candidate
+    : "/referees/admin";
+}
+
 export async function createAdminSession(username: string, password: string) {
   const secret = getSessionSecret();
   if (!secret) return false;

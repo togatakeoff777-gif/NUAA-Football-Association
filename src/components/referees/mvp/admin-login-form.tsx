@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function AdminLoginForm() {
+export function AdminLoginForm({ returnTo = "/referees/admin" }: { returnTo?: string }) {
   const router = useRouter();
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -23,7 +23,7 @@ export function AdminLoginForm() {
     const result = (await response.json()) as { error?: string };
     setSubmitting(false);
     if (!response.ok) return setMessage(result.error ?? "登录失败。" );
-    router.replace("/referees/admin");
+    router.replace(returnTo);
     router.refresh();
   }
 

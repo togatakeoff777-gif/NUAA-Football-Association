@@ -99,6 +99,30 @@ enum AdminRole {
   REFEREE_MANAGER
 }
 
+enum UnifiedAdminRole {
+  SUPER_ADMIN
+  CONTENT_EDITOR
+  COMPETITION_ADMIN
+  REFEREE_ADMIN
+}
+
+enum ContentPostType {
+  NEWS
+  ANNOUNCEMENT
+  DISCIPLINE
+}
+
+enum ContentPostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum MediaVisibility {
+  PUBLIC
+  PRIVATE
+}
+
 enum AppointmentPositionKey {
   REFEREE
   ASSISTANT_REFEREE_1
@@ -112,21 +136,22 @@ enum AppointmentPositionKey {
 }
 
 model Competition {
-  id                    String            @id @default(cuid())
-  slug                  String            @unique
+  id                    String             @id @default(cuid())
+  slug                  String             @unique
   name                  String
   year                  Int?
   campus                String
   format                CompetitionFormat
   status                CompetitionStatus
-  isTestData            Boolean           @default(false)
-  source                DataSource        @default(MANUAL)
+  isTestData            Boolean            @default(false)
+  source                DataSource         @default(MANUAL)
   externalCompetitionId String?
   lastSyncedAt          DateTime?
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
   teams                 Team[]
   matches               Match[]
+  disciplineDetails     DisciplineDetail[]
 
   @@unique([source, externalCompetitionId])
 }
@@ -493,6 +518,79 @@ model AuditLog {
   @@index([entityType, entityId])
 }
 
+model AdminRoleAssignment {
+  id             String           @id @default(cuid())
+  adminAccountId String
+  role           UnifiedAdminRole
+  createdAt      DateTime         @default(now())
+  adminAccount   AdminAccount     @relation(fields: [adminAccountId], references: [id], onDelete: Cascade)
+
+  @@unique([adminAccountId, role])
+  @@index([role])
+}
+
+model MediaAsset {
+  id                String             @id @default(cuid())
+  storageKey        String             @unique
+  originalFilename  String
+  storedFilename    String             @unique
+  mimeType          String
+  size              Int
+  visibility        MediaVisibility    @default(PRIVATE)
+  altText           String?
+  metadata          Json?
+  uploadedByAdminId String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  uploadedByAdmin   AdminAccount?      @relation(fields: [uploadedByAdminId], references: [id], onDelete: SetNull)
+  coverPosts        ContentPost[]      @relation("ContentPostCover")
+  disciplineDetails DisciplineDetail[] @relation("DisciplineOfficialMedia")
+
+  @@index([visibility, createdAt])
+  @@index([mimeType, createdAt])
+  @@index([uploadedByAdminId])
+}
+
+model ContentPost {
+  id            String            @id @default(cuid())
+  type          ContentPostType   @default(NEWS)
+  slug          String            @unique
+  title         String
+  summary       String
+  content       Json
+  coverMediaId  String?
+  status        ContentPostStatus @default(DRAFT)
+  authorAdminId String?
+  source        String?
+  publishedAt   DateTime?
+  pinned        Boolean           @default(false)
+  featured      Boolean           @default(false)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  coverMedia    MediaAsset?       @relation("ContentPostCover", fields: [coverMediaId], references: [id], onDelete: Restrict)
+  authorAdmin   AdminAccount?     @relation(fields: [authorAdminId], references: [id], onDelete: SetNull)
+  discipline    DisciplineDetail?
+
+  @@index([status, type, publishedAt])
+  @@index([status, pinned, publishedAt])
+  @@index([authorAdminId])
+  @@index([coverMediaId])
+}
+
+model DisciplineDetail {
+  contentPostId   String       @id
+  competitionId   String?
+  officialMediaId String?
+  versionLabel    String?
+  scopeLabel      String?
+  contentPost     ContentPost  @relation(fields: [contentPostId], references: [id], onDelete: Cascade)
+  competition     Competition? @relation(fields: [competitionId], references: [id], onDelete: SetNull)
+  officialMedia   MediaAsset?  @relation("DisciplineOfficialMedia", fields: [officialMediaId], references: [id], onDelete: Restrict)
+
+  @@index([competitionId])
+  @@index([officialMediaId])
+}
+
 model LoginAttempt {
   id           String    @id @default(cuid())
   scope        String
@@ -532,6 +630,9 @@ model AdminAccount {
   sessions                AdminSession[]
   versions                AppointmentVersion[]
   resolvedConflictReports AppointmentConflictReport[]
+  unifiedRoles            AdminRoleAssignment[]
+  contentPosts            ContentPost[]
+  uploadedMedia           MediaAsset[]
 }
 
 model RefereeSession {

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAdminActor, getAdminSession, isSameOrigin } from "@/lib/referee-auth";
+import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
 import {
   cancelAppointment,
   completeAppointment,
@@ -11,10 +11,9 @@ import {
 import { isRecord, readEnum, readPositionAssignments, readShortText } from "@/lib/referee-validation";
 
 export async function PUT(request: Request, context: { params: Promise<{ matchId: string }> }) {
-  if (!isSameOrigin(request)) return NextResponse.json({ error: "请求来源无效。" }, { status: 403 });
-  const session = await getAdminSession();
-  if (!session) return NextResponse.json({ error: "请先登录管理员后台。" }, { status: 401 });
-  const actor = getAdminActor(session)!;
+  const authorization = await authorizeLegacyAdminRequest(request, "referees:write");
+  if (!authorization.ok) return authorization.response;
+  const actor = authorization.actor;
   try {
     const body: unknown = await request.json();
     if (!isRecord(body)) throw new Error("选派内容格式不正确。" );
@@ -37,10 +36,9 @@ export async function PUT(request: Request, context: { params: Promise<{ matchId
 }
 
 export async function POST(request: Request, context: { params: Promise<{ matchId: string }> }) {
-  if (!isSameOrigin(request)) return NextResponse.json({ error: "请求来源无效。" }, { status: 403 });
-  const session = await getAdminSession();
-  if (!session) return NextResponse.json({ error: "请先登录管理员后台。" }, { status: 401 });
-  const actor = getAdminActor(session)!;
+  const authorization = await authorizeLegacyAdminRequest(request, "referees:write");
+  if (!authorization.ok) return authorization.response;
+  const actor = authorization.actor;
   try {
     const body: unknown = await request.json();
     if (!isRecord(body)) throw new Error("操作内容格式不正确。" );

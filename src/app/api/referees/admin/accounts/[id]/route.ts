@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getAdminActor, getAdminSession, isSameOrigin } from "@/lib/referee-auth";
+import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
 import {
   RefereeServiceError,
   resetRefereePassword,
@@ -19,14 +19,8 @@ import { refereeQualifications } from "@/lib/referee-qualifications";
 import { refereeGrades } from "@/lib/referee-profile-options";
 
 async function authorize(request: Request) {
-  if (!isSameOrigin(request)) {
-    return NextResponse.json({ error: "请求来源无效。" }, { status: 403 });
-  }
-  const session = await getAdminSession();
-  if (!session) {
-    return NextResponse.json({ error: "请先登录管理员后台。" }, { status: 401 });
-  }
-  return getAdminActor(session)!;
+  const authorization = await authorizeLegacyAdminRequest(request, "referees:write");
+  return authorization.ok ? authorization.actor : authorization.response;
 }
 
 export async function PATCH(

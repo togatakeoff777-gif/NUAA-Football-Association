@@ -24,8 +24,9 @@ const navigationGroups: Array<{
     label: "赛事中心",
     module: "competitions",
     items: [
-      { href: "/referees/admin/matches/competitions", label: "赛事管理", english: "Competitions" },
-      { href: "/referees/admin/matches", label: "比赛管理", english: "Matches" },
+      { href: "/admin/competitions", label: "赛事管理", english: "Competitions" },
+      { href: "/admin/matches", label: "比赛管理", english: "Matches" },
+      { href: "/admin/organizations", label: "组织与球队", english: "Organizations" },
     ],
   },
   {
@@ -33,18 +34,18 @@ const navigationGroups: Array<{
     module: "referees",
     items: [
       { href: "/admin/referees", label: "裁判员", english: "Referees" },
-      { href: "/referees/admin/availability", label: "可执裁时间", english: "Availability" },
-      { href: "/referees/admin/matches", label: "选派管理", english: "Appointments" },
-      { href: "/referees/admin/conflicts", label: "冲突报告", english: "Conflicts" },
-      { href: "/referees/admin/statistics", label: "执裁统计", english: "Statistics" },
+      { href: "/admin/referees/availability", label: "可执裁时间", english: "Availability" },
+      { href: "/admin/appointments", label: "选派管理", english: "Appointments" },
+      { href: "/admin/conflicts", label: "冲突报告", english: "Conflicts" },
+      { href: "/admin/statistics", label: "执裁统计", english: "Statistics" },
     ],
   },
   {
     label: "系统管理",
     module: "system",
     items: [
-      { href: "/referees/admin/admins", label: "管理员账号", english: "Administrators" },
-      { href: "/referees/admin/audit-log", label: "操作日志", english: "Audit Log" },
+      { href: "/admin/system/admins", label: "管理员账号", english: "Administrators" },
+      { href: "/admin/system/audit", label: "操作日志", english: "Audit Log" },
     ],
   },
 ];
@@ -160,7 +161,7 @@ export function UnifiedAdminShell({
             {accountOpen ? <div className="admin-account-menu">
               <strong>{actorName}</strong><span>{roleLabels.join(" / ")}{isLegacy ? " · 兼容登录" : ""}</span>
               {!isLegacy ? <button onClick={() => { setPasswordOpen(true); setAccountOpen(false); }} type="button">修改个人密码</button> : null}
-              {allowedModules.includes("system") ? <Link href="/referees/admin/admins" onClick={() => setAccountOpen(false)}>管理员账号</Link> : null}
+              {allowedModules.includes("system") ? <Link href="/admin/system/admins" onClick={() => setAccountOpen(false)}>管理员账号</Link> : null}
               <button onClick={logout} type="button">退出后台</button>
             </div> : null}
           </div>

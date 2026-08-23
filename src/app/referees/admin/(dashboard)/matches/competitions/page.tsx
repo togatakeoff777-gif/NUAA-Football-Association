@@ -10,9 +10,10 @@ import {
   dataSourceLabels,
 } from "@/components/referees/admin/admin-ui";
 import { prisma } from "@/lib/prisma";
+import { getUnifiedAdminActor, hasUnifiedAdminPermission } from "@/lib/unified-admin-rbac";
 
 export default async function AdminCompetitionsPage() {
-  const competitions = await prisma.competition.findMany({
+  const [actor, competitions] = await Promise.all([getUnifiedAdminActor(), prisma.competition.findMany({
     select: {
       id: true,
       name: true,
@@ -23,13 +24,14 @@ export default async function AdminCompetitionsPage() {
       _count: { select: { teams: true, matches: true } },
     },
     orderBy: [{ year: "desc" }, { createdAt: "desc" }],
-  });
+  })]);
+  const canWrite = Boolean(actor && hasUnifiedAdminPermission(actor.roles, "competitions:write"));
   return <>
     <AdminPageHeader
       eyebrow="COMPETITIONS"
       title="赛事管理"
       description="先建立赛事，再在赛事范围内维护参赛球队、具体比赛与裁判选派。"
-      actions={<Link className="admin-button" href="/referees/admin/matches/competitions/new">+ 新建赛事</Link>}
+      actions={canWrite ? <Link className="admin-button" href="/referees/admin/matches/competitions/new">+ 新建赛事</Link> : <span className="admin-status-badge">只读权限</span>}
     />
     <AdminMatchNavigation active="competitions" />
     <AdminPanel title={`赛事列表 · ${competitions.length}`} description="Competition 是球队与比赛的上级对象；R1 支持手工维护，保留未来官方数据同步字段。">
@@ -40,8 +42,8 @@ export default async function AdminCompetitionsPage() {
         <td>{competition._count.matches}</td>
         <td>{competition._count.teams}</td>
         <td>{dataSourceLabels[competition.source]}</td>
-        <td><div className="admin-table-actions"><Link href={`/referees/admin/matches/new?competition=${competition.id}`}>新建比赛</Link><Link href={`/referees/admin/affiliations?tab=teams&competition=${competition.id}`}>管理球队</Link><Link href={`/referees/admin/matches/competitions/${competition.id}/edit`}>编辑</Link></div></td>
-      </tr>)}</tbody></table></div> : <div className="admin-empty-state"><strong>当前尚未创建赛事</strong><p>请先创建赛事，再继续建立球队和比赛。</p><Link className="admin-button" href="/referees/admin/matches/competitions/new">新建赛事</Link></div>}
+        <td><div className="admin-table-actions">{canWrite ? <><Link href={`/referees/admin/matches/new?competition=${competition.id}`}>新建比赛</Link><Link href={`/referees/admin/affiliations?tab=teams&competition=${competition.id}`}>管理球队</Link><Link href={`/referees/admin/matches/competitions/${competition.id}/edit`}>编辑</Link></> : <span>查看</span>}</div></td>
+      </tr>)}</tbody></table></div> : <div className="admin-empty-state"><strong>当前尚未创建赛事</strong><p>{canWrite ? "请先创建赛事，再继续建立球队和比赛。" : "当前没有可查看的赛事。"}</p>{canWrite ? <Link className="admin-button" href="/referees/admin/matches/competitions/new">新建赛事</Link> : null}</div>}
     </AdminPanel>
   </>;
 }

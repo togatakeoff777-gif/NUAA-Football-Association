@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getAdminActor, getAdminSession, isSameOrigin } from "@/lib/referee-auth";
+import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
 import { prisma } from "@/lib/prisma";
 import {
   createMatch,
@@ -18,14 +18,8 @@ import {
 } from "@/lib/referee-validation";
 
 async function authorize(request: Request) {
-  if (!isSameOrigin(request)) {
-    return NextResponse.json({ error: "请求来源无效。" }, { status: 403 });
-  }
-  const session = await getAdminSession();
-  if (!session) {
-    return NextResponse.json({ error: "请先登录管理员后台。" }, { status: 401 });
-  }
-  return getAdminActor(session)!;
+  const authorization = await authorizeLegacyAdminRequest(request, "competitions:write");
+  return authorization.ok ? authorization.actor : authorization.response;
 }
 
 function counts(value: unknown) {

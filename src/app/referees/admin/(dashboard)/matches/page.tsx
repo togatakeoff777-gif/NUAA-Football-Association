@@ -4,6 +4,7 @@ import { AdminMatchNavigation } from "@/components/referees/admin/admin-match-na
 import { AdminEmptyState, AdminPageHeader, AdminPanel, AdminStatusBadge, appointmentStatusLabels, matchStatusLabels } from "@/components/referees/admin/admin-ui";
 import { prisma } from "@/lib/prisma";
 import { formatRefereeDateTime } from "@/lib/referee-presenters";
+import { getUnifiedAdminActor, hasUnifiedAdminPermission } from "@/lib/unified-admin-rbac";
 
 export default async function AdminMatchesPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const query = await searchParams;
@@ -14,7 +15,8 @@ export default async function AdminMatchesPage({ searchParams }: { searchParams:
   const appointmentStatus = ["NONE", "DRAFT", "PUBLISHED", "WITHDRAWN", "COMPLETED", "CANCELLED"].includes(rawAppointmentStatus) ? rawAppointmentStatus : "";
   const date = typeof query.date === "string" ? query.date : "";
   const dateStart = /^\d{4}-\d{2}-\d{2}$/.test(date) ? new Date(`${date}T00:00:00+08:00`) : null;
-  const [competitions, matches] = await Promise.all([
+  const [actor, competitions, matches] = await Promise.all([
+    getUnifiedAdminActor(),
     prisma.competition.findMany({ select: { id: true, name: true }, orderBy: [{ year: "desc" }, { name: "asc" }] }),
     prisma.match.findMany({
       where: {
@@ -27,8 +29,9 @@ export default async function AdminMatchesPage({ searchParams }: { searchParams:
       orderBy: { kickoff: "desc" }, take: 250,
     }),
   ]);
+  const canWriteCompetitions = Boolean(actor && hasUnifiedAdminPermission(actor.roles, "competitions:write"));
   return <>
-    <AdminPageHeader eyebrow="MATCHES & APPOINTMENTS" title="比赛与选派" description="先从比赛列表进入具体场次，再维护岗位与正式选派。" actions={<><Link className="admin-button admin-button-secondary" href="/referees/admin/matches/competitions">赛事管理</Link><Link className="admin-button" href="/referees/admin/matches/new">+ 新建比赛</Link></>} />
+    <AdminPageHeader eyebrow="MATCHES & APPOINTMENTS" title="比赛与选派" description="先从比赛列表进入具体场次，再维护岗位与正式选派。" actions={<><Link className="admin-button admin-button-secondary" href="/referees/admin/matches/competitions">赛事管理</Link>{canWriteCompetitions ? <Link className="admin-button" href="/referees/admin/matches/new">+ 新建比赛</Link> : null}</>} />
     <AdminMatchNavigation active="matches" />
     <form className="admin-filter-bar">
       <label><span>赛事</span><select defaultValue={competitionId} name="competition"><option value="">全部赛事</option>{competitions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
@@ -39,7 +42,7 @@ export default async function AdminMatchesPage({ searchParams }: { searchParams:
       <Link className="admin-filter-reset" href="/referees/admin/matches">清除</Link>
     </form>
     <AdminPanel title={`比赛列表 · ${matches.length}`} description="默认按开球时间倒序，最多显示 250 场。">
-      {matches.length ? <div className="admin-table-scroll"><table className="admin-data-table"><thead><tr><th>时间</th><th>比赛</th><th>赛事</th><th>场地</th><th>比赛状态</th><th>选派状态</th><th>操作</th></tr></thead><tbody>{matches.map((match) => <tr key={match.id}><td>{formatRefereeDateTime(match.kickoff)}</td><td><strong>{match.homeTeam.name} vs {match.awayTeam.name}</strong><small>{match.stage}</small></td><td>{match.competition.name}</td><td>{match.venue}</td><td><AdminStatusBadge status={match.status} label={matchStatusLabels[match.status]} /></td><td><AdminStatusBadge status={match.appointment?.status ?? "NONE"} label={appointmentStatusLabels[match.appointment?.status ?? "NONE"]} /></td><td><div className="admin-table-actions"><Link className="admin-row-action-primary" href={`/referees/admin/matches/${match.id}`}>{match.appointment?.status === "PUBLISHED" ? "查看选派" : "查看 / 选派"}</Link><Link href={`/referees/admin/matches/${match.id}/edit`}>编辑</Link></div></td></tr>)}</tbody></table></div> : <AdminEmptyState title="没有符合条件的比赛" description="调整筛选条件，或创建一场新比赛。" />}
+      {matches.length ? <div className="admin-table-scroll"><table className="admin-data-table"><thead><tr><th>时间</th><th>比赛</th><th>赛事</th><th>场地</th><th>比赛状态</th><th>选派状态</th><th>操作</th></tr></thead><tbody>{matches.map((match) => <tr key={match.id}><td>{formatRefereeDateTime(match.kickoff)}</td><td><strong>{match.homeTeam.name} vs {match.awayTeam.name}</strong><small>{match.stage}</small></td><td>{match.competition.name}</td><td>{match.venue}</td><td><AdminStatusBadge status={match.status} label={matchStatusLabels[match.status]} /></td><td><AdminStatusBadge status={match.appointment?.status ?? "NONE"} label={appointmentStatusLabels[match.appointment?.status ?? "NONE"]} /></td><td><div className="admin-table-actions"><Link className="admin-row-action-primary" href={`/referees/admin/matches/${match.id}`}>{match.appointment?.status === "PUBLISHED" ? "查看选派" : "查看 / 选派"}</Link>{canWriteCompetitions ? <Link href={`/referees/admin/matches/${match.id}/edit`}>编辑</Link> : null}</div></td></tr>)}</tbody></table></div> : <AdminEmptyState title="没有符合条件的比赛" description={canWriteCompetitions ? "调整筛选条件，或创建一场新比赛。" : "请调整筛选条件。"} />}
     </AdminPanel>
   </>;
 }

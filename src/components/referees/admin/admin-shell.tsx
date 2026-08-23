@@ -4,16 +4,14 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { adminRoleLabels } from "@/components/referees/admin/admin-ui";
-
 const primaryNavigation = [
   { href: "/referees/admin", label: "概览", english: "Overview", exact: true },
-  { href: "/referees/admin/matches", label: "比赛与选派", english: "Matches & Appointments" },
-  { href: "/referees/admin/referees", label: "裁判员", english: "Referees" },
-  { href: "/referees/admin/availability", label: "可执裁时间", english: "Availability" },
-  { href: "/referees/admin/affiliations", label: "组织与球队", english: "Organizations & Teams" },
-  { href: "/referees/admin/conflicts", label: "冲突报告", english: "Conflict Reports" },
-  { href: "/referees/admin/statistics", label: "执裁统计", english: "Statistics" },
+  { href: "/referees/admin/matches", label: "比赛与选派", english: "Matches & Appointments", module: "operations" },
+  { href: "/referees/admin/referees", label: "裁判员", english: "Referees", module: "referees" },
+  { href: "/referees/admin/availability", label: "可执裁时间", english: "Availability", module: "referees" },
+  { href: "/referees/admin/affiliations", label: "组织与球队", english: "Organizations & Teams", module: "competitions" },
+  { href: "/referees/admin/conflicts", label: "冲突报告", english: "Conflict Reports", module: "referees" },
+  { href: "/referees/admin/statistics", label: "执裁统计", english: "Statistics", module: "referees" },
 ] as const;
 
 function isActive(pathname: string, href: string, exact = false) {
@@ -33,13 +31,19 @@ async function api(url: string, method: string, body?: unknown) {
 export function AdminShell({
   children,
   actorName,
-  actorRole,
+  roleLabel,
+  canCompetitions,
+  canReferees,
+  canSystem,
   isLegacy,
   mustChangePassword,
 }: {
   children: React.ReactNode;
   actorName: string;
-  actorRole: string;
+  roleLabel: string;
+  canCompetitions: boolean;
+  canReferees: boolean;
+  canSystem: boolean;
   isLegacy: boolean;
   mustChangePassword: boolean;
 }) {
@@ -79,7 +83,11 @@ export function AdminShell({
     }
   }
 
-  const roleLabel = adminRoleLabels[actorRole] ?? "授权管理员";
+  const visibleNavigation = primaryNavigation.filter((item) => {
+    if (!("module" in item)) return true;
+    if (item.module === "operations") return canCompetitions || canReferees;
+    return item.module === "competitions" ? canCompetitions : canReferees;
+  });
   return (
     <div className="admin-shell">
       <aside className={`admin-sidebar${mobileOpen ? " is-open" : ""}`}>
@@ -90,7 +98,7 @@ export function AdminShell({
         </div>
         <nav aria-label="裁判后台导航" className="admin-navigation">
           <span className="admin-nav-label">工作台</span>
-          {primaryNavigation.map((item) => (
+          {visibleNavigation.map((item) => (
             <Link
               aria-current={isActive(pathname, item.href, "exact" in item && item.exact) ? "page" : undefined}
               href={item.href}
@@ -102,14 +110,14 @@ export function AdminShell({
             </Link>
           ))}
           <span className="admin-nav-label admin-nav-label-system">系统管理</span>
-          {actorRole === "SUPER_ADMIN" ? (
+          {canSystem ? (
             <Link aria-current={isActive(pathname, "/referees/admin/admins") ? "page" : undefined} href="/referees/admin/admins" onClick={() => setMobileOpen(false)}>
               <i aria-hidden="true" /><span><strong>管理员账号</strong><small>Administrators</small></span>
             </Link>
           ) : null}
-          <Link aria-current={isActive(pathname, "/referees/admin/audit-log") ? "page" : undefined} href="/referees/admin/audit-log" onClick={() => setMobileOpen(false)}>
+          {canSystem ? <Link aria-current={isActive(pathname, "/referees/admin/audit-log") ? "page" : undefined} href="/referees/admin/audit-log" onClick={() => setMobileOpen(false)}>
             <i aria-hidden="true" /><span><strong>操作日志</strong><small>Audit Log</small></span>
-          </Link>
+          </Link> : null}
         </nav>
         <Link className="admin-back-link" href="/referees">← 返回裁判中心</Link>
       </aside>
@@ -127,7 +135,7 @@ export function AdminShell({
             {accountOpen ? <div className="admin-account-menu">
               <strong>{actorName}</strong><span>{roleLabel}{isLegacy ? " · 兼容登录" : ""}</span>
               {!isLegacy ? <button onClick={() => { setPasswordOpen(true); setAccountOpen(false); }} type="button">修改个人密码</button> : null}
-              {actorRole === "SUPER_ADMIN" ? <Link href="/referees/admin/admins" onClick={() => setAccountOpen(false)}>管理员账号</Link> : null}
+              {canSystem ? <Link href="/referees/admin/admins" onClick={() => setAccountOpen(false)}>管理员账号</Link> : null}
               <button onClick={logout} type="button">退出后台</button>
             </div> : null}
           </div>

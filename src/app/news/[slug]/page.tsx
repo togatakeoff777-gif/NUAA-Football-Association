@@ -6,6 +6,7 @@ import { ArchiveGallery } from "@/components/competitions/archive/archive-galler
 import { JsonLd } from "@/components/seo/json-ld";
 import { ShareActions } from "@/components/share/share-actions";
 import { DetailPageLayout } from "@/components/templates/detail-page-layout";
+import { DatabaseNewsDetail } from "@/components/database-news-detail";
 import {
   freshmanCupPreparationNews,
   freshmanCupPreparationNotice,
@@ -30,12 +31,14 @@ import {
 } from "@/data/public-information";
 import { newsArticleJsonLd } from "@/lib/structured-data";
 import { SITE_NAME } from "@/lib/site-metadata";
+import { getPublishedContentDetailBySlug } from "@/lib/admin-content-service";
+import { isDatabaseContentSource } from "@/lib/content-source";
 
 type NewsDetailPageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 export function generateStaticParams() {
   return [
@@ -53,6 +56,19 @@ function contentDate(dateLabel: string) {
 
 export async function generateMetadata({ params }: NewsDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
+  if (isDatabaseContentSource()) {
+    const post = await getPublishedContentDetailBySlug(slug);
+    if (!post) return { robots: { index: false, follow: false } };
+    const canonicalPath = `/news/${slug}`;
+    const image = post.cover?.url ?? "/brand/nuaa-fa-logo.jpg";
+    return {
+      title: post.title,
+      description: post.summary,
+      alternates: { canonical: canonicalPath },
+      openGraph: { type: "article", locale: "zh_CN", siteName: SITE_NAME, title: post.title, description: post.summary, url: canonicalPath, publishedTime: post.publishedAt.toISOString(), modifiedTime: post.updatedAt.toISOString(), images: [{ url: image, alt: post.cover?.altText ?? post.title }] },
+      twitter: { card: "summary_large_image", title: post.title, description: post.summary, images: [image] },
+    };
+  }
   const story =
     getFreshmanCupContentItem(slug) ??
     getMensCupNewsItem(slug) ??
@@ -90,6 +106,7 @@ export async function generateMetadata({ params }: NewsDetailPageProps): Promise
 
 export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
   const { slug } = await params;
+  if (isDatabaseContentSource()) return <DatabaseNewsDetail slug={slug} />;
   const isWomensCupStory = Boolean(getWomensCupNewsItem(slug));
   const isFreshmanCupStory = Boolean(getFreshmanCupContentItem(slug));
   const disciplineDecision = getDisciplineDecision(slug);

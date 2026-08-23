@@ -505,10 +505,10 @@ async function main() {
 
     await sourceContains("src/app/referees/admin/(dashboard)/layout.tsx", ["getAdminSession", "redirect"]);
     await sourceContains("src/app/referees/workspace/page.tsx", ["getRefereeMemberSession", "redirect"]);
-    await sourceContains("src/app/api/referees/admin/exports/[kind]/route.ts", ["getAdminSession"]);
+    await sourceContains("src/app/api/referees/admin/exports/[kind]/route.ts", ["authorizeLegacyAdminRequest", '"referees:read"']);
     await sourceContains("src/app/api/referees/admin/logout/route.ts", ["destroyAdminSession"]);
     await sourceContains("src/app/api/referees/logout/route.ts", ["destroyRefereeMemberSession"]);
-    await sourceContains("src/app/api/referees/admin/accounts/route.ts", ["getAdminSession"]);
+    await sourceContains("src/app/api/referees/admin/accounts/route.ts", ["authorizeLegacyAdminRequest", '"referees:write"']);
     await sourceContains("src/app/api/referees/applications/route.ts", ["getRefereeMemberSession"]);
     await sourceContains("src/app/api/referees/admin/login/route.ts", ["登录信息不正确或后台当前不可用"]);
     await sourceContains("src/app/api/referees/login/route.ts", ["登录信息不正确或账号当前不可用"]);

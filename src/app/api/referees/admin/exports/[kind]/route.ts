@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getAdminSession } from "@/lib/referee-auth";
+import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
 import { prisma } from "@/lib/prisma";
 import { formatRefereeDateTime } from "@/lib/referee-presenters";
 
@@ -24,9 +24,8 @@ export async function GET(
   request: Request,
   context: { params: Promise<{ kind: string }> },
 ) {
-  if (!(await getAdminSession())) {
-    return NextResponse.json({ error: "请先登录管理员后台。" }, { status: 401 });
-  }
+  const authorization = await authorizeLegacyAdminRequest(request, "referees:read", { mutation: false });
+  if (!authorization.ok) return authorization.response;
   const { kind } = await context.params;
   const url = new URL(request.url);
 

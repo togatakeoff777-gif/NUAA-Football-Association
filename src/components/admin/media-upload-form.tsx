@@ -14,7 +14,19 @@ export function MediaUploadForm() {
     setSubmitting(true);
     setMessage("");
     try {
-      const response = await fetch("/api/admin/media", { method: "POST", body: new FormData(form) });
+      const values = new FormData(form);
+      const file = values.get("file");
+      if (!(file instanceof File)) throw new Error("请选择有效文件。");
+      const response = await fetch("/api/admin/media", {
+        method: "POST",
+        headers: {
+          "content-type": file.type,
+          "x-nuaafa-filename": encodeURIComponent(file.name),
+          "x-nuaafa-visibility": String(values.get("visibility") ?? "PRIVATE"),
+          "x-nuaafa-alt-text": encodeURIComponent(String(values.get("altText") ?? "")),
+        },
+        body: file,
+      });
       const result = (await response.json()) as { error?: string };
       if (!response.ok) throw new Error(result.error ?? "上传失败。");
       form.reset();

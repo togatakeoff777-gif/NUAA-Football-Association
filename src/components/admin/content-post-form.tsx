@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { StructuredContentEditor } from "@/components/admin/structured-content-editor";
+
 type ContentType = "NEWS" | "ANNOUNCEMENT" | "DISCIPLINE";
 
 type ContentPostFormValue = {
@@ -109,14 +111,14 @@ export function ContentPostForm({
         </div>
       </section> : null}
       <section className="admin-form-section">
-        <header><h2>结构化正文 JSON</h2><p>R1-1 使用受控 JSON 输入验证正式 schema；本阶段不集成 TipTap，也不接受任意 HTML。</p></header>
-        <label><span>Content JSON</span><textarea defaultValue={initialValue.contentJson} maxLength={100000} name="content" required rows={18} spellCheck={false} /></label>
+        <header><h2>结构化正文</h2><p>TipTap 只负责编辑体验；服务端仅保存并信任通过白名单验证的版本化 JSON，不保存任意 HTML。</p></header>
+        <StructuredContentEditor imageMedia={imageMedia} initialValue={initialValue.contentJson} />
       </section>
       <section className="admin-form-section">
-        <header><h2>展示设置</h2><p>公开 Service 只返回已发布且发布时间不晚于当前时间的内容。</p></header>
+        <header><h2>展示设置</h2><p>“置顶”只改变普通新闻列表顺序；“首页推荐”是独立标记，不会改变普通列表顺序。</p></header>
         <div className="admin-inline-checks">
-          <label><input defaultChecked={initialValue.pinned} name="pinned" type="checkbox" /><span>置顶标记</span></label>
-          <label><input defaultChecked={initialValue.featured} name="featured" type="checkbox" /><span>首页推荐</span></label>
+          <label><input defaultChecked={initialValue.pinned} name="pinned" type="checkbox" /><span>置顶 · 仅影响新闻列表排序</span></label>
+          <label><input defaultChecked={initialValue.featured} name="featured" type="checkbox" /><span>首页推荐 · 独立候选池</span></label>
         </div>
       </section>
       <p aria-live="polite" className="admin-form-message">{message}</p>
@@ -124,6 +126,7 @@ export function ContentPostForm({
         <span>请选择保存草稿、发布或归档；服务端会再次验证权限和关联媒体。</span>
         <div>
           <Link className="admin-button admin-button-secondary" href="/admin/content/news">取消</Link>
+          {initialValue.id ? <Link className="admin-button admin-button-secondary" href={`/admin/content/news/${initialValue.id}/preview`} target="_blank">安全预览</Link> : null}
           <button className="admin-button admin-button-secondary" disabled={submitting} name="status" type="submit" value="DRAFT">保存草稿</button>
           {initialValue.id ? <button className="admin-button admin-button-danger" disabled={submitting} name="status" type="submit" value="ARCHIVED">归档</button> : null}
           <button className="admin-button" disabled={submitting} name="status" type="submit" value="PUBLISHED">发布</button>

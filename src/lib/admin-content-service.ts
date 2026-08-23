@@ -4,7 +4,7 @@ import type {
   Prisma,
 } from "@/generated/prisma-v29/client";
 import type { ContentPostInput, DisciplineInput } from "@/lib/admin-content-input";
-import { validateStructuredContent } from "@/lib/admin-content-input";
+import { getStructuredContentMediaIds, validateStructuredContent } from "@/lib/admin-content-input";
 import { UnifiedAdminInputError } from "@/lib/unified-admin-api";
 import { prisma } from "@/lib/prisma";
 import {
@@ -83,7 +83,13 @@ function normalizeInput(input: ContentPostInput) {
 
 async function assertPublishableMedia(
   tx: Prisma.TransactionClient,
-  input: { type: ContentPostType; status: ContentPostStatus; coverMediaId: string | null; discipline: DisciplineInput | null },
+  input: {
+    type: ContentPostType;
+    status: ContentPostStatus;
+    coverMediaId: string | null;
+    discipline: DisciplineInput | null;
+    content: Prisma.InputJsonValue;
+  },
 ) {
   if (input.status !== "PUBLISHED") return;
   if (input.coverMediaId) {
@@ -93,6 +99,19 @@ async function assertPublishableMedia(
     });
     if (!cover || cover.visibility !== "PUBLIC" || !cover.mimeType.startsWith("image/")) {
       throw new UnifiedAdminInputError("发布内容的封面必须是存在的 PUBLIC 图片。", 409);
+    }
+  }
+  const inlineMediaIds = getStructuredContentMediaIds(input.content);
+  if (inlineMediaIds.length) {
+    const media = await tx.mediaAsset.findMany({
+      where: { id: { in: inlineMediaIds } },
+      select: { id: true, visibility: true, mimeType: true },
+    });
+    if (
+      media.length !== inlineMediaIds.length ||
+      media.some((asset) => asset.visibility !== "PUBLIC" || !asset.mimeType.startsWith("image/"))
+    ) {
+      throw new UnifiedAdminInputError("发布正文引用的图片必须全部是存在的 PUBLIC 图片。", 409);
     }
   }
   if (input.type === "DISCIPLINE") {
@@ -271,7 +290,7 @@ export async function getAdminContentPage(input: {
   };
 }
 
-type PublicCursor = { publishedAt: string; id: string };
+type PublicCursor = { pinned: boolean; publishedAt: string; id: string };
 
 function decodeCursor(value: string | undefined): PublicCursor | null {
   if (!value) return null;
@@ -279,11 +298,12 @@ function decodeCursor(value: string | undefined): PublicCursor | null {
     const parsed = JSON.parse(Buffer.from(value, "base64url").toString("utf8")) as unknown;
     if (
       typeof parsed === "object" && parsed !== null &&
+      "pinned" in parsed && typeof parsed.pinned === "boolean" &&
       "publishedAt" in parsed && typeof parsed.publishedAt === "string" &&
       "id" in parsed && typeof parsed.id === "string" &&
       !Number.isNaN(Date.parse(parsed.publishedAt))
     ) {
-      return { publishedAt: parsed.publishedAt, id: parsed.id };
+      return { pinned: parsed.pinned, publishedAt: parsed.publishedAt, id: parsed.id };
     }
   } catch {
     // Invalid cursors are rejected below.
@@ -298,27 +318,38 @@ function encodeCursor(value: PublicCursor) {
 export async function getPublishedContentPage(input: {
   cursor?: string;
   type?: ContentPostType;
+  year?: number;
   now?: Date;
   pageSize?: number;
 }) {
   const now = input.now ?? new Date();
   const pageSize = Math.min(50, Math.max(1, input.pageSize ?? contentPostPageSize));
   const cursor = decodeCursor(input.cursor);
+  const yearRange = input.year
+    ? { gte: new Date(Date.UTC(input.year, 0, 1)), lt: new Date(Date.UTC(input.year + 1, 0, 1)) }
+    : null;
   const baseWhere: Prisma.ContentPostWhereInput = {
     status: "PUBLISHED",
-    publishedAt: { lte: now },
+    publishedAt: { lte: now, ...(yearRange ?? {}) },
     ...(input.type ? { type: input.type } : {}),
   };
   const where: Prisma.ContentPostWhereInput = cursor
     ? {
         AND: [
           baseWhere,
-          {
-            OR: [
-              { publishedAt: { lt: new Date(cursor.publishedAt) } },
-              { publishedAt: new Date(cursor.publishedAt), id: { lt: cursor.id } },
-            ],
-          },
+          cursor.pinned
+            ? { OR: [
+                { pinned: true, publishedAt: { lt: new Date(cursor.publishedAt) } },
+                { pinned: true, publishedAt: new Date(cursor.publishedAt), id: { lt: cursor.id } },
+                { pinned: false },
+              ] }
+            : { AND: [
+                { pinned: false },
+                { OR: [
+                    { publishedAt: { lt: new Date(cursor.publishedAt) } },
+                    { publishedAt: new Date(cursor.publishedAt), id: { lt: cursor.id } },
+                  ] },
+              ] },
         ],
       }
     : baseWhere;
@@ -330,44 +361,123 @@ export async function getPublishedContentPage(input: {
       slug: true,
       title: true,
       summary: true,
-      content: true,
       source: true,
       publishedAt: true,
       pinned: true,
-      featured: true,
       coverMedia: {
         select: { id: true, mimeType: true, altText: true, visibility: true },
       },
-      discipline: {
-        select: { competitionId: true, officialMediaId: true, versionLabel: true, scopeLabel: true },
-      },
     },
-    orderBy: [{ publishedAt: "desc" }, { id: "desc" }],
+    orderBy: [{ pinned: "desc" }, { publishedAt: "desc" }, { id: "desc" }],
     take: pageSize + 1,
   });
   const hasNext = rows.length > pageSize;
   const items = rows.slice(0, pageSize).map((row) => ({
-    id: row.id,
     type: row.type,
     slug: row.slug,
     title: row.title,
     summary: row.summary,
-    content: row.content,
     source: row.source,
     publishedAt: row.publishedAt,
     pinned: row.pinned,
-    featured: row.featured,
     cover: row.coverMedia?.visibility === "PUBLIC"
-      ? { id: row.coverMedia.id, url: `/media/${row.coverMedia.id}`, mimeType: row.coverMedia.mimeType, altText: row.coverMedia.altText }
+      ? { url: `/media/${row.coverMedia.id}`, mimeType: row.coverMedia.mimeType, altText: row.coverMedia.altText }
       : null,
-    discipline: row.type === "DISCIPLINE" ? row.discipline : null,
   }));
   const last = items.at(-1);
   return {
     items,
     pageSize,
     nextCursor: hasNext && last?.publishedAt
-      ? encodeCursor({ publishedAt: last.publishedAt.toISOString(), id: last.id })
+      ? encodeCursor({ pinned: last.pinned, publishedAt: last.publishedAt.toISOString(), id: rows[pageSize - 1]!.id })
       : null,
+  };
+}
+
+export async function getFeaturedPublishedContent(input: { type?: ContentPostType; now?: Date; take?: number } = {}) {
+  const now = input.now ?? new Date();
+  const rows = await prisma.contentPost.findMany({
+    where: {
+      status: "PUBLISHED",
+      featured: true,
+      publishedAt: { lte: now },
+      ...(input.type ? { type: input.type } : {}),
+    },
+    select: {
+      type: true,
+      slug: true,
+      title: true,
+      summary: true,
+      source: true,
+      publishedAt: true,
+      pinned: true,
+      coverMedia: { select: { id: true, mimeType: true, altText: true, visibility: true } },
+    },
+    orderBy: [{ publishedAt: "desc" }, { id: "desc" }],
+    take: Math.min(10, Math.max(1, input.take ?? 3)),
+  });
+  return rows.map((row) => ({
+    type: row.type,
+    slug: row.slug,
+    title: row.title,
+    summary: row.summary,
+    source: row.source,
+    publishedAt: row.publishedAt!,
+    pinned: row.pinned,
+    cover: row.coverMedia?.visibility === "PUBLIC"
+      ? { url: `/media/${row.coverMedia.id}`, mimeType: row.coverMedia.mimeType, altText: row.coverMedia.altText }
+      : null,
+  }));
+}
+
+export async function getPublishedContentDetailBySlug(slug: string, now = new Date()) {
+  const row = await prisma.contentPost.findFirst({
+    where: { slug, status: "PUBLISHED", publishedAt: { lte: now } },
+    select: {
+      type: true,
+      slug: true,
+      title: true,
+      summary: true,
+      content: true,
+      source: true,
+      publishedAt: true,
+      updatedAt: true,
+      pinned: true,
+      featured: true,
+      coverMedia: { select: { id: true, mimeType: true, altText: true, visibility: true } },
+      discipline: {
+        select: {
+          versionLabel: true,
+          scopeLabel: true,
+          competition: { select: { name: true } },
+          officialMedia: { select: { id: true, originalFilename: true, mimeType: true, visibility: true } },
+        },
+      },
+    },
+  });
+  if (!row) return null;
+  const official = row.discipline?.officialMedia;
+  return {
+    type: row.type,
+    slug: row.slug,
+    title: row.title,
+    summary: row.summary,
+    content: validateStructuredContent(row.content),
+    source: row.source,
+    publishedAt: row.publishedAt!,
+    updatedAt: row.updatedAt,
+    pinned: row.pinned,
+    featured: row.featured,
+    cover: row.coverMedia?.visibility === "PUBLIC"
+      ? { url: `/media/${row.coverMedia.id}`, mimeType: row.coverMedia.mimeType, altText: row.coverMedia.altText }
+      : null,
+    discipline: row.type === "DISCIPLINE" ? {
+      versionLabel: row.discipline?.versionLabel ?? null,
+      scopeLabel: row.discipline?.scopeLabel ?? null,
+      competitionName: row.discipline?.competition?.name ?? null,
+      officialMedia: official?.visibility === "PUBLIC" && official.mimeType === "application/pdf"
+        ? { url: `/media/${official.id}`, filename: official.originalFilename, mimeType: official.mimeType }
+        : null,
+    } : null,
   };
 }

@@ -1,18 +1,17 @@
 import { NextResponse } from "next/server";
 
-import { getAdminActor, getAdminSession, isSameOrigin } from "@/lib/referee-auth";
+import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
 import { deleteRefereeAvailability, saveRefereeAvailability } from "@/lib/referee-r1-service";
 import { RefereeServiceError } from "@/lib/referee-service";
 import { isRecord, readDate, readEnum, readShortText } from "@/lib/referee-validation";
 
 export async function POST(request: Request) {
-  if (!isSameOrigin(request)) return NextResponse.json({ error: "请求来源无效。" }, { status: 403 });
-  const session = await getAdminSession();
-  if (!session) return NextResponse.json({ error: "请先登录管理员后台。" }, { status: 401 });
+  const authorization = await authorizeLegacyAdminRequest(request, "referees:write");
+  if (!authorization.ok) return authorization.response;
   try {
     const body: unknown = await request.json();
     if (!isRecord(body)) throw new Error("可执裁时间格式不正确。");
-    const actor = getAdminActor(session)!;
+    const actor = authorization.actor;
     const result = await saveRefereeAvailability({
       id: readShortText(body.id, "记录 ID", 64, false) || undefined,
       refereeId: readShortText(body.refereeId, "裁判员", 64),
@@ -32,13 +31,12 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  if (!isSameOrigin(request)) return NextResponse.json({ error: "请求来源无效。" }, { status: 403 });
-  const session = await getAdminSession();
-  if (!session) return NextResponse.json({ error: "请先登录管理员后台。" }, { status: 401 });
+  const authorization = await authorizeLegacyAdminRequest(request, "referees:write");
+  if (!authorization.ok) return authorization.response;
   try {
     const body: unknown = await request.json();
     if (!isRecord(body)) throw new Error("删除内容格式不正确。");
-    const actor = getAdminActor(session)!;
+    const actor = authorization.actor;
     await deleteRefereeAvailability(
       readShortText(body.id, "记录 ID", 64),
       readShortText(body.refereeId, "裁判员", 64),

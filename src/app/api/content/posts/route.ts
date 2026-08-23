@@ -21,12 +21,22 @@ function readPageSize(value: string | null) {
   return parsed;
 }
 
+function readYear(value: string | null) {
+  if (!value) return undefined;
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < 2000 || parsed > 2100) {
+    throw new UnifiedAdminInputError("year 必须是 2000 至 2100 的整数。");
+  }
+  return parsed;
+}
+
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const result = await getPublishedContentPage({
       cursor: url.searchParams.get("cursor") ?? undefined,
       type: readType(url.searchParams.get("type")),
+      year: readYear(url.searchParams.get("year")),
       pageSize: readPageSize(url.searchParams.get("pageSize")),
     });
     return NextResponse.json(result, {

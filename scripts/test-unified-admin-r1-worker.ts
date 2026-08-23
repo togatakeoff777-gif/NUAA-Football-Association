@@ -35,8 +35,10 @@ async function countFiles(root: string): Promise<number> {
 
 const doc = (text: string) => ({
   schemaVersion: 1 as const,
-  type: "doc" as const,
-  content: [{ type: "paragraph" as const, content: [{ type: "text" as const, text }] }],
+  document: {
+    type: "doc" as const,
+    content: [{ type: "paragraph" as const, content: [{ type: "text" as const, text }] }],
+  },
 });
 
 const contentInput = (
@@ -116,17 +118,17 @@ async function main() {
     const contentActor: UnifiedAdminActor = { id: contentAccount.id, displayName: contentAccount.displayName, isLegacy: false, roles: ["CONTENT_EDITOR"] };
     const refereeActor: UnifiedAdminActor = { id: refereeAccount.id, displayName: refereeAccount.displayName, isLegacy: false, roles: ["REFEREE_ADMIN"] };
     const workflow = await content.createContentPost(contentInput("workflow-proof", "DRAFT"), contentActor);
-    assert((await content.getPublishedContentPage({})).items.every((item) => item.id !== workflow.id), "DRAFT leaked to public DTO.");
+    assert((await content.getPublishedContentPage({})).items.every((item) => item.slug !== workflow.slug), "DRAFT leaked to public DTO.");
     await content.updateContentPost(workflow.id, { ...contentInput("workflow-proof", "DRAFT"), title: "编辑后的草稿" }, contentActor);
     await content.updateContentPost(workflow.id, { ...contentInput("workflow-proof", "PUBLISHED"), title: "已发布新闻" }, contentActor);
-    const publishedWorkflow = (await content.getPublishedContentPage({})).items.find((item) => item.id === workflow.id);
+    const publishedWorkflow = (await content.getPublishedContentPage({})).items.find((item) => item.slug === workflow.slug);
     assert(publishedWorkflow && !("authorAdmin" in publishedWorkflow) && !("authorAdminId" in publishedWorkflow), "Public DTO leaked admin fields.");
     await content.updateContentPost(workflow.id, { ...contentInput("workflow-proof", "ARCHIVED"), title: "已归档新闻" }, contentActor);
-    assert((await content.getPublishedContentPage({})).items.every((item) => item.id !== workflow.id), "ARCHIVED leaked to public DTO.");
+    assert((await content.getPublishedContentPage({})).items.every((item) => item.slug !== workflow.slug), "ARCHIVED leaked to public DTO.");
 
     const future = await content.createContentPost(contentInput("future-news"), contentActor);
     await verifier.contentPost.update({ where: { id: future.id }, data: { publishedAt: new Date("2030-01-01T00:00:00.000Z") } });
-    assert((await content.getPublishedContentPage({ now: new Date("2029-01-01T00:00:00.000Z") })).items.every((item) => item.id !== future.id), "Future content leaked to public DTO.");
+    assert((await content.getPublishedContentPage({ now: new Date("2029-01-01T00:00:00.000Z") })).items.every((item) => item.slug !== future.slug), "Future content leaked to public DTO.");
 
     let invalidEnvelope = false;
     try {
@@ -159,7 +161,7 @@ async function main() {
     } while (cursor);
     const cursorItems = cursorPages.flatMap((page) => page.items);
     assert(cursorPages.map((page) => page.items.length).join() === "10,10,5", "Cursor pagination page sizes are incorrect.");
-    assert(new Set(cursorItems.map((item) => item.id)).size === 25, "Cursor pagination has duplicates or omissions.");
+    assert(new Set(cursorItems.map((item) => item.slug)).size === 25, "Cursor pagination has duplicates or omissions.");
     assert(cursorItems[0]?.slug === "paged-25" && cursorItems.at(-1)?.slug === "paged-01", "Cursor pagination ordering is unstable.");
     const adminPage3 = await content.getAdminContentPage({ actor: contentActor, page: 3, type: "ANNOUNCEMENT" });
     assert(adminPage3.total === 25 && adminPage3.items.length === 5, "Admin count/skip/take pagination is incorrect.");

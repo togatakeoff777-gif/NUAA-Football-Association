@@ -8,7 +8,7 @@ import {
 } from "@/lib/unified-admin-rbac";
 
 export class UnifiedAdminInputError extends Error {
-  constructor(message: string, readonly status: 400 | 404 | 409 | 413 | 415 = 400) {
+  constructor(message: string, readonly status: 400 | 404 | 408 | 409 | 413 | 415 | 429 = 400) {
     super(message);
     this.name = "UnifiedAdminInputError";
   }

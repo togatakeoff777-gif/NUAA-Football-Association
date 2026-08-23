@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import {
   getAdminMediaPage,
   maximumMediaRequestBytes,
-  storeMediaAssetUpload,
+  storeMediaAssetUploadStream,
 } from "@/lib/admin-media-service";
 import {
   authorizeUnifiedAdminRequest,
@@ -36,15 +36,22 @@ export async function POST(request: Request) {
     if (Number.isFinite(contentLength) && contentLength > maximumMediaRequestBytes) {
       throw new UnifiedAdminInputError("上传请求超过 21 MB 服务端硬限制。", 413);
     }
-    const form = await request.formData();
-    const file = form.get("file");
-    if (!(file instanceof File)) throw new UnifiedAdminInputError("文件格式不正确。");
-    const asset = await storeMediaAssetUpload({
-      fileName: file.name,
-      mimeType: file.type,
-      bytes: new Uint8Array(await file.arrayBuffer()),
-      altText: typeof form.get("altText") === "string" ? String(form.get("altText")) : "",
-      visibility: typeof form.get("visibility") === "string" ? String(form.get("visibility")) : "PRIVATE",
+    if (!request.body) throw new UnifiedAdminInputError("上传数据流为空。");
+    const decodeHeader = (name: string, required = false) => {
+      const value = request.headers.get(name);
+      if (!value) {
+        if (required) throw new UnifiedAdminInputError(`缺少 ${name} 请求头。`);
+        return "";
+      }
+      try { return decodeURIComponent(value); } catch { throw new UnifiedAdminInputError(`${name} 请求头编码无效。`); }
+    };
+    const asset = await storeMediaAssetUploadStream({
+      fileName: decodeHeader("x-nuaafa-filename", true),
+      mimeType: request.headers.get("content-type")?.split(";", 1)[0]?.trim() ?? "",
+      stream: request.body,
+      contentLength: contentLength > 0 ? contentLength : undefined,
+      altText: decodeHeader("x-nuaafa-alt-text"),
+      visibility: request.headers.get("x-nuaafa-visibility") ?? "PRIVATE",
       actor,
     });
     return NextResponse.json({ ok: true, asset }, { status: 201 });

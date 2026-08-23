@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getAdminActor, getAdminSession, isSameOrigin } from "@/lib/referee-auth";
+import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
 import {
   createRefereeAccount,
   RefereeServiceError,
@@ -18,14 +18,9 @@ import { refereeQualifications } from "@/lib/referee-qualifications";
 import { refereeGrades } from "@/lib/referee-profile-options";
 
 export async function POST(request: Request) {
-  if (!isSameOrigin(request)) {
-    return NextResponse.json({ error: "请求来源无效。" }, { status: 403 });
-  }
-  const session = await getAdminSession();
-  if (!session) {
-    return NextResponse.json({ error: "请先登录管理员后台。" }, { status: 401 });
-  }
-  const actor = getAdminActor(session)!;
+  const authorization = await authorizeLegacyAdminRequest(request, "referees:write");
+  if (!authorization.ok) return authorization.response;
+  const actor = authorization.actor;
   try {
     const body: unknown = await request.json();
     if (!isRecord(body)) throw new Error("账号内容格式不正确。");

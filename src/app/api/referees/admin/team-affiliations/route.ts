@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 
-import { getAdminActor, getAdminSession, isSameOrigin } from "@/lib/referee-auth";
+import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
 import { setTeamUnitAffiliations } from "@/lib/referee-r1-service";
 import { RefereeServiceError } from "@/lib/referee-service";
 import { isRecord, readEnum, readShortText, readShortTextArray } from "@/lib/referee-validation";
 
 export async function PUT(request: Request) {
-  if (!isSameOrigin(request)) return NextResponse.json({ error: "请求来源无效。" }, { status: 403 });
-  const session = await getAdminSession();
-  if (!session) return NextResponse.json({ error: "请先登录管理员后台。" }, { status: 401 });
+  const authorization = await authorizeLegacyAdminRequest(request, "competitions:write");
+  if (!authorization.ok) return authorization.response;
   try {
     const body: unknown = await request.json();
     if (!isRecord(body)) throw new Error("球队组织关联格式不正确。");
@@ -18,7 +17,7 @@ export async function PUT(request: Request) {
       readShortText(body.teamId, "球队", 64),
       unitIds,
       readEnum(body.teamType ?? inferredType, ["ORGANIZATION", "JOINT", "FREEFORM"] as const, "球队类型"),
-      getAdminActor(session)!,
+      authorization.actor,
     );
     return NextResponse.json({ ok: true });
   } catch (error) {

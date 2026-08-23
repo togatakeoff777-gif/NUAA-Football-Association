@@ -162,11 +162,13 @@ async function main() {
     assert(cancelledRejected && await verifier.match.count({ where: { id: cancelledMatch.id } }) === 1, "真实 CANCELLED 比赛未被保留。");
 
     const routeSource = await readFile(path.resolve("src/app/api/referees/admin/matches/[id]/route.ts"), "utf8");
+    const unifiedAuthorizationSource = await readFile(path.resolve("src/lib/legacy-admin-authorization.ts"), "utf8");
     const uiSource = await readFile(path.resolve("src/components/referees/admin/admin-match-danger-actions.tsx"), "utf8");
     const deleteHandler = routeSource.slice(routeSource.indexOf("export async function DELETE"));
     assert(deleteHandler.includes("await authorize(request)") && deleteHandler.includes("deleteMatchSafely"), "DELETE API 未先执行统一管理员鉴权或未复用安全删除服务。");
-    assert(routeSource.includes("getAdminSession") && !routeSource.includes("getRefereeSession"), "普通裁判员会话可能被误用于 Match 删除权限。");
-    assert(routeSource.includes("isSameOrigin"), "DELETE API 未保留同源 / CSRF 保护。");
+    assert(routeSource.includes("authorizeLegacyAdminRequest") && !routeSource.includes("getRefereeSession"), "Match 删除 API 未接入统一管理员权限。");
+    assert(unifiedAuthorizationSource.includes("getAdminSession") && !unifiedAuthorizationSource.includes("getRefereeMemberSession"), "普通裁判员会话可能被误用于 Match 删除权限。");
+    assert(unifiedAuthorizationSource.includes("isSameOrigin"), "DELETE API 未保留同源 / CSRF 保护。");
     assert(uiSource.includes("确定删除") && uiSource.includes("确认删除") && uiSource.includes("删除与取消比赛不同"), "前端缺少二次确认或删除/取消语义提示。");
     assert(uiSource.includes("测试数据") && uiSource.includes("重复创建") && uiSource.includes("信息录入错误"), "删除原因选项不完整。");
 

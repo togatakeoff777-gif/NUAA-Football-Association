@@ -53,6 +53,12 @@ enum ApplicationStatus {
   WITHDRAWN
 }
 
+enum RefereeAdmissionApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum AppointmentStatus {
   DRAFT
   PUBLISHED
@@ -406,6 +412,20 @@ model RefereeApplication {
   referee            Referee           @relation(fields: [refereeId], references: [id], onDelete: Restrict)
 
   @@unique([matchId, refereeId])
+  @@index([status, createdAt])
+}
+
+model RefereeAdmissionApplication {
+  id        String                            @id @default(cuid())
+  name      String
+  studentId String?
+  phone     String?
+  qq        String?
+  note      String?
+  status    RefereeAdmissionApplicationStatus @default(PENDING)
+  createdAt DateTime                          @default(now())
+  updatedAt DateTime                          @updatedAt
+
   @@index([status, createdAt])
 }
 

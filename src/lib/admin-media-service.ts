@@ -114,12 +114,12 @@ async function readWithDeadline(reader: ReadableStreamDefaultReader<Uint8Array>,
   }
 }
 
-async function streamToStaging(input: { stream: ReadableStream<Uint8Array>; stagingTarget: string; maximumBytes: number; expectedBytes?: number }) {
+async function streamToStaging(input: { stream: ReadableStream<Uint8Array>; stagingTarget: string; maximumBytes: number; expectedBytes?: number; timeoutMs?: number }) {
   const handle = await open(input.stagingTarget, "wx", 0o600);
   const reader = input.stream.getReader();
   let size = 0;
   let signature = new Uint8Array();
-  const deadline = Date.now() + uploadStreamTimeoutMs;
+  const deadline = Date.now() + Math.max(1, input.timeoutMs ?? uploadStreamTimeoutMs);
   try {
     while (true) {
       const { done, value } = await readWithDeadline(reader, deadline);
@@ -167,6 +167,7 @@ export async function storeMediaAssetUploadStream(input: {
   mimeType: string;
   stream: ReadableStream<Uint8Array>;
   contentLength?: number;
+  timeoutMs?: number;
   altText?: string;
   visibility: string;
   actor: UnifiedAdminActor;
@@ -193,7 +194,7 @@ export async function storeMediaAssetUploadStream(input: {
     await mkdir(stagingDirectory, { recursive: true });
     await cleanupAbandonedMediaStaging();
     await mkdir(path.dirname(target), { recursive: true });
-    const streamed = await streamToStaging({ stream: input.stream, stagingTarget, maximumBytes: rule.maximumBytes, expectedBytes: input.contentLength });
+    const streamed = await streamToStaging({ stream: input.stream, stagingTarget, maximumBytes: rule.maximumBytes, expectedBytes: input.contentLength, timeoutMs: input.timeoutMs });
     if (!rule.matches(streamed.signature)) throw new UnifiedAdminInputError("文件内容 signature 与声明 MIME 不匹配。", 415);
     try { await rename(stagingTarget, target); } catch (error) { await rm(stagingTarget, { force: true }); throw error; }
     try {

@@ -123,6 +123,10 @@ async function main() {
     assert((await readdir(uploadRoot, { recursive: true })).length === filesBeforeSignature.length, "Signature failure left a formal file.");
     const interrupted = new ReadableStream<Uint8Array>({ start(controller) { controller.enqueue(png); controller.error(new Error("client interrupted")); } });
     await rejects(() => media.storeMediaAssetUploadStream({ fileName: "interrupted.png", mimeType: "image/png", stream: interrupted, visibility: "PRIVATE", actor }), "Interrupted stream was accepted.");
+    const stalled = new ReadableStream<Uint8Array>({ start() { /* Intentionally never emits or closes. */ } });
+    const stagingBeforeTimeout = (await readdir(path.join(uploadRoot, ".staging"))).length;
+    await rejects(() => media.storeMediaAssetUploadStream({ fileName: "timeout.png", mimeType: "image/png", stream: stalled, visibility: "PRIVATE", actor, timeoutMs: 20 }), "Stalled stream did not time out.");
+    assert((await readdir(path.join(uploadRoot, ".staging"))).length === stagingBeforeTimeout, "Timed-out stream left staging data.");
     const concurrent = await Promise.all(Array.from({ length: 4 }, (_, index) => media.storeMediaAssetUploadStream({ fileName: `concurrent-${index}.png`, mimeType: "image/png", stream: delayedStream(png, 40), contentLength: png.length, visibility: "PRIVATE", actor })));
     assert(concurrent.length === 4 && media.mediaUploadMetrics.maximumObservedActive === 2, "Upload concurrency guard failed.");
     const stagingOld = path.join(uploadRoot, ".staging", "abandoned.upload");
@@ -154,7 +158,19 @@ async function main() {
     const countsAfterFirst = { posts: await verifier.contentPost.count(), media: await verifier.mediaAsset.count() };
     const secondImport = await migration.importStaticContentManifest(manifest);
     assert(firstImport.differences.length === 0 && secondImport.differences.length === 0, "Static import reconciliation failed.");
+    assert(secondImport.expectedMediaCount === manifest.media.length && secondImport.reconciledMediaCount === manifest.media.length, "Static media inventory count reconciliation failed.");
     assert((await verifier.contentPost.count()) === countsAfterFirst.posts && (await verifier.mediaAsset.count()) === countsAfterFirst.media, "Static import was not idempotent.");
+    const coverEntry = manifest.entries.find((entry) => entry.cover)!;
+    const coverPost = await verifier.contentPost.findUniqueOrThrow({ where: { slug: coverEntry.slug }, select: { id: true, coverMediaId: true } });
+    const wrongCoverMedia = await verifier.mediaAsset.findFirstOrThrow({ where: { id: { not: coverPost.coverMediaId! } }, select: { id: true } });
+    await verifier.contentPost.update({ where: { id: coverPost.id }, data: { coverMediaId: wrongCoverMedia.id } });
+    assert((await migration.reconcileStaticContentManifest(manifest)).differences.some((item) => item.includes("cover media relationship")), "Cover media relationship mismatch was not detected.");
+    await verifier.contentPost.update({ where: { id: coverPost.id }, data: { coverMediaId: coverPost.coverMediaId } });
+    const disciplineEntry = manifest.entries.find((entry) => entry.attachments.some((item) => item.kind === "official-pdf"))!;
+    const disciplinePost = await verifier.contentPost.findUniqueOrThrow({ where: { slug: disciplineEntry.slug }, select: { discipline: { select: { contentPostId: true, officialMediaId: true } } } });
+    await verifier.disciplineDetail.update({ where: { contentPostId: disciplinePost.discipline!.contentPostId }, data: { officialMediaId: coverPost.coverMediaId! } });
+    assert((await migration.reconcileStaticContentManifest(manifest)).differences.some((item) => item.includes("official PDF relationship")), "Official PDF relationship mismatch was not detected.");
+    await verifier.disciplineDetail.update({ where: { contentPostId: disciplinePost.discipline!.contentPostId }, data: { officialMediaId: disciplinePost.discipline!.officialMediaId } });
     const migratedMedia = await verifier.mediaAsset.findFirstOrThrow({ where: { originalFilename: path.basename(manifest.media[0]!.path) }, select: { storageKey: true } });
     const migratedPath = path.join(uploadRoot, ...migratedMedia.storageKey.split("/"));
     const savedMedia = await readFile(migratedPath);
@@ -206,8 +222,8 @@ async function main() {
     console.log(JSON.stringify({
       structuredJson: { valid: true, unknownNode: "rejected", unknownMark: "rejected", dangerousLink: "rejected", malformed: "rejected", oversized: "rejected", deep: "rejected" },
       publicContent: { total: items.length, pinned: 5, normal: 25, pages: pages.map((page) => page.items.length), noDuplicateOrOmission: true, listDtoExcludesContentAndIds: true, detail404NoLeak: true, featuredIndependent: true },
-      streamingMedia: { jpg: true, pdf20Mb: true, oversize: "rejected", concurrencyMaximum: media.mediaUploadMetrics.maximumObservedActive, interruptedCleanup: true, stagingCleanup: true, signatureCleanup: true, writeFailureNoRow: true, dbFailureNoFile: true, orphanScan: true },
-      staticMigration: { entries: manifest.entries.length, media: manifest.media.length, dryRun: true, idempotent: true, duplicateSlugDetected: true, missingMediaBlocked: true, checksumReconciled: true },
+      streamingMedia: { jpg: true, pdf20Mb: true, oversize: "rejected", timeout: "rejected-and-cleaned", concurrencyMaximum: media.mediaUploadMetrics.maximumObservedActive, interruptedCleanup: true, stagingCleanup: true, signatureCleanup: true, writeFailureNoRow: true, dbFailureNoFile: true, orphanScan: true },
+      staticMigration: { entries: manifest.entries.length, media: manifest.media.length, dryRun: true, idempotent: true, duplicateSlugDetected: true, missingMediaBlocked: true, checksumReconciled: true, coverRelationshipReconciled: true, officialPdfRelationshipReconciled: true },
       legacyRbacMatrix: "4 roles verified at permission resolver",
       combinedBackup: { manifestFormat: backupManifest.formatVersion, missingDbRejected: true, orphanRejected: true, checksumMismatchRejected: true, restore: restored, restoredContentPosts: Number(health.rows[0]?.count) },
       isolatedRoot: root,

@@ -118,6 +118,26 @@ function mimeTypeFor(sourcePath: string) {
   return null;
 }
 
+function importedMediaStorageKey(media: StaticContentManifest["media"][number], publishedAt: string) {
+  const extension = path.extname(media.path).toLowerCase();
+  const date = new Date(publishedAt);
+  return `${date.getUTCFullYear()}/${String(date.getUTCMonth() + 1).padStart(2, "0")}/${media.sha256.slice(0, 32)}${extension}`;
+}
+
+function expectedImportedMediaKeys(manifest: StaticContentManifest) {
+  const mediaByPath = new Map(manifest.media.map((item) => [item.path, item]));
+  const result = new Map<string, string>();
+  for (const entry of manifest.entries) {
+    const references = [entry.cover?.path, ...entry.attachments.map((item) => item.path)]
+      .filter((item): item is string => Boolean(item));
+    for (const mediaPath of references) {
+      const media = mediaByPath.get(mediaPath);
+      if (media && !result.has(mediaPath)) result.set(mediaPath, importedMediaStorageKey(media, entry.publishedAt));
+    }
+  }
+  return result;
+}
+
 export function validateStaticManifestEntries(entries: readonly StaticContentManifestEntry[]) {
   const issues: StaticMigrationIssue[] = [];
   const slugs = new Set<string>();
@@ -184,10 +204,8 @@ export async function buildStaticContentManifest(): Promise<StaticContentManifes
 }
 
 async function ensureImportedMedia(media: StaticContentManifest["media"][number], publishedAt: string) {
-  const extension = path.extname(media.path).toLowerCase();
-  const date = new Date(publishedAt);
-  const storedFilename = `${media.sha256.slice(0, 32)}${extension}`;
-  const storageKey = `${date.getUTCFullYear()}/${String(date.getUTCMonth() + 1).padStart(2, "0")}/${storedFilename}`;
+  const storageKey = importedMediaStorageKey(media, publishedAt);
+  const storedFilename = path.basename(storageKey);
   const existing = await prisma.mediaAsset.findUnique({ where: { storageKey }, select: { id: true } });
   const uploadRoot = getMediaUploadRoot();
   const target = path.join(uploadRoot, ...storageKey.split("/"));
@@ -242,24 +260,60 @@ export async function importStaticContentManifest(manifest: StaticContentManifes
 
 export async function reconcileStaticContentManifest(manifest: StaticContentManifest) {
   const differences: string[] = [];
-  const posts = await prisma.contentPost.findMany({ where: { slug: { in: manifest.entries.map((entry) => entry.slug) } }, select: { slug: true, title: true, type: true, publishedAt: true, content: true, coverMedia: { select: { storageKey: true } }, discipline: { select: { officialMedia: { select: { storageKey: true } } } } } });
+  const expectedMediaKeys = expectedImportedMediaKeys(manifest);
+  const posts = await prisma.contentPost.findMany({
+    where: { slug: { in: manifest.entries.map((entry) => entry.slug) } },
+    select: {
+      slug: true,
+      title: true,
+      summary: true,
+      type: true,
+      status: true,
+      source: true,
+      publishedAt: true,
+      pinned: true,
+      featured: true,
+      content: true,
+      coverMedia: { select: { storageKey: true } },
+      discipline: { select: { officialMedia: { select: { storageKey: true } } } },
+    },
+  });
   const bySlug = new Map(posts.map((post) => [post.slug, post]));
   for (const entry of manifest.entries) {
     const post = bySlug.get(entry.slug);
     if (!post) { differences.push(`${entry.slug}: missing post`); continue; }
-    if (post.title !== entry.title || post.type !== entry.type || post.publishedAt?.toISOString() !== entry.publishedAt) differences.push(`${entry.slug}: metadata mismatch`);
+    if (
+      post.title !== entry.title || post.summary !== entry.summary || post.type !== entry.type || post.status !== "PUBLISHED" ||
+      post.source !== entry.source || post.publishedAt?.toISOString() !== entry.publishedAt ||
+      post.pinned !== entry.pinned || post.featured !== entry.featured
+    ) differences.push(`${entry.slug}: metadata mismatch`);
     if (checksum(JSON.stringify(validateStructuredContent(post.content))) !== entry.contentHash) differences.push(`${entry.slug}: content checksum mismatch`);
+    const expectedCoverKey = entry.cover ? expectedMediaKeys.get(entry.cover.path) ?? null : null;
+    if ((post.coverMedia?.storageKey ?? null) !== expectedCoverKey) differences.push(`${entry.slug}: cover media relationship mismatch`);
     const official = entry.attachments.find((item) => item.kind === "official-pdf");
-    if (official && !post.discipline?.officialMedia) differences.push(`${entry.slug}: official PDF unavailable`);
+    const expectedOfficialKey = official ? expectedMediaKeys.get(official.path) ?? null : null;
+    if ((post.discipline?.officialMedia?.storageKey ?? null) !== expectedOfficialKey) differences.push(`${entry.slug}: official PDF relationship mismatch`);
   }
   const mediaRows = await prisma.mediaAsset.findMany({ select: { storageKey: true, metadata: true } });
+  const mediaByStorageKey = new Map(mediaRows.map((row) => [row.storageKey, row]));
   for (const media of manifest.media) {
-    const row = mediaRows.find((candidate) => typeof candidate.metadata === "object" && candidate.metadata !== null && !Array.isArray(candidate.metadata) && "sha256" in candidate.metadata && candidate.metadata.sha256 === media.sha256);
-    if (row) {
-      const target = path.join(getMediaUploadRoot(), ...row.storageKey.split("/"));
-      try { const bytes = await readFile(target); if (checksum(bytes) !== media.sha256) differences.push(`${media.path}: media checksum mismatch`); }
-      catch { differences.push(`${media.path}: media unavailable`); }
-    }
+    const storageKey = expectedMediaKeys.get(media.path);
+    const row = storageKey ? mediaByStorageKey.get(storageKey) : null;
+    if (!storageKey || !row) { differences.push(`${media.path}: media row unavailable`); continue; }
+    const metadataHash = typeof row.metadata === "object" && row.metadata !== null && !Array.isArray(row.metadata) && "sha256" in row.metadata
+      ? row.metadata.sha256
+      : null;
+    if (metadataHash !== media.sha256) differences.push(`${media.path}: media metadata checksum mismatch`);
+    const target = path.join(getMediaUploadRoot(), ...row.storageKey.split("/"));
+    try { const bytes = await readFile(target); if (bytes.length !== media.bytes || checksum(bytes) !== media.sha256) differences.push(`${media.path}: media checksum mismatch`); }
+    catch { differences.push(`${media.path}: media unavailable`); }
   }
-  return { expectedCount: manifest.entries.length, actualCount: posts.length, slugSetMatches: posts.length === manifest.entries.length, differences };
+  return {
+    expectedCount: manifest.entries.length,
+    actualCount: posts.length,
+    expectedMediaCount: manifest.media.length,
+    reconciledMediaCount: manifest.media.filter((media) => mediaByStorageKey.has(expectedMediaKeys.get(media.path) ?? "")).length,
+    slugSetMatches: posts.length === manifest.entries.length,
+    differences,
+  };
 }

@@ -1,0 +1,25 @@
+[Unit]
+Description=NUAAFA verified SQLite and uploads combined backup
+After=local-fs.target
+ConditionPathIsDirectory=/srv/nuaafa/shared
+ConditionPathIsDirectory=/srv/nuaafa/shared/uploads
+ConditionPathIsDirectory=/srv/nuaafa/shared/backups
+
+[Service]
+Type=oneshot
+User=nuaafa
+Group=nuaafa
+WorkingDirectory=/srv/nuaafa/current
+EnvironmentFile=/etc/nuaafa/nuaafa.env
+Environment=NUAAFA_BACKUP_ROOT=/srv/nuaafa/shared/backups
+UMask=0077
+ExecStart=/usr/bin/npm run backup:unified -- --root=${NUAAFA_BACKUP_ROOT}
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+ReadWritePaths=/srv/nuaafa/shared
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=NUAAFA combined backup schedule template (R1-3D finalizes schedule)
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+RandomizedDelaySec=30m
+Persistent=true
+Unit=nuaafa-unified-backup.service
+
+[Install]
+WantedBy=timers.target

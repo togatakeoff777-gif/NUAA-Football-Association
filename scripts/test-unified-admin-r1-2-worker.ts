@@ -212,6 +212,13 @@ async function main() {
     await mkdir(restoredUploadRoot, { recursive: true });
     await writeFile(restoredDatabasePath, "destroy-me");
     await writeFile(path.join(restoredUploadRoot, "destroy-me.txt"), "destroy-me");
+    await rejects(
+      () => backup.restoreCombinedBackup({ backupDirectory: backupRoot, databasePath: restoredDatabasePath, uploadRoot: restoredUploadRoot, allowedTargetRoot: root }),
+      "Combined restore overwrote an existing destination.",
+    );
+    assert((await readFile(restoredDatabasePath, "utf8")) === "destroy-me", "Restore modified an existing destination before rejection.");
+    await rm(restoredDatabasePath, { force: true });
+    await rm(restoredUploadRoot, { recursive: true, force: true });
     const restored = await backup.restoreCombinedBackup({ backupDirectory: backupRoot, databasePath: restoredDatabasePath, uploadRoot: restoredUploadRoot, allowedTargetRoot: root });
     assert(restored.integrityCheck === "ok" && restored.foreignKeyViolations === 0 && restored.mediaAssetCount === backupManifest.uploads.mediaAssetCount, "Combined backup restore rehearsal failed.");
     const restoredClient = createClient({ url: `file:${restoredDatabasePath.replaceAll("\\", "/")}` });
@@ -225,7 +232,7 @@ async function main() {
       streamingMedia: { jpg: true, pdf20Mb: true, oversize: "rejected", timeout: "rejected-and-cleaned", concurrencyMaximum: media.mediaUploadMetrics.maximumObservedActive, interruptedCleanup: true, stagingCleanup: true, signatureCleanup: true, writeFailureNoRow: true, dbFailureNoFile: true, orphanScan: true },
       staticMigration: { entries: manifest.entries.length, media: manifest.media.length, dryRun: true, idempotent: true, duplicateSlugDetected: true, missingMediaBlocked: true, checksumReconciled: true, coverRelationshipReconciled: true, officialPdfRelationshipReconciled: true },
       legacyRbacMatrix: "4 roles verified at permission resolver",
-      combinedBackup: { manifestFormat: backupManifest.formatVersion, missingDbRejected: true, orphanRejected: true, checksumMismatchRejected: true, restore: restored, restoredContentPosts: Number(health.rows[0]?.count) },
+      combinedBackup: { manifestFormat: backupManifest.formatVersion, missingDbRejected: true, orphanRejected: true, checksumMismatchRejected: true, existingDestinationRejected: true, restore: restored, restoredContentPosts: Number(health.rows[0]?.count) },
       isolatedRoot: root,
     }, null, 2));
   } finally {

@@ -34,7 +34,16 @@
     "admin:create": "tsx scripts/create-admin-account.ts",
     "db:backup": "node scripts/backup-database.mjs",
     "backup:unified": "tsx scripts/backup-unified-data.ts",
+    "backup:verify": "tsx scripts/verify-unified-backup.ts",
+    "backup:retention": "tsx scripts/backup-retention.ts",
+    "backup:capacity": "tsx scripts/backup-capacity.ts",
     "restore:unified": "tsx scripts/restore-unified-data.ts",
+    "restore:rehearsal": "tsx scripts/rehearse-unified-restore.ts",
+    "orphan:check": "tsx scripts/orphan-monitor.ts",
+    "ops:upload-preflight": "tsx scripts/upload-provisioning-preflight.ts",
+    "test:production-hardening": "tsx scripts/test-production-hardening.ts",
+    "test:clean-install": "node scripts/test-clean-install.mjs",
+    "rc:check": "node scripts/release-candidate-check.mjs",
     "health:check": "node scripts/health-check.mjs"
   },
   "dependencies": {

@@ -41,12 +41,38 @@ No real value for any secret belongs in Git, this document, shell history, syste
 | `NUAAFA_RESTORE_ISOLATED` | Rehearsal only | No | No | Must be `1` for isolated restore CLI |
 | `NUAAFA_RESTORE_TARGET_ROOT` | Rehearsal only | No | Yes | Absolute allowlisted isolated restore root |
 | `NUAAFA_RETENTION_APPLY` | Explicit cleanup only | No | No | Must be `1` together with `--apply`; never set in the dry-run unit |
+| `NUAAFA_STATIC_IMPORT_PRODUCTION_APPLY` | One-shot content import apply only | No | No | Must be `1` together with `--production --apply`; never reuse `NUAAFA_STATIC_IMPORT_ISOLATED` |
 
 Use a root-owned `EnvironmentFile` such as `/etc/nuaafa/nuaafa.env` with the existing deployment's secret-management permissions. The supplied systemd templates reference the file but contain no value.
 
 ## Unified backup
 
 The existing `backup:unified` architecture remains authoritative; `db:backup` is not sufficient for R1-3D restore points.
+
+### FINAL PRE-ENABLEMENT legacy bridge
+
+The reviewed bridge is explicit. It is never inferred from missing tables. Before Unified Admin migration and before the managed upload directory exists, the future authorized Phase B command is:
+
+```bash
+sudo -u nuaafa -H env \
+  DATABASE_URL='file:/ABSOLUTE/PRODUCTION/DATABASE.sqlite' \
+  NUAAFA_UPLOAD_DIR='/srv/nuaafa/shared/uploads' \
+  NUAAFA_BACKUP_ROOT='/ABSOLUTE/FORMAL/BACKUP/ROOT' \
+  npm run backup:unified -- \
+    --root=/ABSOLUTE/FORMAL/BACKUP/ROOT \
+    --profile=legacy-pre-enablement
+```
+
+`NUAAFA_UPLOAD_DIR` identifies the future managed location and may be absent only in this explicit profile. The v4 legacy manifest records `LEGACY_PRE_ENABLEMENT`, the reviewed first-three-migration inventory, present and expected-absent protected tables, and managed uploads as `ABSENT` or `PRESENT_EMPTY`. It records no invented media or files. Unexpected migration/table capability, a non-empty upload root, or any database failure stops the backup.
+
+Verify the exact generated directory before any migration:
+
+```bash
+npm run backup:verify -- \
+  --backup=/ABSOLUTE/FORMAL/BACKUP/ROOT/EXACT_FINAL_PRE_ENABLEMENT_DIRECTORY
+```
+
+Record backup directory, backup ID, UTC start/end, application SHA, schema profile, migration inventory, manifest SHA-256, completion marker, protected counts, and operator. The normal modern v3 path remains the default and must omit `--profile`; it still requires the complete Unified schema and real managed upload root.
 
 Future creation command:
 
@@ -80,6 +106,8 @@ npm run backup:verify -- --backup=/srv/nuaafa/shared/backups/EXACT_BACKUP_DIRECT
 Verification checks the completion marker, manifest schema, manifest hash binding, exact checksum coverage, safe paths, regular files only, exact uploads tree, artifact sizes, SQLite `PRAGMA integrity_check`, `PRAGMA foreign_key_check`, and protected table counts.
 
 The **FINAL PRE-ENABLEMENT BACKUP** in R1-3D must record an unambiguous directory, backup ID, application SHA, completion marker, manifest checksum, start/end time, and operator. Do not proceed to enablement until `backup:verify` passes.
+
+An isolated restore of a legacy bundle creates a fresh empty managed-upload destination while retaining `ABSENT` or `PRESENT_EMPTY` as source capability evidence. It does not invent `MediaAsset` rows. Completion binding, artifact checksum/size, SQLite integrity/FK, reviewed schema capability, migration inventory, and existing protected-table counts remain mandatory.
 
 ## Backup failure behavior
 
@@ -233,6 +261,48 @@ It records backup duration, restore duration, first HTTP response, health-ready 
 
 Protected count names include `Competition`, `Team`, `Match`, `Referee`, `RefereeApplication`, `RefereeAppointment`, `AppointmentVersion`, `RefereeAvailability`, `RefereePositionCapability`, `RefereeAdmissionApplication`, `ContentPost`, `MediaAsset`, `AdminAccount`, and `AuditLog`. Zero is acceptable only when it was zero before restore; every before/after count must match.
 
+## Production static content import gate
+
+This gate wraps the existing R1-2 inventory/import/reconciliation implementation; it does not create a second importer. `NUAAFA_STATIC_IMPORT_ISOLATED=1` remains reserved for isolated databases and never authorizes production mode.
+
+Create and review the source inventory without database writes:
+
+```bash
+npm run content:migrate:dry-run -- \
+  --output=/ABSOLUTE/REVIEW/EVIDENCE/static-content-manifest.json
+```
+
+After the reviewed migration has completed and the production upload directory/environment has passed its own gates, run the production-aware dry run. It is non-mutating by default:
+
+```bash
+DATABASE_URL='file:/ABSOLUTE/PRODUCTION/DATABASE.sqlite' \
+NUAAFA_UPLOAD_DIR='/srv/nuaafa/shared/uploads' \
+npm run content:migrate:dry-run -- --production
+```
+
+The preflight requires an absolute real SQLite file, exact release migration history, `ContentPost`, `MediaAsset`, and `DisciplineDetail`, integrity/FK success, zero blocking inventory issues, exact safe media inventory, no ambiguous duplicate slugs, and an absolute real read/write upload directory. Any failure exits non-zero before import.
+
+Only a separately approved apply command supplies both controls:
+
+```bash
+DATABASE_URL='file:/ABSOLUTE/PRODUCTION/DATABASE.sqlite' \
+NUAAFA_UPLOAD_DIR='/srv/nuaafa/shared/uploads' \
+NUAAFA_STATIC_IMPORT_PRODUCTION_APPLY=1 \
+npm run content:migrate:dry-run -- --production --apply
+```
+
+`--apply` without the dedicated environment authorization fails. The environment authorization without `--apply` remains a dry run. The command uses the actual source inventory, upserts idempotently, and fails if its immediate exact reconciliation reports any difference.
+
+Run reconciliation again as a separate read-only recorded gate:
+
+```bash
+DATABASE_URL='file:/ABSOLUTE/PRODUCTION/DATABASE.sqlite' \
+NUAAFA_UPLOAD_DIR='/srv/nuaafa/shared/uploads' \
+npm run content:migrate:dry-run -- --production --reconcile
+```
+
+Do not set or change `NUAAFA_CONTENT_SOURCE` in any inventory/import/reconciliation command. The importer does not switch the content source and does not deploy or restart the application. Only after the separate exact reconciliation succeeds may a later approved step switch the content source to DB.
+
 ## Migration rehearsal
 
 R1-3C requires both official paths:
@@ -282,24 +352,25 @@ Future authorized installation must copy the reviewed files to `/etc/systemd/sys
 
 Stop immediately if any preflight, backup, migration, reconciliation, health, RBAC, media, or rollback gate fails.
 
-1. **Preflight:** confirm approved release SHA, clean artifacts, Node 22.23.2, advisory recheck, disk/capacity result, maintenance ownership, rollback owner, and observation staffing.
-2. **Final production backup:** create and verify the FINAL PRE-ENABLEMENT combined backup; record backup ID, manifest/checksum, duration, and location.
-3. **Provision uploads:** create only `/srv/nuaafa/shared/uploads` as `nuaafa:nuaafa` `0700`.
-4. **Verify owner/mode:** run `stat`, service-user read/write tests, upload preflight, traversal/staging and disk checks.
-5. **Configure environment:** update the protected EnvironmentFile with exact upload path and approved variables; do not log values.
-6. **Migration:** run the reviewed `prisma migrate deploy` path against the production SQLite database; never reset/seed.
-7. **Static content import:** execute the frozen isolated-to-production procedure only after migration gate and explicit approval.
-8. **Exact reconciliation:** compare static manifest/content/media counts, checksums, relationships, protected counts, and representative IDs.
-9. **Content-source switch:** change to the database source only after exact reconciliation passes.
-10. **Application restart:** restart only the approved release/service with the reviewed environment.
-11. **Health:** require `/health`, `/api/health`, service status, and no new 5xx.
-12. **Four-role RBAC smoke:** verify SUPER_ADMIN, CONTENT_EDITOR, COMPETITION_ADMIN, and REFEREE_ADMIN allow/deny boundaries.
-13. **News smoke:** list, DB detail, publish visibility, and public API.
-14. **Media smoke:** PUBLIC/PRIVATE access, real upload/read, 20 MB PDF, timeout/concurrency, staging cleanup, RFC5987, and `nosniff`.
-15. **Referee smoke:** admission, eligibility, capability, availability, conflict, application, appointment, stale publish, and role boundaries.
-16. **Competition import smoke:** CSV/XLSX/Paste preview zero writes, reconciliation, atomic commit, race/idempotency/timezone/RBAC, and CLOSED application window.
-17. **Rollback verification:** confirm the exact release rollback and the verified combined restore point are both immediately usable.
-18. **Observation window:** begin the staffed 24-hour plan only after all enablement gates pass.
+Future Phase B remains separately human-authorized and must execute in this order; none of these steps is executed by this Fix-1:
+
+1. **Exact approved release available:** confirm the reviewed SHA is present through the approved transfer/push path, artifacts are clean, Node is 22.23.2, RC classification is accepted, and owners are staffed.
+2. **Stage without switching current:** stage the exact release while the current application, service, and content source remain unchanged.
+3. **FINAL PRE-ENABLEMENT legacy restore bundle:** run the explicit `--profile=legacy-pre-enablement` combined backup against the pre-migration database and not-yet-enabled upload path.
+4. **Verify backup:** record and verify completion/manifest binding, checksums, schema profile/capabilities, migration inventory, SQLite integrity/FK, and legacy protected counts.
+5. **Isolated clone/rehearsal:** restore the exact bundle to fresh isolated DB/uploads, deploy migrations only on the clone, rehearse inventory/import/reconciliation/build/start/smoke, and prove rollback readiness.
+6. **Provision uploads `0700`:** create only `/srv/nuaafa/shared/uploads` as `nuaafa:nuaafa` `0700`, then verify owner/mode, service-user read/write, traversal/staging, and disk gates.
+7. **Configure environment:** update only the approved protected EnvironmentFile values without logging secrets; do not switch the content source yet.
+8. **Migrate deploy:** execute only the reviewed `prisma migrate deploy` path against production; never reset, seed, or db-push.
+9. **Integrity/FK:** require SQLite `integrity_check=ok`, zero FK violations, exact migration inventory, protected counts, and representative IDs.
+10. **Production content inventory/dry-run/apply:** record source inventory, pass `--production` dry run, then use the separately approved dual-authorized `--production --apply` command.
+11. **Exact reconciliation:** require exact content/media counts, checksums, relationships, protected counts, and representative IDs; repeat the read-only `--production --reconcile` gate.
+12. **Switch content source:** only after step 11, change the approved `NUAAFA_CONTENT_SOURCE` value to DB.
+13. **Deploy/restart:** activate only the exact approved release/environment and perform the reviewed service restart.
+14. **Production smoke:** require health/no-new-5xx plus approved four-role RBAC, news, media, referee, and competition-import smoke. Smoke accounts/fixtures follow the separately approved production policy.
+15. **Backup automation:** install/verify the approved backup service/timer only after smoke; retention apply remains separately authorized.
+16. **Post-enablement backup:** create and verify a normal modern v3 combined backup with no legacy profile argument.
+17. **Observation:** begin the staffed 24-hour plan, with allowed 36-hour grace only when explicitly approved.
 
 ## Rollback plan
 

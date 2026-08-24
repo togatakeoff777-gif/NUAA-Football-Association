@@ -9,7 +9,9 @@ async function main() {
   console.log(JSON.stringify({
     valid: true,
     backupId: result.manifest.backupId,
+    backupProfile: result.manifest.backupProfile,
     generatedAtUtc: result.manifest.generatedAtUtc,
+    schemaCapabilities: result.manifest.schemaCapabilities,
     completion: result.completion,
     database: result.database,
     uploads: result.manifest.uploads,

@@ -118,13 +118,33 @@ function mimeTypeFor(sourcePath: string) {
   return null;
 }
 
+export function resolveStaticMediaSourcePath(mediaPath: string) {
+  if (
+    !mediaPath.startsWith("/") ||
+    mediaPath.includes("\\") ||
+    mediaPath.includes("?") ||
+    mediaPath.includes("#") ||
+    mediaPath.includes("\0")
+  ) {
+    throw new Error("Static media path is unsafe.");
+  }
+  const segments = mediaPath.slice(1).split("/");
+  if (segments.some((segment) => !segment || segment === "." || segment === "..")) {
+    throw new Error("Static media path is unsafe.");
+  }
+  const publicRoot = path.resolve("public");
+  const target = path.resolve(publicRoot, ...segments);
+  if (!target.startsWith(`${publicRoot}${path.sep}`)) throw new Error("Static media path is unsafe.");
+  return target;
+}
+
 function importedMediaStorageKey(media: StaticContentManifest["media"][number], publishedAt: string) {
   const extension = path.extname(media.path).toLowerCase();
   const date = new Date(publishedAt);
   return `${date.getUTCFullYear()}/${String(date.getUTCMonth() + 1).padStart(2, "0")}/${media.sha256.slice(0, 32)}${extension}`;
 }
 
-function expectedImportedMediaKeys(manifest: StaticContentManifest) {
+export function expectedImportedMediaKeys(manifest: StaticContentManifest) {
   const mediaByPath = new Map(manifest.media.map((item) => [item.path, item]));
   const result = new Map<string, string>();
   for (const entry of manifest.entries) {
@@ -149,6 +169,8 @@ export function validateStaticManifestEntries(entries: readonly StaticContentMan
     slugs.add(entry.slug);
     if (Number.isNaN(Date.parse(entry.publishedAt))) issues.push({ severity: "error", code: "INVALID_DATE", slug: entry.slug, message: "发布日期无效。" });
     for (const reference of [entry.cover?.path, ...entry.attachments.map((item) => item.path)].filter((item): item is string => Boolean(item))) {
+      try { resolveStaticMediaSourcePath(reference); }
+      catch { issues.push({ severity: "error", code: "UNSAFE_MEDIA_PATH", slug: entry.slug, path: reference, message: "媒体路径不安全。" }); }
       if (!mimeTypeFor(reference)) issues.push({ severity: "error", code: "UNSUPPORTED_MEDIA_FORMAT", slug: entry.slug, path: reference, message: "媒体格式不受支持。" });
       mediaReferences.set(reference, [...(mediaReferences.get(reference) ?? []), entry.slug]);
     }
@@ -181,8 +203,8 @@ export async function buildStaticContentManifest(): Promise<StaticContentManifes
   const hashes = new Map<string, string>();
   for (const mediaPath of mediaPaths) {
     const mimeType = mimeTypeFor(mediaPath);
-    const diskPath = path.resolve("public", mediaPath.replace(/^\//, ""));
     try {
+      const diskPath = resolveStaticMediaSourcePath(mediaPath);
       const bytes = await readFile(diskPath);
       const sha256 = checksum(bytes);
       media.push({ path: mediaPath, bytes: bytes.length, sha256, mimeType: mimeType! });
@@ -213,7 +235,7 @@ async function ensureImportedMedia(media: StaticContentManifest["media"][number]
     const staging = path.join(uploadRoot, ".staging", `${randomUUID()}.upload`);
     await mkdir(path.dirname(staging), { recursive: true });
     await mkdir(path.dirname(target), { recursive: true });
-    await copyFile(path.resolve("public", media.path.replace(/^\//, "")), staging);
+    await copyFile(resolveStaticMediaSourcePath(media.path), staging);
     await rename(staging, target);
     try {
       return await prisma.mediaAsset.create({ data: { storageKey, originalFilename: path.basename(media.path), storedFilename, mimeType: media.mimeType, size: media.bytes, visibility: "PUBLIC", metadata: { migrationSourcePath: media.path, sha256: media.sha256, migrationVersion: 1 } }, select: { id: true } });

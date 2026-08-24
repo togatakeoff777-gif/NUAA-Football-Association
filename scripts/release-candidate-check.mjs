@@ -102,6 +102,7 @@ async function main() {
     "test:referee-match-deletion",
     "test:competition-import",
     "test:production-hardening",
+    "test:static-content-import-gate",
   ];
   for (const script of regressionScripts) await npm(["run", script], script);
   await npm(["run", "build"], "Node 22 production build");

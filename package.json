@@ -42,6 +42,7 @@
     "orphan:check": "tsx scripts/orphan-monitor.ts",
     "ops:upload-preflight": "tsx scripts/upload-provisioning-preflight.ts",
     "test:production-hardening": "tsx scripts/test-production-hardening.ts",
+    "test:static-content-import-gate": "tsx scripts/test-static-content-import-gate.ts",
     "test:clean-install": "node scripts/test-clean-install.mjs",
     "rc:check": "node scripts/release-candidate-check.mjs",
     "health:check": "node scripts/health-check.mjs"

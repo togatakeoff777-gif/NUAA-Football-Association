@@ -41,6 +41,7 @@
     "restore:rehearsal": "tsx scripts/rehearse-unified-restore.ts",
     "orphan:check": "tsx scripts/orphan-monitor.ts",
     "ops:upload-preflight": "tsx scripts/upload-provisioning-preflight.ts",
+    "test:deployer": "node scripts/test-deployer.mjs",
     "test:production-hardening": "tsx scripts/test-production-hardening.ts",
     "test:static-content-import-gate": "tsx scripts/test-static-content-import-gate.ts",
     "test:clean-install": "node scripts/test-clean-install.mjs",

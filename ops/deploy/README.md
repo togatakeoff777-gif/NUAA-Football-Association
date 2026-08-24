@@ -1,132 +1,124 @@
-# NUAAFA production deployer provenance
+# NUAAFA production deployer provenance and reviewed modes
 
 ## Status
 
-`ops/deploy/nuaafa-deploy` is the byte-identical source-control adoption of the
-deployer that was installed on production when R1-3D PREFLIGHT FIX-3A was
-performed. This adoption records provenance only. It does not approve an
-installation, deployment, stage-only mode, activation mode, or production
-mutation.
+`ops/deploy/nuaafa-deploy` is the canonical source for the production deployer.
+R1-3D PREFLIGHT FIX-3A adopted the then-installed production file byte for byte.
+R1-3D PREFLIGHT FIX-3B starts from that frozen source and adds reviewed,
+isolated-test-backed staging and activation primitives. It does not install or
+execute the changed deployer on production and does not authorize Phase B.
 
-Do not edit the adopted file as part of FIX-3A. Any future behavior change must
-start from this exact baseline, receive isolated tests and source review, and be
-separately approved before production installation.
-
-## Capture provenance
-
-| Field | Captured value |
+| Field | Value |
 | --- | --- |
-| Production source path | `/usr/local/sbin/nuaafa-deploy` |
-| Capture time | `2026-08-24T13:08:04Z` |
-| Production file type | regular Bourne-Again shell script, ASCII executable |
-| Production owner/group | `root:root` |
-| Production mode | `0755` |
-| Production size | `3634` bytes |
-| Production SHA-256 | `a3de22095a9d894c3ae2bc412c07432263dd0822f24d4bea28d2acadb545d694` |
-| Adopted repository path | `ops/deploy/nuaafa-deploy` |
-| Observed production release | `/srv/nuaafa/releases/09e8222c5e02193d38e9a0348385bd0987596168` |
-| Observed production release SHA | `09e8222c5e02193d38e9a0348385bd0987596168` |
+| Fix-3A production/source baseline SHA-256 | `a3de22095a9d894c3ae2bc412c07432263dd0822f24d4bea28d2acadb545d694` |
+| Fix-3B reviewed source SHA-256 | `a5267ba836d54e6857c9fcac317a4ac21f9dc7635ea3e72b5f09dfd105f712c5` |
+| Version output | `nuaafa-deploy R1-3D-FIX-3B-1` |
+| Canonical repository path | `ops/deploy/nuaafa-deploy` |
+| Installed production path, if later approved | `/usr/local/sbin/nuaafa-deploy` |
 
-The production file was read without modification and copied out of production.
-The captured local file and the adopted repository file were each hashed before
-commit. Both hashes matched the production SHA-256 above. No line-ending
-normalization, reformatting, header insertion, or behavioral edit was made to
-the adopted script.
+The source is forced to LF by `.gitattributes` and remains executable in Git.
+The separate bootstrap procedure requires both the old and new hashes, syntax,
+owner, and mode checks before an atomic replacement.
 
-The secret-material scan found no embedded password, access token, private key,
+### Preserved Fix-3A capture evidence
+
+The Fix-3A baseline came from `/usr/local/sbin/nuaafa-deploy` at
+`2026-08-24T13:08:04Z`. The observed production file was a regular executable,
+owned by `root:root`, mode `0755`, size `3634` bytes, and its production,
+captured-local, and committed-source hashes all matched the Fix-3A baseline
+above. The then-observed current release was
+`/srv/nuaafa/releases/09e8222c5e02193d38e9a0348385bd0987596168`;
+that observation is evidence, never a permanent rollback assumption.
+
+The Fix-3A secret scan found no embedded password, access token, private key,
 SSH credential, database credential, session secret, API key, or `.env` value.
-The script contains operational configuration such as fixed filesystem paths,
-the `nuaafa.service` name, the `nuaafa` Unix user, an SSH host alias, and the
-repository URL.
+Fixed filesystem paths, the service/user names, SSH host alias, and repository
+URL are operational configuration rather than secrets. Fix-3B retains that
+boundary and adds no secret value.
 
-## Current behavior characterization
+## CLI
 
-The adopted deployer performs these operations in order:
+The default invocation remains the backward-compatible full deployment path.
+The two new operations require an explicit exact 40-character lowercase SHA:
 
-1. Enables `set -Eeuo pipefail`, requires root, applies `umask 077`, and changes
-   its working directory to `/`.
-2. Parses `--dry-run`, `--help`, and at most one optional commit argument.
-3. Acquires a non-blocking `flock` on `/run/lock/nuaafa-deploy.lock`.
-4. Uses the supplied commit or resolves `refs/heads/main` from the configured
-   repository, then requires exactly 40 lowercase hexadecimal characters.
-5. Resolves the current release and reads its Git SHA when it has a `.git`
-   directory. An already-current target exits successfully.
-6. In dry-run mode, prints the target and current SHA and exits before creating
-   or modifying deployment state.
-7. Constructs `/srv/nuaafa/releases/<sha>`, cloning when the target does not
-   already contain a `.git` directory, then fetches `origin` and checks out the
-   requested SHA detached.
-8. Links the shared production environment and SQLite database into the release
-   and applies link ownership.
-9. Runs `npm ci`, ESLint, Unicode checking, the referee-flow test, and a
-   critical-level production dependency audit as `nuaafa`.
-10. Runs the installed DB-only backup command.
-11. Runs `prisma migrate deploy` against the production environment, builds the
-    application, and requires `.next/BUILD_ID`.
-12. Creates `/srv/nuaafa/.current.new` and uses `mv -Tf` to switch
-    `/srv/nuaafa/current` to the release.
-13. Restarts `nuaafa.service`. A restart failure restores the prior release link
-    and attempts to restart the prior application.
-14. Polls `/api/health` up to 20 times. A persistent health failure restores the
-    prior release link and service, but explicitly does not roll back database
-    migrations.
-15. Reports the deployed and previous Git SHAs on success.
+```bash
+nuaafa-deploy --stage-only \
+  --allowed-ref refs/heads/feat/v2.9-unified-admin-r1 \
+  EXACT_40_HEX_SHA
 
-Cleanup is intentionally limited: the script removes the release-local DB entry
-before recreating its symlink and removes the fixed temporary current-link path.
-It does not delete old release directories, roll back database migrations, or
-clean a partially prepared release after an earlier failure.
+nuaafa-deploy --activate-staged \
+  --allowed-ref refs/heads/feat/v2.9-unified-admin-r1 \
+  EXACT_40_HEX_SHA
+```
 
-## Existing safety observations
+`--dry-run` is compatible with stage-only, activate-staged, and the default
+full mode. Conflicting modes, a missing SHA for either new mode, unsafe refs,
+and invalid SHAs fail closed. `--help` documents the modes and `--version`
+provides a deterministic operator-visible source version.
 
-### Blocking for future modification
+## Stage-only boundary
 
-These findings do not block byte-identical provenance adoption. They must be
-resolved or explicitly dispositioned before adding stage-only or
-activate-staged behavior:
+Stage-only takes the deployment lock, validates the fixed layout, fetches the
+explicit allowed ref, proves the requested commit is its ancestor, checks out
+detached, installs dependencies, runs the existing static/Prisma checks, builds,
+validates `.next/BUILD_ID`, and writes deterministic provenance under the
+release's `.git` directory. A new release is prepared under an operation-scoped
+`.staging-<sha>-<pid>` directory and is published to the canonical SHA path only
+after the build and provenance checks pass.
 
-- The release path is derived from a validated SHA, but an already-existing
-  release directory is not required to be a non-symlink whose resolved path,
-  owner, Git origin, and clean state are trustworthy and contained below the
-  exact releases root.
-- Reusing an existing `.git` directory does not verify a clean worktree,
-  expected origin, build provenance, or unambiguous prior staging state. A
-  partial failed deployment can therefore affect a later reuse attempt.
-- `git fetch origin` followed by checkout of a SHA does not prove that the SHA
-  is reachable from the specifically approved remote ref. A tampered local
-  release repository could already contain an unrelated object.
-- The release-local `.env.production` and `prisma/dev.db` entries are replaced
-  without first rejecting unexpected file types or symlinks. In particular,
-  `rm -f "$release/prisma/dev.db"` relies on the release directory being safe.
-- The installed current link and its resolved previous target are not required
-  to be safe symlinks contained below `/srv/nuaafa/releases/<40-hex-sha>` before
-  switching or rollback.
-- The fixed `/srv/nuaafa/.current.new` path is removed without a prior
-  collision/type check. Future activation must fail closed on ambiguous state
-  and retain the established same-directory atomic switch.
+It does not run a backup or migration, alter the shared environment/database,
+switch `current`, import content, provision uploads, touch timers, or control the
+service. A failed partial preparation cannot be mistaken for a valid canonical
+staged release. An existing canonical release is reused only after all staged
+provenance checks pass.
 
-### Non-blocking legacy observations
+## Activate-staged boundary
 
-- `set -Eeuo pipefail`, root enforcement, restrictive `umask`, exact SHA syntax
-  validation, and the deployment lock are useful existing fail-closed controls.
-- The legacy full-deploy path intentionally couples build, DB backup, migration,
-  release switching, restart, and health checks. That behavior is incompatible
-  with the controlled R1-3D stage/maintenance split but remains the adopted
-  baseline and is not changed here.
-- There is no `trap`-based cleanup. Failure before switching leaves a partial
-  release for investigation, but future idempotent staging must reject or safely
-  characterize that state rather than overwriting it.
-- Restart/health rollback restores only the application release and explicitly
-  leaves migrations in place. Database rollback belongs to the separate
-  reviewed R1-3D backup/staging/quarantine procedure.
-- The dependency audit uses `--audit-level=critical`; known high-severity
-  advisory disposition is handled by the separate release-candidate process.
-- The script performs no `rm -rf` release cleanup and does not automatically
-  delete historical releases.
+Activate-staged performs read-only validation of the canonical release path,
+owner, origin, clean HEAD, recorded allowed-ref provenance, build artifact,
+shared environment/database links, and current-link state. It then performs
+only an operation-scoped same-parent atomic `current` link replacement.
 
-## Future change boundary
+It does not install, build, back up, migrate, import, modify environment data,
+provision uploads, change timers, or stop/start/restart/reload the service. An
+already-current verified release returns a deterministic success.
 
-FIX-3A ends with source adoption. Stage-only, activate-staged, production
-bootstrap instructions, and installation remain separate reviewed work. The
-production copy at `/usr/local/sbin/nuaafa-deploy` must not be replaced from this
-commit without fresh human approval.
+## Full deploy compatibility
+
+The default path still runs checks, DB-only backup, `prisma migrate deploy`,
+build verification, current switch, service restart, and health polling. Its
+restart/health rollback continues to restore the prior application link without
+claiming to roll back database migrations. Shared path helpers now fail closed
+on ambiguous release, link, and temporary-current state; the isolated full-mode
+regression proves the legacy operation ordering remains available.
+
+## Safety and provenance
+
+- Release and preparation directories must be canonical direct children of
+  `/srv/nuaafa/releases`; unexpected types, symlinks, traversal, dirty worktrees,
+  incorrect origins, and mismatched HEADs are rejected.
+- `.env.production` and `prisma/dev.db` may only be direct links to canonical
+  shared regular files. Existing unexpected entries and link chains fail closed.
+- `current` may be absent or a direct link to an existing owned
+  `/srv/nuaafa/releases/<40-hex>` release. A regular file, directory, outside
+  target, chain, or invalid name is rejected.
+- The temporary current link is unique to the operation and SHA. Any collision
+  is rejected without unlinking it.
+- Staged provenance binds format, commit, allowed ref, fetched ref HEAD,
+  repository, BUILD_ID SHA-256, and deployer version.
+- No release cleanup uses `rm -rf`, and unrelated releases are not deleted.
+
+## Validation and production boundary
+
+Run the isolated matrix with `npm run test:deployer`; it uses temporary roots,
+test remotes, fake shared files, and mocked service/database actions, never
+`/srv/nuaafa`. The RC runner includes this matrix together with the production
+hardening, content gate, backup/restore, Prisma, TypeScript, lint, Unicode,
+R1/R1-2/R1-3A/R1-3B, build, and clean-install gates.
+
+The reviewed future installation procedure is
+[`docs/operations/R1-3D_DEPLOYER_BOOTSTRAP.md`](../../docs/operations/R1-3D_DEPLOYER_BOOTSTRAP.md).
+Do not execute it without separate human Phase B authorization.
+
+No production database, filesystem, environment, service, timer, deployer
+installation, deployment, push, or merge change was performed by Fix-3B.

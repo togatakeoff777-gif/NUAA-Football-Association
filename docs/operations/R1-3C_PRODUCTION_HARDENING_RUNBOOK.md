@@ -334,7 +334,7 @@ Official command, under Node `22.23.2`:
 npm run rc:check
 ```
 
-The runner fails closed and includes Node version, live advisory classification, dependency path, Prisma format/validate/generate, TypeScript, ESLint, Unicode, Git whitespace/clean status, R1/R1-2 core tests, R1-3A tests and both migration rehearsals, R1-3B competition import tests, hardening tests, production build, full restore/application rehearsal, and isolated `npm ci` reproducibility.
+The runner fails closed and includes Node version, live advisory classification, dependency path, Prisma format/validate/generate, TypeScript, ESLint, Unicode, Git whitespace/clean status, R1/R1-2 core tests, R1-3A tests and both migration rehearsals, R1-3B competition import tests, the Fix-3B isolated deployer matrix, hardening tests, production build, full restore/application rehearsal, and isolated `npm ci` reproducibility.
 
 The only non-PASS security classification currently permitted is `KNOWN-ADVISORY` for the exact documented GHSA chain. Any new audit finding, Critical finding, missing disposition, failed gate, or dirty tree produces `NOT_READY`. Successful completion with the known exception produces `READY_WITH_DOCUMENTED_ADVISORY`, never `SECURITY CLEAN`.
 
@@ -354,23 +354,51 @@ Future authorized installation must copy the reviewed files to `/etc/systemd/sys
 
 Stop immediately if any preflight, backup, migration, reconciliation, health, RBAC, media, or rollback gate fails.
 
-Future Phase B remains separately human-authorized and must execute in this order; none of these steps is executed by this Fix-2:
+Future Phase B remains separately human-authorized and must execute in this exact order. None of these steps was executed by Fix-3B.
 
-1. **Online preparation:** confirm the exact approved release SHA, Node 22.23.2 RC, owners, capacity, paths, and rollback decision; stage/build the release without changing `/srv/nuaafa/current` or the current content source.
-2. **Capture the actual rollback release and environment:** resolve the current symlink at execution time, verify it is an approved `/srv/nuaafa/releases/<40-hex-SHA>` directory, and preserve `/srv/nuaafa/shared/.env.production` with metadata in the protected operation record. The previously observed `09e8222c5e02193d38e9a0348385bd0987596168` is evidence, not a permanent rollback assumption.
-3. **Complete non-mutating preparation:** inventory/dry-run work and command review finish while `nuaafa.service` remains online. No final rollback-point claim is made yet.
-4. **Enter the approved maintenance/write-freeze window:** stop `nuaafa.service`; require inactive service state, `MainPID=0`, and no listener on `127.0.0.1:3001` before continuing.
-5. **Create the true FINAL PRE-ENABLEMENT backup after writes are frozen:** use the staged reviewed release's explicit legacy profile against `/srv/nuaafa/shared/prisma/dev.db` and `/srv/nuaafa/shared/uploads`, writing only below `/srv/nuaafa/shared/backups/unified`.
-6. **Verify and quick-clone the frozen rollback point:** verify the bundle, restore it with the existing isolated restore command below `/srv/nuaafa/shared/restore-staging/<backup-id>/pre-enable`, and recheck DB/files/counts/tree before any migration.
-7. **Provision uploads `0700`:** only after the verified legacy restore point exists, create `/srv/nuaafa/shared/uploads` as `nuaafa:nuaafa` `0700` and pass its preflight.
-8. **Configure the approved environment while stopped:** keep the content source on its previous value until import reconciliation succeeds; never log secret values.
-9. **Migrate deploy and verify:** execute only reviewed `prisma migrate deploy`; require integrity `ok`, zero FK violations, exact migrations, protected counts, and representative IDs.
-10. **Inventory, production dry run, dual-authorized import, and exact reconciliation:** any mismatch enters the combined rollback decision while writes remain frozen.
-11. **Switch content source and exact release only after reconciliation:** atomically update the approved environment/current-release state; do not start the service until both point to the reviewed compatible set.
-12. **Start and smoke:** start `nuaafa.service`, wait for readiness, then perform health, public news, RBAC, media, referee, and competition-import smoke under the separately approved fixture/account policy.
-13. **Rollback on any failed coupled-data gate:** stop/keep stopped, restore the FINAL PRE-ENABLEMENT bundle through fresh staging, quarantine failed DB/uploads/environment/current symlink, publish the verified set, restore the captured previous environment/release, and smoke again.
-14. **Automation and post-enablement backup:** only after production acceptance, separately approve/install the proposed timer/retention policy and create a verified modern v3 backup.
-15. **Observation:** begin the staffed 24-hour plan, with a 36-hour grace only when explicitly approved.
+Online preparation while the current service remains online:
+
+1. **Push the exact reviewed final HEAD** only after separate push authorization; record the remote SHA.
+2. **Bootstrap/install the reviewed deployer** with [`R1-3D_DEPLOYER_BOOTSTRAP.md`](R1-3D_DEPLOYER_BOOTSTRAP.md), requiring the frozen Fix-3A hash before replacement.
+3. **Verify the installed deployer SHA and version** against the reviewed Fix-3B source; stop and restore the quarantined old deployer on any mismatch.
+4. **Stage-only the exact reviewed application SHA** with the explicit reviewed ref; do not use default/full deploy:
+
+   ```bash
+   /usr/local/sbin/nuaafa-deploy --stage-only \
+     --allowed-ref refs/heads/feat/v2.9-unified-admin-r1 \
+     "$new_sha"
+   ```
+
+5. **Verify staged release provenance/build**: canonical direct release path, owner, clean exact HEAD, origin/ref provenance record, canonical shared links, and non-empty `.next/BUILD_ID`. Confirm `current`, DB, environment, and service state are unchanged.
+
+Maintenance/write-freeze window:
+
+6. **Stop `nuaafa.service`** and require inactive state, `MainPID=0`, and no listener on `127.0.0.1:3001`.
+7. **Verify the write freeze** and capture the actual previous release/environment state; the previously observed SHA is evidence, not a permanent rollback assumption.
+8. **Create the true FINAL PRE-ENABLEMENT backup** with the explicit legacy profile only after writes are frozen.
+9. **Verify and rehearse an isolated restore** of that exact bundle; recheck completion binding, DB/uploads, checksums, counts, integrity, and FK state before migration.
+10. **Provision uploads and prepare the approved environment** while stopped, preserving protected ownership/modes and never logging secrets; keep the current content source until reconciliation succeeds.
+11. **Run only the reviewed `prisma migrate deploy`** and require exact migrations, integrity `ok`, zero FK violations, protected counts, and representative IDs.
+12. **Run production static-content import dry-run and dual-authorized apply** using the reviewed gate.
+13. **Perform exact reconciliation** and stop on any inventory, count, identity, media, or protected-data mismatch.
+14. **Switch the DB content source** only after exact reconciliation, still with the service stopped.
+15. **Run DB/content-source verification** and confirm the compatible environment/data set is complete before release switching.
+16. **Activate only the exact staged SHA**; this changes `current` only and does not control the service:
+
+    ```bash
+    /usr/local/sbin/nuaafa-deploy --activate-staged \
+      --allowed-ref refs/heads/feat/v2.9-unified-admin-r1 \
+      "$new_sha"
+    ```
+
+17. **Run reviewed pre-start checks** against the exact staged release, environment, database, uploads, integrity/FK, content reconciliation, service unit, and current target. Keep the service stopped on any failure.
+18. **Explicitly start `nuaafa.service`** with `systemctl start nuaafa.service`; activation itself must never start or restart it.
+19. **Run health and smoke acceptance** for API readiness, public content, RBAC, media, referee, and competition import.
+20. **Clean only approved test fixtures** using the separately reviewed fixture/account policy; do not delete operational evidence or unrelated data.
+21. **Create and verify the post-enable modern backup**. Timer/retention installation remains a separate authorization.
+22. **Begin staffed observation** for 24 hours, with a 36-hour grace only when explicitly approved.
+
+Any failed coupled-data gate enters the reviewed rollback procedure: stop or keep stopped, restore the FINAL PRE-ENABLEMENT bundle through fresh staging, quarantine the failed DB/uploads/environment/current link, publish the verified prior set, and smoke again. Do not improvise a partial rollback.
 
 ## Maintenance window and rollback plan
 
@@ -552,6 +580,42 @@ test -z "$(sqlite3 "$staged_db" 'PRAGMA foreign_key_check;')"
 ```
 
 The restore command already rechecks completion binding, DB/upload sizes and SHA-256 values, exact upload tree, protected row counts, profile/capabilities, integrity, and FK state. The recorded restore JSON must show identical `rowCounts` and `sourceRowCounts`. Do not proceed if the staging device differs from the canonical shared device; cross-filesystem publication is prohibited.
+
+### Exact release activation and explicit service-start boundary
+
+Only after the reviewed migration, production content import, exact reconciliation, content-source switch, and DB verification have all passed may the separately authorized operator activate the already-staged release:
+
+```bash
+test -d "$reviewed_release"
+test ! -L "$reviewed_release"
+test "$(git -C "$reviewed_release" rev-parse HEAD)" = "$new_sha"
+test -s "$reviewed_release/.next/BUILD_ID"
+
+/usr/local/sbin/nuaafa-deploy --activate-staged \
+  --allowed-ref refs/heads/feat/v2.9-unified-admin-r1 \
+  "$new_sha"
+
+test -L /srv/nuaafa/current
+test "$(readlink /srv/nuaafa/current)" = "$reviewed_release"
+test "$(readlink -f /srv/nuaafa/current)" = "$reviewed_release"
+if systemctl is-active --quiet nuaafa.service; then exit 1; fi
+test "$(systemctl show -p MainPID --value nuaafa.service)" = 0
+if ss -ltnp 'sport = :3001' | tail -n +2 | grep -q .; then exit 1; fi
+```
+
+Activation switches only `current`. It must not install/build, migrate/import,
+modify the environment, or control the service. Run every reviewed pre-start
+integrity, FK, content, upload, environment, release, and service-unit check
+after activation. Only then is service start a separate explicit action:
+
+```bash
+systemctl start nuaafa.service
+systemctl is-active --quiet nuaafa.service
+```
+
+Health/readiness polling and the reviewed smoke suite follow the explicit start.
+If a pre-start check fails, keep the service stopped and enter the reviewed
+rollback decision; do not call default/full deploy and do not silently restart.
 
 ### Failed enablement: fresh staging and quarantine preflight
 

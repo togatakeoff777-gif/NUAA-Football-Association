@@ -101,6 +101,7 @@ async function main() {
     "test:referee-flow",
     "test:referee-match-deletion",
     "test:competition-import",
+    "test:deployer",
     "test:production-hardening",
     "test:static-content-import-gate",
   ];

@@ -1,8 +1,8 @@
 [Unit]
-Description=NUAAFA combined backup schedule template (R1-3D finalizes schedule)
+Description=PROPOSED NUAAFA combined backup schedule (requires human approval)
 
 [Timer]
-OnCalendar=*-*-* 03:00:00
+OnCalendar=*-*-* 03:00:00 Asia/Shanghai
 RandomizedDelaySec=30m
 Persistent=true
 Unit=nuaafa-unified-backup.service

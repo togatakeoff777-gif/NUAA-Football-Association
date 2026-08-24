@@ -303,6 +303,63 @@ async function main() {
     );
     assert((await readFile(existingDatabase, "utf8")) === "DO_NOT_OVERWRITE", "Existing restore destination was modified.");
 
+    const stagedAllowRoot = path.join(root, "staged-allow-root");
+    const outsideStagedDatabase = path.join(root, "outside-staged-database.sqlite");
+    const insideStagedUploads = path.join(stagedAllowRoot, "uploads");
+    await rejects(
+      () => restoreCombinedBackup({
+        backupDirectory: validBackups[2],
+        databasePath: outsideStagedDatabase,
+        uploadRoot: insideStagedUploads,
+        allowedTargetRoot: stagedAllowRoot,
+      }),
+      "Restore accepted a database target outside the explicit staging root.",
+    );
+    await rejects(() => access(outsideStagedDatabase), "Outside staging target was written before rejection.");
+    await rejects(() => access(insideStagedUploads), "Inside staging upload target was written after paired target rejection.");
+
+    const overlappingRoot = path.join(root, "overlapping-restore-targets");
+    await rejects(
+      () => restoreCombinedBackup({
+        backupDirectory: validBackups[2],
+        databasePath: path.join(overlappingRoot, "database.sqlite"),
+        uploadRoot: overlappingRoot,
+        allowedTargetRoot: root,
+      }),
+      "Restore accepted overlapping database and upload targets.",
+    );
+    await rejects(() => access(overlappingRoot), "Overlapping restore target was written before rejection.");
+
+    const sourceOverlapDatabase = path.join(validBackups[2], "restore-target.sqlite");
+    const sourceOverlapUploads = path.join(root, "source-overlap-uploads");
+    await rejects(
+      () => restoreCombinedBackup({
+        backupDirectory: validBackups[2],
+        databasePath: sourceOverlapDatabase,
+        uploadRoot: sourceOverlapUploads,
+        allowedTargetRoot: root,
+      }),
+      "Restore accepted a target inside its source backup.",
+    );
+    await rejects(() => access(sourceOverlapDatabase), "Source-overlap restore target was written before rejection.");
+    await rejects(() => access(sourceOverlapUploads), "Source-overlap upload target was written before rejection.");
+
+    const restoreSymlinkReal = path.join(root, "restore-symlink-real");
+    const restoreSymlinkTarget = path.join(root, "restore-symlink-target");
+    const restoreSymlinkDatabase = path.join(root, "restore-symlink-database.sqlite");
+    await mkdir(restoreSymlinkReal);
+    await symlink(restoreSymlinkReal, restoreSymlinkTarget, process.platform === "win32" ? "junction" : "dir");
+    await rejects(
+      () => restoreCombinedBackup({
+        backupDirectory: validBackups[2],
+        databasePath: restoreSymlinkDatabase,
+        uploadRoot: restoreSymlinkTarget,
+        allowedTargetRoot: root,
+      }),
+      "Restore accepted an existing symlink destination.",
+    );
+    await rejects(() => access(restoreSymlinkDatabase), "Restore wrote its database before rejecting a symlink destination.");
+
     const corruptStagedDatabase = path.join(root, "corrupt-staged-restore.sqlite");
     const corruptStagedUploads = path.join(root, "corrupt-staged-restore-uploads");
     await rejects(
@@ -412,6 +469,19 @@ async function main() {
       assert(!provisioning.ownership.enforced, "Non-Linux rehearsal incorrectly claimed POSIX ownership enforcement.");
     }
 
+    const [backupUnit, retentionUnit, timerUnit] = await Promise.all([
+      readFile(path.resolve("ops/systemd/nuaafa-unified-backup.service"), "utf8"),
+      readFile(path.resolve("ops/systemd/nuaafa-unified-retention-dry-run.service"), "utf8"),
+      readFile(path.resolve("ops/systemd/nuaafa-unified-backup.timer"), "utf8"),
+    ]);
+    for (const unit of [backupUnit, retentionUnit]) {
+      assert(unit.includes("NUAAFA_BACKUP_ROOT=/srv/nuaafa/shared/backups/unified"), "Combined backup unit did not use the dedicated unified root.");
+      assert(unit.includes("EnvironmentFile=/srv/nuaafa/shared/.env.production"), "Combined backup unit did not use the reviewed production environment file.");
+      assert(!/NUAAFA_BACKUP_ROOT=\/srv\/nuaafa\/shared\/backups(?:\r?\n|$)/.test(unit), "Combined backup unit could scan the parent DB-only backup root.");
+    }
+    assert(timerUnit.includes("Description=PROPOSED") && timerUnit.includes("OnCalendar=*-*-* 03:00:00 Asia/Shanghai"), "Timer template did not remain an explicit Asia/Shanghai proposal.");
+    assert(timerUnit.includes("RandomizedDelaySec=30m") && timerUnit.includes("Persistent=true"), "Timer proposal contract changed.");
+
     console.log(JSON.stringify({
       combinedBackup: {
         formatVersion: verified.manifest.formatVersion,
@@ -425,6 +495,10 @@ async function main() {
         corruptionRejected: true,
         existingRestoreDestinationRejected: true,
         stagedUploadCorruptionRejectedBeforePublish: true,
+        stagingOutsideAllowlistRejected: true,
+        databaseUploadsOverlapRejected: true,
+        sourceTargetOverlapRejected: true,
+        symlinkDestinationRejected: true,
       },
       legacyBackupBridge,
       retention: {
@@ -446,6 +520,12 @@ async function main() {
         frozenContract: { path: "/srv/nuaafa/shared/uploads", owner: "nuaafa", group: "nuaafa", mode: "0700" },
         pathTraversalRejected: true,
         localReadOnlyVerification: provisioning,
+      },
+      operationalTemplates: {
+        combinedRoot: "/srv/nuaafa/shared/backups/unified",
+        parentDbOnlyBackupRootExcluded: true,
+        retentionCountProposed: 14,
+        timerProposed: { onCalendar: "03:00 Asia/Shanghai", randomizedDelay: "30m", persistent: true },
       },
     }, null, 2));
   } finally {

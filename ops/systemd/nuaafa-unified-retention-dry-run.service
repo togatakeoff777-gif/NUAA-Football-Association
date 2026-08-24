@@ -1,19 +1,19 @@
 [Unit]
 Description=NUAAFA combined backup retention dry run
 After=local-fs.target
-ConditionPathIsDirectory=/srv/nuaafa/shared/backups
+ConditionPathIsDirectory=/srv/nuaafa/shared/backups/unified
 
 [Service]
 Type=oneshot
 User=nuaafa
 Group=nuaafa
 WorkingDirectory=/srv/nuaafa/current
-EnvironmentFile=/etc/nuaafa/nuaafa.env
-Environment=NUAAFA_BACKUP_ROOT=/srv/nuaafa/shared/backups
+EnvironmentFile=/srv/nuaafa/shared/.env.production
+Environment=NUAAFA_BACKUP_ROOT=/srv/nuaafa/shared/backups/unified
 UMask=0077
 ExecStart=/usr/bin/npm run backup:retention -- --root=${NUAAFA_BACKUP_ROOT} --keep=${NUAAFA_BACKUP_RETENTION_COUNT}
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectHome=true
 ProtectSystem=strict
-ReadOnlyPaths=/srv/nuaafa/shared/backups
+ReadOnlyPaths=/srv/nuaafa/shared/backups/unified

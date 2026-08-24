@@ -45,16 +45,22 @@ export async function PATCH(
       joinedAt: readDate(body.joinedAt, "加入日期", false),
       status: readEnum(
         body.status,
-        ["PENDING", "ACTIVE", "INACTIVE", "ARCHIVED"] as const,
+        ["PENDING_ACTIVATION", "ACTIVE", "INACTIVE", "ARCHIVED"] as const,
         "账号状态",
       ),
+      assignmentEligibility: readEnum(
+        body.assignmentEligibility,
+        ["NOT_ELIGIBLE", "ELIGIBLE", "SUSPENDED"] as const,
+        "正式选派资格",
+      ),
+      eligibilityReason: readShortText(body.eligibilityReason, "选派资格调整原因", 500, false),
       elevenASide: readBoolean(body.elevenASide, "十一人制资格"),
       futsal: readBoolean(body.futsal, "五人制资格"),
       certificateNote: readShortText(body.certificateNote, "证书 / 登记编号", 240, false),
       qualificationNote: readShortText(body.qualificationNote, "资质备注", 500, false),
       trainingStatus: readEnum(
         body.trainingStatus,
-        ["NOT_STARTED", "IN_PROGRESS", "COMPLETED"] as const,
+        ["PENDING_ASSESSMENT", "IN_TRAINING", "QUALIFIED"] as const,
         "培训状态",
       ),
       publicDirectoryEnabled: readBoolean(body.publicDirectoryEnabled, "公开名录授权"),
@@ -89,6 +95,7 @@ export async function POST(
     await resetRefereePassword(
       id,
       readShortText(body.initialPassword, "新初始密码", 256),
+      authorization,
     );
     return NextResponse.json({ ok: true });
   } catch (error) {

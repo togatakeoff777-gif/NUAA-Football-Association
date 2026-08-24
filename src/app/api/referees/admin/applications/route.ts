@@ -28,7 +28,7 @@ export async function POST(request: Request) {
       ),
       note: readShortText(body.note, "补充说明", 240, false),
       exceptionReason: readShortText(body.exceptionReason, "人工例外原因", 240),
-    });
+    }, authorization.actor);
     return NextResponse.json(
       { ok: true, applicationId: application.id },
       { status: 201 },

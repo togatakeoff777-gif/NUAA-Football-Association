@@ -31,16 +31,22 @@ enum ApplicationWindowStatus {
 }
 
 enum RefereeStatus {
-  PENDING
+  PENDING_ACTIVATION
   ACTIVE
   INACTIVE
   ARCHIVED
 }
 
 enum TrainingStatus {
-  NOT_STARTED
-  IN_PROGRESS
-  COMPLETED
+  PENDING_ASSESSMENT
+  IN_TRAINING
+  QUALIFIED
+}
+
+enum AssignmentEligibility {
+  NOT_ELIGIBLE
+  ELIGIBLE
+  SUSPENDED
 }
 
 enum ApplicationStatus {
@@ -220,11 +226,11 @@ model Match {
 }
 
 model Referee {
-  id                       String                       @id @default(cuid())
-  publicCode               String                       @unique
+  id                       String                        @id @default(cuid())
+  publicCode               String                        @unique
   name                     String
-  status                   RefereeStatus                @default(ACTIVE)
-  studentId                String?                      @unique
+  status                   RefereeStatus                 @default(ACTIVE)
+  studentId                String?                       @unique
   collegeId                String?
   currentAffiliationUnitId String?
   grade                    String?
@@ -232,33 +238,35 @@ model Referee {
   qq                       String?
   refereeLevel             String?
   joinedAt                 DateTime?
-  elevenASide              Boolean                      @default(false)
-  futsal                   Boolean                      @default(false)
+  elevenASide              Boolean                       @default(false)
+  futsal                   Boolean                       @default(false)
   sourceNote               String?
   passwordHash             String?
-  mustChangePassword       Boolean                      @default(true)
+  mustChangePassword       Boolean                       @default(true)
   certificateNote          String?
   qualificationNote        String?
-  trainingStatus           TrainingStatus               @default(NOT_STARTED)
-  publicDirectoryEnabled   Boolean                      @default(false)
+  trainingStatus           TrainingStatus                @default(PENDING_ASSESSMENT)
+  assignmentEligibility    AssignmentEligibility         @default(NOT_ELIGIBLE)
+  publicDirectoryEnabled   Boolean                       @default(false)
   publicBio                String?
   internalNote             String?
-  failedLoginCount         Int                          @default(0)
+  failedLoginCount         Int                           @default(0)
   lockedUntil              DateTime?
   lastLoginAt              DateTime?
   passwordChangedAt        DateTime?
-  createdAt                DateTime                     @default(now())
-  updatedAt                DateTime                     @updatedAt
+  createdAt                DateTime                      @default(now())
+  updatedAt                DateTime                      @updatedAt
   applications             RefereeApplication[]
   positions                AppointmentPosition[]
   sessions                 RefereeSession[]
-  college                  College?                     @relation(fields: [collegeId], references: [id], onDelete: SetNull)
-  currentAffiliationUnit   AffiliationUnit?             @relation("RefereeCurrentAffiliation", fields: [currentAffiliationUnitId], references: [id], onDelete: SetNull)
+  college                  College?                      @relation(fields: [collegeId], references: [id], onDelete: SetNull)
+  currentAffiliationUnit   AffiliationUnit?              @relation("RefereeCurrentAffiliation", fields: [currentAffiliationUnitId], references: [id], onDelete: SetNull)
   capabilities             RefereePositionCapability[]
   affiliations             RefereeAffiliation[]
   availability             RefereeAvailability[]
   acknowledgements         AppointmentAcknowledgement[]
   conflictReports          AppointmentConflictReport[]
+  admissionApplications    RefereeAdmissionApplication[]
 
   @@index([collegeId])
   @@index([currentAffiliationUnitId])
@@ -416,17 +424,25 @@ model RefereeApplication {
 }
 
 model RefereeAdmissionApplication {
-  id        String                            @id @default(cuid())
-  name      String
-  studentId String?
-  phone     String?
-  qq        String?
-  note      String?
-  status    RefereeAdmissionApplicationStatus @default(PENDING)
-  createdAt DateTime                          @default(now())
-  updatedAt DateTime                          @updatedAt
+  id                String                            @id @default(cuid())
+  name              String
+  studentId         String?
+  phone             String?
+  qq                String?
+  note              String?
+  status            RefereeAdmissionApplicationStatus @default(PENDING)
+  reviewedAt        DateTime?
+  reviewNote        String?
+  reviewedByAdminId String?
+  refereeId         String?
+  createdAt         DateTime                          @default(now())
+  updatedAt         DateTime                          @updatedAt
+  reviewedByAdmin   AdminAccount?                     @relation("RefereeAdmissionReviewer", fields: [reviewedByAdminId], references: [id], onDelete: SetNull)
+  referee           Referee?                          @relation(fields: [refereeId], references: [id], onDelete: Restrict)
 
   @@index([status, createdAt])
+  @@index([reviewedByAdminId])
+  @@index([refereeId])
 }
 
 model RefereeAppointment {
@@ -637,22 +653,23 @@ model AdminSession {
 }
 
 model AdminAccount {
-  id                      String                      @id @default(cuid())
-  username                String                      @unique
+  id                      String                        @id @default(cuid())
+  username                String                        @unique
   displayName             String
   passwordHash            String
   role                    AdminRole
-  isActive                Boolean                     @default(true)
-  mustChangePassword      Boolean                     @default(false)
+  isActive                Boolean                       @default(true)
+  mustChangePassword      Boolean                       @default(false)
   lastLoginAt             DateTime?
-  createdAt               DateTime                    @default(now())
-  updatedAt               DateTime                    @updatedAt
+  createdAt               DateTime                      @default(now())
+  updatedAt               DateTime                      @updatedAt
   sessions                AdminSession[]
   versions                AppointmentVersion[]
   resolvedConflictReports AppointmentConflictReport[]
   unifiedRoles            AdminRoleAssignment[]
   contentPosts            ContentPost[]
   uploadedMedia           MediaAsset[]
+  reviewedAdmissions      RefereeAdmissionApplication[] @relation("RefereeAdmissionReviewer")
 }
 
 model RefereeSession {

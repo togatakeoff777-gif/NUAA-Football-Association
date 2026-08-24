@@ -62,6 +62,9 @@ async function main() {
   await applyMigration(raw, "20260819120000_referee_admin_r1");
   await applyMigration(raw, "20260820120000_referee_business_model_fix2");
   await applyMigration(raw, "20260820160000_referee_acceptance_fix3");
+  await applyMigration(raw, "20260823091228_unified_admin_r1_foundation");
+  await applyMigration(raw, "20260823160000_referee_admission_application_intake");
+  await applyMigration(raw, "20260824120000_referee_admission_eligibility");
   raw.close();
 
   const verifier = new PrismaClient({ adapter: new PrismaLibSql({ url }) });
@@ -98,6 +101,11 @@ async function main() {
     assert(
       legacyReferee.capabilities.length === 5,
       "既有十一人制能力未回填至规范化岗位能力表。",
+    );
+    assert(
+      legacyReferee.trainingStatus === "PENDING_ASSESSMENT" &&
+        legacyReferee.assignmentEligibility === "ELIGIBLE",
+      "R1-3A migration 未按规则映射既有 ACTIVE 裁判员状态。",
     );
     assert(legacyMatch.source === "MANUAL", "既有比赛未按 MANUAL 回填来源。");
     const confirmedMappings = await verifier.collegeCodeMapping.findMany({
@@ -241,8 +249,43 @@ async function main() {
     assert(firstAcknowledgement.versionId === "legacy-version", "首次确认未绑定既有发布版本。");
     await service.withdrawAppointment(legacyMatch.id, "R1 自动化改派", superActor);
 
+    let hardConflictBlocked = false;
+    let hardWarnings: Array<{ code: string; severity: string }> = [];
+    try {
+      await service.saveAppointmentDraft({
+        matchId: legacyMatch.id,
+        publicationNote: "R1 警告验证",
+        changeReason: "R1 自动化改派",
+        overrideReason: "硬冲突不应被此原因覆盖",
+        positions: [{ key: "REFEREE", slot: 1, refereeId: legacyReferee.id }],
+      }, superActor);
+    } catch (error) {
+      if (error instanceof service.RefereeServiceError && error.status === 409) {
+        hardConflictBlocked = true;
+        hardWarnings = error.warnings.map((warning) => ({
+          code: warning.code,
+          severity: warning.severity,
+        }));
+      }
+    }
+    assert(hardConflictBlocked, "硬冲突被覆盖原因绕过。 ");
+    for (const code of ["COLLEGE_CONFLICT", "UNAVAILABLE", "MATCH_OVERLAP"]) {
+      assert(hardWarnings.some((warning) => warning.code === code), `冲突检测未返回 ${code}。`);
+    }
+    for (const code of ["UNAVAILABLE", "MATCH_OVERLAP"]) {
+      assert(
+        hardWarnings.some((warning) => warning.code === code && warning.severity === "HARD"),
+        `${code} 未被标记为不可覆盖的硬冲突。`,
+      );
+    }
+
+    await verifier.refereeAvailability.deleteMany({ where: { refereeId: legacyReferee.id } });
+    await verifier.refereeAppointment.update({
+      where: { matchId: overlapMatch.id },
+      data: { status: "CANCELLED" },
+    });
+
     let overrideReasonRequired = false;
-    let warningCodes: string[] = [];
     try {
       await service.saveAppointmentDraft({
         matchId: legacyMatch.id,
@@ -251,15 +294,14 @@ async function main() {
         positions: [{ key: "REFEREE", slot: 1, refereeId: legacyReferee.id }],
       }, superActor);
     } catch (error) {
-      if (error instanceof service.RefereeServiceError && error.status === 409) {
-        overrideReasonRequired = true;
-        warningCodes = error.warnings.map((warning) => warning.code);
-      }
+      overrideReasonRequired =
+        error instanceof service.RefereeServiceError &&
+        error.status === 409 &&
+        error.warnings.some(
+          (warning) => warning.code === "COLLEGE_CONFLICT" && warning.severity === "OVERRIDABLE",
+        );
     }
-    assert(overrideReasonRequired, "可覆盖冲突未强制要求填写覆盖原因。");
-    for (const code of ["COLLEGE_CONFLICT", "UNAVAILABLE", "MATCH_OVERLAP"]) {
-      assert(warningCodes.includes(code), `冲突检测未返回 ${code}。`);
-    }
+    assert(overrideReasonRequired, "组织冲突未强制要求填写覆盖原因。");
 
     const draftResult = await service.saveAppointmentDraft({
       matchId: legacyMatch.id,
@@ -268,7 +310,12 @@ async function main() {
       overrideReason: "经核实由管理员批准覆盖",
       positions: [{ key: "REFEREE", slot: 1, refereeId: legacyReferee.id }],
     }, superActor);
-    assert(draftResult.warnings.length >= 3, "覆盖保存后未返回结构化警告供界面展示。");
+    assert(
+      draftResult.warnings.some(
+        (warning) => warning.code === "COLLEGE_CONFLICT" && warning.severity === "OVERRIDABLE",
+      ),
+      "覆盖保存后未返回结构化组织冲突警告供界面展示。",
+    );
 
     let publishOverrideRequired = false;
     try {
@@ -359,8 +406,9 @@ async function main() {
       adminRoleAuthorization: true,
       adminPasswordChangeInvalidatesOtherSessions: true,
       collegeConflictWarning: true,
-      unavailableWarning: true,
-      matchOverlapWarning: true,
+      unavailableHardConflict: true,
+      matchOverlapHardConflict: true,
+      hardConflictCannotBeOverridden: true,
       overrideReasonRequiredAndAudited: true,
       acknowledgementBoundToVersion: true,
       republishInvalidatesOldAcknowledgement: true,

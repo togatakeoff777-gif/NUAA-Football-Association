@@ -68,7 +68,7 @@ async function main() {
     ];
     const capabilityReferee = await service.createRefereeAccount({
       publicCode: "FIX2-CAP", name: "培养状态裁判", initialPassword: "Fix2-Test-Password-2026", status: "ACTIVE",
-      elevenASide: true, futsal: false, trainingStatus: "IN_PROGRESS", publicDirectoryEnabled: false,
+      elevenASide: true, futsal: false, trainingStatus: "IN_TRAINING", assignmentEligibility: "ELIGIBLE", publicDirectoryEnabled: false,
       refereeLevel: "国家三级", certificateNote: "CERT-001", qualificationNote: "测试资质备注", capabilities,
     }, actor);
     const savedCapabilities = await verifier.refereePositionCapability.findMany({ where: { refereeId: capabilityReferee.id } });
@@ -78,7 +78,7 @@ async function main() {
     async function makeReferee(code: string, collegeId?: string) {
       return service.createRefereeAccount({
         publicCode: code, name: code, initialPassword: "Fix2-Test-Password-2026", status: "ACTIVE",
-        elevenASide: true, futsal: false, trainingStatus: "COMPLETED", publicDirectoryEnabled: true,
+        elevenASide: true, futsal: false, trainingStatus: "QUALIFIED", assignmentEligibility: "ELIGIBLE", publicDirectoryEnabled: true,
         refereeLevel: "暂无正式裁判资质", collegeId,
         capabilities: [{ format: "ELEVEN_A_SIDE", positionKey: "REFEREE", status: "READY" }],
       }, actor);

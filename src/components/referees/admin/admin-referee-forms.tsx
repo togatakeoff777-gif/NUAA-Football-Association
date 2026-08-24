@@ -4,7 +4,11 @@ import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 
 import { AdminAffiliationOptionGroups } from "@/components/referees/admin/admin-affiliation-options";
-import { refereeStatusLabels, trainingStatusLabels } from "@/components/referees/admin/admin-ui";
+import {
+  assignmentEligibilityLabels,
+  refereeStatusLabels,
+  trainingStatusLabels,
+} from "@/components/referees/admin/admin-ui";
 import {
   applyCapabilityBatch,
   refereeGrades,
@@ -38,6 +42,7 @@ export type AdminRefereeRecord = {
   certificateNote: string;
   qualificationNote: string;
   trainingStatus: string;
+  assignmentEligibility: string;
   publicDirectoryEnabled: boolean;
   publicBio: string;
   internalNote: string;
@@ -88,6 +93,7 @@ function fullPayload(form: FormData) {
     elevenASide: selectedCapabilities.some((item) => item.format === "ELEVEN_A_SIDE" && item.status !== "NOT_ASSIGNED"),
     futsal: selectedCapabilities.some((item) => item.format === "FUTSAL" && item.status !== "NOT_ASSIGNED"),
     certificateNote: text(form, "certificateNote"), qualificationNote: text(form, "qualificationNote"), trainingStatus: text(form, "trainingStatus"),
+    assignmentEligibility: text(form, "assignmentEligibility"), eligibilityReason: text(form, "eligibilityReason"),
     publicDirectoryEnabled: form.get("publicDirectoryEnabled") === "on",
     publicBio: text(form, "publicBio"), internalNote: text(form, "internalNote"),
     capabilities: selectedCapabilities,
@@ -132,8 +138,8 @@ export function RefereeCreateForm({ colleges }: { colleges: CollegeOption[] }) {
       body: JSON.stringify({
         publicCode: text(form, "publicCode"), name: text(form, "name"), studentId: text(form, "studentId"),
         collegeId: text(form, "collegeId"), currentAffiliationUnitId: "", grade: "", phone: "", qq: "", refereeLevel: refereeQualifications[0], joinedAt: "",
-        initialPassword: text(form, "initialPassword"), status: text(form, "status"), elevenASide: false, futsal: false,
-        certificateNote: "", qualificationNote: "", trainingStatus: "NOT_STARTED", publicDirectoryEnabled: false,
+        initialPassword: text(form, "initialPassword"), status: text(form, "status"), assignmentEligibility: "NOT_ELIGIBLE", elevenASide: false, futsal: false,
+        certificateNote: "", qualificationNote: "", trainingStatus: "PENDING_ASSESSMENT", publicDirectoryEnabled: false,
         publicBio: "", internalNote: "", capabilities: [],
       }),
     });
@@ -151,7 +157,7 @@ export function RefereeCreateForm({ colleges }: { colleges: CollegeOption[] }) {
       <label><span>学号</span><input maxLength={32} name="studentId" /></label>
       <label><span>学院背景</span><select name="collegeId"><option value="">待确认</option>{colleges.map((college) => <option key={college.id} value={college.id}>{college.label}</option>)}</select></label>
       <label><span>初始密码</span><input minLength={12} name="initialPassword" required type="password" /></label>
-      <label><span>账号状态</span><select defaultValue="PENDING" name="status">{Object.entries(refereeStatusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+      <label><span>账号状态</span><select defaultValue="PENDING_ACTIVATION" name="status">{Object.entries(refereeStatusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
     </div>
     <p aria-live="polite" className="admin-form-message">{message}</p>
     <footer><button className="admin-button admin-button-secondary" onClick={() => router.back()} type="button">取消</button><button className="admin-button" disabled={submitting} type="submit">{submitting ? "创建中…" : "创建裁判员"}</button></footer>
@@ -176,6 +182,7 @@ export function RefereeEditForm({ account, colleges, affiliationUnits }: { accou
   const [collegeId, setCollegeId] = useState(account.collegeId);
   const [currentUnitId, setCurrentUnitId] = useState(account.currentAffiliationUnitId);
   const [capabilityValues, setCapabilityValues] = useState<Record<string, CapabilityStatus>>(startingCapabilities);
+  const [assignmentEligibility, setAssignmentEligibility] = useState(account.assignmentEligibility);
   const [publicEnabled, setPublicEnabled] = useState(account.publicDirectoryEnabled);
   const [publicBio, setPublicBio] = useState(account.publicBio);
 
@@ -204,6 +211,7 @@ export function RefereeEditForm({ account, colleges, affiliationUnits }: { accou
     setCollegeId(account.collegeId);
     setCurrentUnitId(account.currentAffiliationUnitId);
     setCapabilityValues(startingCapabilities);
+    setAssignmentEligibility(account.assignmentEligibility);
     setPublicEnabled(account.publicDirectoryEnabled);
     setPublicBio(account.publicBio);
     setDirty(false);
@@ -251,6 +259,8 @@ export function RefereeEditForm({ account, colleges, affiliationUnits }: { accou
         <label><span>裁判资质</span><select defaultValue={account.refereeLevel || refereeQualifications[0]} name="refereeLevel">{refereeQualifications.map((qualification) => <option key={qualification} value={qualification}>{qualification}</option>)}</select></label>
         <label><span>加入日期</span><input defaultValue={account.joinedAt} name="joinedAt" type="date" /></label>
         <label><span>培训状态</span><select defaultValue={account.trainingStatus} name="trainingStatus">{Object.entries(trainingStatusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+        <label><span>正式选派资格</span><select name="assignmentEligibility" onChange={(event) => { setAssignmentEligibility(event.target.value); markDirty(); }} value={assignmentEligibility}>{Object.entries(assignmentEligibilityLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+        <label className="admin-form-span-2"><span>选派资格调整原因</span><input maxLength={500} name="eligibilityReason" placeholder="暂停或恢复选派时必填，并写入 AuditLog" /></label>
         <label><span>证书 / 登记编号</span><input defaultValue={account.certificateNote} name="certificateNote" /></label>
         <label className="admin-form-span-2"><span>资质备注</span><textarea defaultValue={account.qualificationNote} maxLength={500} name="qualificationNote" /></label>
       </div></section>
@@ -261,7 +271,7 @@ export function RefereeEditForm({ account, colleges, affiliationUnits }: { accou
 
       <section className="admin-form-section" hidden={activeTab !== "internal"}><header><h2>内部备注</h2><p>仅管理员可见，不通过 Public DTO 返回。</p></header><label><span>内部备注</span><textarea defaultValue={account.internalNote} maxLength={500} name="internalNote" /></label></section>
 
-      <section className="admin-form-section" hidden={activeTab !== "security"}><header><h2>账号与安全</h2><p>登录信息与密码操作集中在此处，不与普通档案字段混排。</p></header><dl className="admin-security-grid"><div><dt>账号状态</dt><dd>{refereeStatusLabels[account.status] ?? account.status}</dd></div><div><dt>最近登录</dt><dd>{account.lastLoginAt || "从未登录"}</dd></div><div><dt>下次登录修改密码</dt><dd>{account.mustChangePassword ? "需要" : "不需要"}</dd></div></dl><div className="admin-security-action"><div><strong>重置登录密码</strong><p>重置后原有裁判员会话全部失效，并要求下次登录修改密码。</p></div><button className="admin-button admin-button-secondary" onClick={() => { setPasswordMessage(""); setResetOpen(true); }} type="button">重置登录密码</button></div><p aria-live="polite" className="admin-form-message">{passwordMessage}</p></section>
+      <section className="admin-form-section" hidden={activeTab !== "security"}><header><h2>账号与安全</h2><p>登录信息与密码操作集中在此处，不与普通档案字段混排。</p></header><dl className="admin-security-grid"><div><dt>账号状态</dt><dd>{refereeStatusLabels[account.status] ?? account.status}</dd></div><div><dt>正式选派资格</dt><dd>{assignmentEligibilityLabels[account.assignmentEligibility] ?? account.assignmentEligibility}</dd></div><div><dt>最近登录</dt><dd>{account.lastLoginAt || "从未登录"}</dd></div><div><dt>下次登录修改密码</dt><dd>{account.mustChangePassword ? "需要" : "不需要"}</dd></div></dl><div className="admin-security-action"><div><strong>重置登录密码</strong><p>重置后原有裁判员会话全部失效，并要求下次登录修改密码。</p></div><button className="admin-button admin-button-secondary" onClick={() => { setPasswordMessage(""); setResetOpen(true); }} type="button">重置登录密码</button></div><p aria-live="polite" className="admin-form-message">{passwordMessage}</p></section>
 
       <div className="admin-form-savebar"><span>{dirty ? "存在未保存修改" : message || "当前档案已同步"}</span><div><button className="admin-button admin-button-secondary" disabled={!dirty} onClick={cancelChanges} type="button">取消修改</button><button className="admin-button" type="submit">保存修改</button></div></div>
     </form>

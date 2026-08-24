@@ -38,7 +38,7 @@ export const appointmentStatusLabels: Record<string, string> = {
 };
 
 export const refereeStatusLabels: Record<string, string> = {
-  PENDING: "待启用",
+  PENDING_ACTIVATION: "待启用",
   ACTIVE: "已启用",
   INACTIVE: "已停用",
   ARCHIVED: "已归档",
@@ -51,9 +51,21 @@ export const conflictStatusLabels: Record<string, string> = {
 };
 
 export const trainingStatusLabels: Record<string, string> = {
-  NOT_STARTED: "未开始",
-  IN_PROGRESS: "进行中",
-  COMPLETED: "已完成",
+  PENDING_ASSESSMENT: "待考察",
+  IN_TRAINING: "培训中",
+  QUALIFIED: "考察通过",
+};
+
+export const assignmentEligibilityLabels: Record<string, string> = {
+  NOT_ELIGIBLE: "不可选派",
+  ELIGIBLE: "可选派",
+  SUSPENDED: "暂停选派",
+};
+
+export const admissionStatusLabels: Record<string, string> = {
+  PENDING: "待审核",
+  APPROVED: "已通过",
+  REJECTED: "已拒绝",
 };
 
 export function AdminPageHeader({

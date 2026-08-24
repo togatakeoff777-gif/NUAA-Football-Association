@@ -1,5 +1,6 @@
 import type {
   AdminRole,
+  AssignmentEligibility,
   AppointmentPositionKey,
   AppointmentStatus,
   ApplicationStatus,
@@ -14,8 +15,13 @@ import type {
 import { prisma } from "@/lib/prisma";
 import {
   detectAppointmentWarnings,
+  hardAppointmentConflicts,
   warningsRequiringOverride,
 } from "@/lib/referee-conflicts";
+import {
+  assertAppointmentPositionsEligible,
+  assertRefereeCanApply,
+} from "@/lib/referee-eligibility";
 import { getPositionTemplate } from "@/lib/referee-roles";
 import { isRefereeQualification, normalizeRefereeQualification } from "@/lib/referee-qualifications";
 import { isRefereeGrade } from "@/lib/referee-profile-options";
@@ -53,11 +59,12 @@ async function writeAudit(input: {
   });
 }
 
-export async function createRefereeAccount(input: {
+export type RefereeAccountInput = {
   publicCode: string;
   name: string;
   initialPassword: string;
   status: RefereeStatus;
+  assignmentEligibility?: AssignmentEligibility;
   elevenASide: boolean;
   futsal: boolean;
   certificateNote?: string;
@@ -76,52 +83,70 @@ export async function createRefereeAccount(input: {
   affiliationUnitIds?: string[];
   currentAffiliationUnitId?: string;
   capabilities?: Array<{ format: CompetitionFormat; positionKey: AppointmentPositionKey; status?: PositionCapabilityStatus }>;
-}, actor?: AdminActor) {
+};
+
+export async function createRefereeAccountInTransaction(
+  input: RefereeAccountInput,
+  actor: AdminActor | undefined,
+  tx: Prisma.TransactionClient,
+  auditMetadata?: Record<string, unknown>,
+) {
   const passwordHash = await hashPassword(input.initialPassword);
   const capabilities = normalizeCapabilities(input);
   if (input.refereeLevel && !isRefereeQualification(input.refereeLevel)) {
     throw new RefereeServiceError("裁判资质不在允许范围内。");
   }
   if (input.grade && !isRefereeGrade(input.grade)) throw new RefereeServiceError("年级不在允许范围内。");
+  const currentAffiliationUnitId = await resolveCurrentAffiliationUnitId(tx, input);
+  const referee = await tx.referee.create({
+    data: {
+      publicCode: input.publicCode,
+      name: input.name,
+      passwordHash,
+      mustChangePassword: true,
+      status: input.status,
+      assignmentEligibility: input.assignmentEligibility ?? "NOT_ELIGIBLE",
+      studentId: input.studentId || null,
+      collegeId: input.collegeId || null,
+      currentAffiliationUnitId,
+      grade: input.grade || null,
+      phone: input.phone || null,
+      qq: input.qq || null,
+      refereeLevel: normalizeRefereeQualification(input.refereeLevel),
+      joinedAt: input.joinedAt ?? null,
+      elevenASide: capabilities.some((item) => item.format === "ELEVEN_A_SIDE" && item.status !== "NOT_ASSIGNED"),
+      futsal: capabilities.some((item) => item.format === "FUTSAL" && item.status !== "NOT_ASSIGNED"),
+      certificateNote: input.certificateNote || null,
+      qualificationNote: input.qualificationNote || null,
+      trainingStatus: input.trainingStatus,
+      publicDirectoryEnabled: input.publicDirectoryEnabled,
+      publicBio: input.publicBio || null,
+      internalNote: input.internalNote || null,
+      capabilities: { create: capabilities },
+      affiliations: currentAffiliationUnitId ? { create: [{ unitId: currentAffiliationUnitId }] } : undefined,
+    },
+  });
+  await writeAudit({
+    action: "REFEREE_ACCOUNT_CREATED",
+    entityType: "Referee",
+    entityId: referee.id,
+    summary: `创建裁判员账号 ${referee.publicCode}`,
+    actorId: actor?.id ?? undefined,
+    metadata: {
+      status: referee.status,
+      trainingStatus: referee.trainingStatus,
+      assignmentEligibility: referee.assignmentEligibility,
+      ...(auditMetadata ?? {}),
+    },
+  }, tx);
+  return referee;
+}
+
+export async function createRefereeAccount(input: RefereeAccountInput, actor?: AdminActor) {
   try {
-    return await prisma.$transaction(async (tx) => {
-      const currentAffiliationUnitId = await resolveCurrentAffiliationUnitId(tx, input);
-      const referee = await tx.referee.create({
-        data: {
-          publicCode: input.publicCode,
-          name: input.name,
-          passwordHash,
-          mustChangePassword: true,
-          status: input.status,
-          studentId: input.studentId || null,
-          collegeId: input.collegeId || null,
-          currentAffiliationUnitId,
-          grade: input.grade || null,
-          phone: input.phone || null,
-          qq: input.qq || null,
-          refereeLevel: normalizeRefereeQualification(input.refereeLevel),
-          joinedAt: input.joinedAt ?? null,
-          elevenASide: capabilities.some((item) => item.format === "ELEVEN_A_SIDE" && item.status !== "NOT_ASSIGNED"),
-          futsal: capabilities.some((item) => item.format === "FUTSAL" && item.status !== "NOT_ASSIGNED"),
-          certificateNote: input.certificateNote || null,
-          qualificationNote: input.qualificationNote || null,
-          trainingStatus: input.trainingStatus,
-          publicDirectoryEnabled: input.publicDirectoryEnabled,
-          publicBio: input.publicBio || null,
-          internalNote: input.internalNote || null,
-          capabilities: { create: capabilities },
-          affiliations: currentAffiliationUnitId ? { create: [{ unitId: currentAffiliationUnitId }] } : undefined,
-        },
-      });
-      await writeAudit({
-        action: "REFEREE_ACCOUNT_CREATED",
-        entityType: "Referee",
-        entityId: referee.id,
-        summary: `创建裁判员账号 ${referee.publicCode}`,
-        actorId: actor?.id ?? undefined,
-      }, tx);
-      return referee;
-    });
+    return await prisma.$transaction((tx) =>
+      createRefereeAccountInTransaction(input, actor, tx),
+    );
   } catch (error) {
     if (error instanceof Error && error.message.includes("Unique constraint")) {
       throw new RefereeServiceError("裁判员编号已存在。", 409);
@@ -136,6 +161,8 @@ export async function updateRefereeAccount(
     publicCode: string;
     name: string;
     status: RefereeStatus;
+    assignmentEligibility: AssignmentEligibility;
+    eligibilityReason?: string;
     elevenASide: boolean;
     futsal: boolean;
     certificateNote?: string;
@@ -164,6 +191,13 @@ export async function updateRefereeAccount(
     throw new RefereeServiceError("裁判资质不在允许范围内。");
   }
   if (input.grade && !isRefereeGrade(input.grade)) throw new RefereeServiceError("年级不在允许范围内。");
+  if (
+    existing.assignmentEligibility !== input.assignmentEligibility &&
+    (existing.assignmentEligibility === "SUSPENDED" || input.assignmentEligibility === "SUSPENDED") &&
+    !input.eligibilityReason?.trim()
+  ) {
+    throw new RefereeServiceError("暂停或恢复正式选派资格时必须填写原因。");
+  }
   let referee;
   try {
     referee = await prisma.$transaction(async (tx) => {
@@ -179,6 +213,7 @@ export async function updateRefereeAccount(
           publicCode: input.publicCode,
           name: input.name,
           status: input.status,
+          assignmentEligibility: input.assignmentEligibility,
           studentId: input.studentId || null,
           collegeId: input.collegeId || null,
           currentAffiliationUnitId,
@@ -213,6 +248,47 @@ export async function updateRefereeAccount(
         summary: `更新裁判员账号 ${updated.publicCode}（${updated.status}）`,
         actorId: actor?.id ?? undefined,
       }, tx);
+      if (existing.status !== updated.status) {
+        const action = updated.status === "INACTIVE"
+          ? "REFEREE_ACCOUNT_DISABLED"
+          : updated.status === "ARCHIVED"
+            ? "REFEREE_ACCOUNT_ARCHIVED"
+            : updated.status === "PENDING_ACTIVATION"
+              ? "REFEREE_ACCOUNT_PENDING_ACTIVATION"
+              : "REFEREE_ACCOUNT_REACTIVATED";
+        await writeAudit({
+          action,
+          entityType: "Referee",
+          entityId: updated.id,
+          summary: `裁判员账号状态由 ${existing.status} 调整为 ${updated.status}`,
+          actorId: actor?.id ?? undefined,
+          metadata: { from: existing.status, to: updated.status },
+        }, tx);
+      }
+      if (existing.trainingStatus !== updated.trainingStatus) {
+        await writeAudit({
+          action: "REFEREE_TRAINING_STATUS_CHANGED",
+          entityType: "Referee",
+          entityId: updated.id,
+          summary: `裁判员培养状态由 ${existing.trainingStatus} 调整为 ${updated.trainingStatus}`,
+          actorId: actor?.id ?? undefined,
+          metadata: { from: existing.trainingStatus, to: updated.trainingStatus },
+        }, tx);
+      }
+      if (existing.assignmentEligibility !== updated.assignmentEligibility) {
+        await writeAudit({
+          action: "REFEREE_ASSIGNMENT_ELIGIBILITY_CHANGED",
+          entityType: "Referee",
+          entityId: updated.id,
+          summary: `裁判员正式选派资格由 ${existing.assignmentEligibility} 调整为 ${updated.assignmentEligibility}`,
+          actorId: actor?.id ?? undefined,
+          metadata: {
+            from: existing.assignmentEligibility,
+            to: updated.assignmentEligibility,
+            reason: input.eligibilityReason?.trim() || null,
+          },
+        }, tx);
+      }
       return updated;
     });
   } catch (error) {
@@ -268,7 +344,11 @@ async function resolveCurrentAffiliationUnitId(
   return requested;
 }
 
-export async function resetRefereePassword(id: string, initialPassword: string) {
+export async function resetRefereePassword(
+  id: string,
+  initialPassword: string,
+  actor?: AdminActor,
+) {
   const referee = await prisma.referee.findUnique({ where: { id } });
   if (!referee) throw new RefereeServiceError("裁判员账号不存在。", 404);
   const passwordHash = await hashPassword(initialPassword);
@@ -284,6 +364,7 @@ export async function resetRefereePassword(id: string, initialPassword: string) 
     entityType: "Referee",
     entityId: id,
     summary: `重置裁判员账号 ${referee.publicCode} 的密码`,
+    actorId: actor?.id ?? undefined,
   });
 }
 
@@ -342,25 +423,19 @@ export async function createRefereeApplication(input: {
       throw new RefereeServiceError("该场比赛的报名时间已截止。", 409);
     }
 
-    const referee = await tx.referee.findUnique({
-      where: { id: input.refereeId },
-      include: { capabilities: true },
-    });
-    if (!referee || referee.status !== "ACTIVE" || referee.mustChangePassword) {
-      throw new RefereeServiceError("裁判员账号当前不可报名。", 403);
-    }
-    const supportsFormat = refereeSupportsFormat(referee, match.competition.format);
-    if (!supportsFormat) {
-      throw new RefereeServiceError("该裁判员未登记为本项目可执裁人员。", 409);
-    }
-
     const allowed = new Set(getPositionTemplate(match.competition.format).map((item) => item.key));
     const preferred = [...new Set(input.preferredPositions)];
     if (!preferred.length || preferred.some((key) => !allowed.has(key))) {
       throw new RefereeServiceError("请至少选择一个符合本场赛制的意向岗位。");
     }
+    await assertRefereeCanApply({
+      refereeId: input.refereeId,
+      format: match.competition.format,
+      preferredPositions: preferred,
+      db: tx,
+    });
     const duplicate = await tx.refereeApplication.findUnique({
-      where: { matchId_refereeId: { matchId: match.id, refereeId: referee.id } },
+      where: { matchId_refereeId: { matchId: match.id, refereeId: input.refereeId } },
     });
     if (duplicate) {
       throw new RefereeServiceError("该裁判员已经报名本场比赛，请勿重复提交。", 409);
@@ -369,7 +444,7 @@ export async function createRefereeApplication(input: {
     return tx.refereeApplication.create({
       data: {
         matchId: match.id,
-        refereeId: referee.id,
+        refereeId: input.refereeId,
         preferredPositions: JSON.stringify(preferred),
         note: input.note || null,
       },
@@ -424,7 +499,7 @@ export async function createAdminApplicationException(input: {
   preferredPositions: AppointmentPositionKey[];
   note?: string;
   exceptionReason: string;
-}) {
+}, actor?: AdminActor) {
   if (!input.exceptionReason.trim()) {
     throw new RefereeServiceError("请填写人工例外原因。");
   }
@@ -434,20 +509,18 @@ export async function createAdminApplicationException(input: {
       include: { competition: true },
     });
     if (!match) throw new RefereeServiceError("比赛不存在。", 404);
-    const referee = await tx.referee.findUnique({
-      where: { id: input.refereeId },
-      include: { capabilities: true },
-    });
-    if (!referee || referee.status !== "ACTIVE") {
-      throw new RefereeServiceError("裁判员账号当前不可用。", 409);
-    }
-    const supportsFormat = refereeSupportsFormat(referee, match.competition.format);
-    if (!supportsFormat) throw new RefereeServiceError("裁判员未登记为本项目可执裁人员。", 409);
     const allowed = new Set(getPositionTemplate(match.competition.format).map((item) => item.key));
     const preferred = [...new Set(input.preferredPositions)];
     if (!preferred.length || preferred.some((key) => !allowed.has(key))) {
       throw new RefereeServiceError("请选择符合本场赛制的意向岗位。");
     }
+    await assertRefereeCanApply({
+      refereeId: input.refereeId,
+      format: match.competition.format,
+      preferredPositions: preferred,
+      requirePasswordChangeCleared: false,
+      db: tx,
+    });
     const duplicate = await tx.refereeApplication.findUnique({
       where: { matchId_refereeId: { matchId: input.matchId, refereeId: input.refereeId } },
     });
@@ -469,23 +542,10 @@ export async function createAdminApplicationException(input: {
     entityType: "RefereeApplication",
     entityId: result.id,
     summary: "管理员补录执裁意向例外",
+    actorId: actor?.id ?? undefined,
     metadata: { matchId: input.matchId, reason: input.exceptionReason },
   });
   return result;
-}
-
-function refereeSupportsFormat(
-  referee: {
-    elevenASide: boolean;
-    futsal: boolean;
-    capabilities: Array<{ format: CompetitionFormat; status?: PositionCapabilityStatus }>;
-  },
-  format: CompetitionFormat,
-) {
-  if (referee.capabilities.length) {
-    return referee.capabilities.some((item) => item.format === format && item.status !== "NOT_ASSIGNED");
-  }
-  return format === "ELEVEN_A_SIDE" ? referee.elevenASide : referee.futsal;
 }
 
 export async function reviewApplication(
@@ -892,14 +952,11 @@ export async function saveAppointmentDraft(input: {
     if (new Set(refereeIds).size !== refereeIds.length) {
       throw new RefereeServiceError("同一裁判员不能在同一场比赛承担多个岗位。");
     }
-    if (refereeIds.length) {
-      const referees = await tx.referee.findMany({
-        where: { id: { in: refereeIds }, status: "ACTIVE" },
-      });
-      if (referees.length !== refereeIds.length) {
-        throw new RefereeServiceError("岗位中包含无效或已停用裁判员。");
-      }
-    }
+    await assertAppointmentPositionsEligible({
+      format: match.competition.format,
+      positions: normalized,
+      db: tx,
+    });
 
     const existingAppointment = await tx.refereeAppointment.findUnique({
       where: { matchId: match.id },
@@ -911,6 +968,9 @@ export async function saveAppointmentDraft(input: {
       throw new RefereeServiceError("修改已发布或已撤回选派时，请填写改派原因。");
     }
     const warnings = await detectAppointmentWarnings(match.id, normalized, tx);
+    if (hardAppointmentConflicts(warnings).length) {
+      throw new RefereeServiceError("存在不可覆盖的选派冲突，草稿未保存。", 409, warnings);
+    }
     if (warningsRequiringOverride(warnings).length && !input.overrideReason?.trim()) {
       throw new RefereeServiceError("存在可覆盖冲突，请填写覆盖原因后再保存。", 409, warnings);
     }
@@ -1014,7 +1074,7 @@ export async function publishAppointment(
   return prisma.$transaction(async (tx) => {
     const appointment = await tx.refereeAppointment.findUnique({
       where: { matchId },
-      include: { positions: true, match: true },
+      include: { positions: true, match: { include: { competition: true } } },
     });
     if (!appointment) throw new RefereeServiceError("请先保存选派草稿。", 409);
     if (appointment.match.status !== "SCHEDULED") {
@@ -1030,7 +1090,15 @@ export async function publishAppointment(
     if (new Set(refereeIds).size !== refereeIds.length) {
       throw new RefereeServiceError("同一裁判员不能在同一场比赛承担多个岗位。", 409);
     }
+    await assertAppointmentPositionsEligible({
+      format: appointment.match.competition.format,
+      positions: appointment.positions,
+      db: tx,
+    });
     const warnings = await detectAppointmentWarnings(matchId, appointment.positions, tx);
+    if (hardAppointmentConflicts(warnings).length) {
+      throw new RefereeServiceError("发布前检测到不可覆盖的选派冲突。", 409, warnings);
+    }
     if (warningsRequiringOverride(warnings).length && !overrideReason.trim()) {
       throw new RefereeServiceError("发布前检测到可覆盖冲突，请填写覆盖原因。", 409, warnings);
     }

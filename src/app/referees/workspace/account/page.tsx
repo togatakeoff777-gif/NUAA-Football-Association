@@ -14,9 +14,15 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 const trainingLabels = {
-  NOT_STARTED: "未开始",
-  IN_PROGRESS: "进行中",
-  COMPLETED: "已完成",
+  PENDING_ASSESSMENT: "待考察",
+  IN_TRAINING: "培训中",
+  QUALIFIED: "考察通过",
+} as const;
+
+const eligibilityLabels = {
+  NOT_ELIGIBLE: "不可选派",
+  ELIGIBLE: "可选派",
+  SUSPENDED: "暂停选派",
 } as const;
 
 export default async function RefereeAccountPage() {
@@ -41,6 +47,7 @@ export default async function RefereeAccountPage() {
               <dl>
                 <div><dt>账号</dt><dd>已启用</dd></div>
                 <div><dt>培训状态</dt><dd>{trainingLabels[session.referee.trainingStatus]}</dd></div>
+                <div><dt>正式选派资格</dt><dd>{eligibilityLabels[session.referee.assignmentEligibility]}</dd></div>
                 <div><dt>密码状态</dt><dd>{session.referee.mustChangePassword ? "须修改初始密码" : "已设置"}</dd></div>
               </dl>
             </article>

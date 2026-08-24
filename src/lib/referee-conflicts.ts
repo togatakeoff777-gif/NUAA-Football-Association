@@ -14,6 +14,7 @@ export type AppointmentWarning = {
   refereeId: string;
   refereeName: string;
   message: string;
+  severity: "HARD" | "OVERRIDABLE" | "ADVISORY";
   overridable: boolean;
   details: Record<string, string | number | null>;
 };
@@ -163,6 +164,7 @@ export async function detectAppointmentWarnings(
           refereeId: referee.id,
           refereeName: referee.name,
           message,
+          severity: "OVERRIDABLE",
           overridable: true,
           details: {
             refereeUnitId: refereeUnit.id,
@@ -183,7 +185,8 @@ export async function detectAppointmentWarnings(
           code: "CAPABILITY_NOT_ASSIGNED",
           refereeId: referee.id,
           refereeName: referee.name,
-          message: `岗位培养提醒：${referee.name}在本制式该岗位当前为“暂不安排”，负责人仍可决定选派。`,
+          message: `岗位能力不满足：${referee.name}在本制式该岗位当前为“暂不安排”。`,
+          severity: "HARD",
           overridable: false,
           details: { positionKey: assignedPosition.key, capabilityStatus: capability?.status ?? "NOT_ASSIGNED" },
         });
@@ -192,7 +195,8 @@ export async function detectAppointmentWarnings(
           code: "CAPABILITY_TRAINING",
           refereeId: referee.id,
           refereeName: referee.name,
-          message: `岗位培养提醒：${referee.name}在本制式该岗位处于“培养中”，负责人仍可决定选派。`,
+          message: `岗位能力不满足：${referee.name}在本制式该岗位仍处于“培养中”。`,
+          severity: "HARD",
           overridable: false,
           details: { positionKey: assignedPosition.key, capabilityStatus: capability.status },
         });
@@ -207,7 +211,8 @@ export async function detectAppointmentWarnings(
         refereeId: referee.id,
         refereeName: referee.name,
         message: `⚠ 不可执裁：${referee.name}在本场时间段标记为不可执裁。`,
-        overridable: true,
+        severity: "HARD",
+        overridable: false,
         details: {
           availabilityId: unavailable.id,
           startAt: unavailable.startAt.toISOString(),
@@ -233,7 +238,8 @@ export async function detectAppointmentWarnings(
           refereeId: referee.id,
           refereeName: referee.name,
           message: `⚠ 时间重叠：${referee.name}与另一场比赛 ${matchup} 计划时间重叠 ${overlapMinutes} 分钟。`,
-          overridable: true,
+          severity: "HARD",
+          overridable: false,
           details: {
             appointmentId: item.appointment.id,
             matchId: other.id,
@@ -265,6 +271,7 @@ export async function detectAppointmentWarnings(
         message: nearestAdjacent.gapMinutes === 0
           ? `⚠ 连续执裁：${referee.name}与${nearestAdjacent.direction}比赛 ${nearestAdjacent.matchup} 之间无休息时间。`
           : `⚠ 连续执裁：${referee.name}与${nearestAdjacent.direction}比赛 ${nearestAdjacent.matchup} 间隔仅 ${nearestAdjacent.gapMinutes} 分钟。`,
+        severity: "ADVISORY",
         overridable: false,
         details: nearestAdjacent,
       });
@@ -275,5 +282,9 @@ export async function detectAppointmentWarnings(
 }
 
 export function warningsRequiringOverride(warnings: AppointmentWarning[]) {
-  return warnings.filter((warning) => warning.overridable);
+  return warnings.filter((warning) => warning.severity === "OVERRIDABLE");
+}
+
+export function hardAppointmentConflicts(warnings: AppointmentWarning[]) {
+  return warnings.filter((warning) => warning.severity === "HARD");
 }

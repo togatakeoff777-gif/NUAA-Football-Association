@@ -47,6 +47,7 @@ export const selfRefereeSelect = {
   certificateNote: true,
   qualificationNote: true,
   trainingStatus: true,
+  assignmentEligibility: true,
   publicDirectoryEnabled: true,
   publicBio: true,
   capabilities: {
@@ -88,6 +89,7 @@ export const adminRefereeSelect = {
   certificateNote: true,
   qualificationNote: true,
   trainingStatus: true,
+  assignmentEligibility: true,
   publicDirectoryEnabled: true,
   publicBio: true,
   internalNote: true,

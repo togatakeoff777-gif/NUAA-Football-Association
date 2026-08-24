@@ -53,7 +53,7 @@ async function main() {
       create: {
         publicCode: referee.code,
         name: referee.name,
-        status: RefereeStatus.PENDING,
+        status: RefereeStatus.PENDING_ACTIVATION,
         elevenASide: referee.eleven,
         futsal: referee.futsal,
         sourceNote: "赛制标记仅依据男子杯注册裁判员名单或女足实际执裁岗位；不含联系方式。",

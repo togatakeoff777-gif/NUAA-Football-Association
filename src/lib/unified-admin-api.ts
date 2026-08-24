@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { isSameOrigin } from "@/lib/referee-auth";
+import { RefereeServiceError } from "@/lib/referee-service-error";
 import {
   requireUnifiedAdminActor,
   UnifiedAdminAccessError,
@@ -26,7 +27,11 @@ export async function authorizeUnifiedAdminRequest(
 }
 
 export function unifiedAdminErrorResponse(error: unknown, fallback: string) {
-  if (error instanceof UnifiedAdminAccessError || error instanceof UnifiedAdminInputError) {
+  if (
+    error instanceof UnifiedAdminAccessError ||
+    error instanceof UnifiedAdminInputError ||
+    error instanceof RefereeServiceError
+  ) {
     return NextResponse.json({ error: error.message }, { status: error.status });
   }
   console.error(error);

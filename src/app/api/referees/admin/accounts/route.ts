@@ -37,8 +37,13 @@ export async function POST(request: Request) {
       initialPassword: readShortText(body.initialPassword, "初始密码", 256),
       status: readEnum(
         body.status,
-        ["PENDING", "ACTIVE", "INACTIVE", "ARCHIVED"] as const,
+        ["PENDING_ACTIVATION", "ACTIVE", "INACTIVE", "ARCHIVED"] as const,
         "账号状态",
+      ),
+      assignmentEligibility: readEnum(
+        body.assignmentEligibility ?? "NOT_ELIGIBLE",
+        ["NOT_ELIGIBLE", "ELIGIBLE", "SUSPENDED"] as const,
+        "正式选派资格",
       ),
       elevenASide: readBoolean(body.elevenASide, "十一人制资格"),
       futsal: readBoolean(body.futsal, "五人制资格"),
@@ -46,7 +51,7 @@ export async function POST(request: Request) {
       qualificationNote: readShortText(body.qualificationNote, "资质备注", 500, false),
       trainingStatus: readEnum(
         body.trainingStatus,
-        ["NOT_STARTED", "IN_PROGRESS", "COMPLETED"] as const,
+        ["PENDING_ASSESSMENT", "IN_TRAINING", "QUALIFIED"] as const,
         "培训状态",
       ),
       publicDirectoryEnabled: readBoolean(body.publicDirectoryEnabled, "公开名录授权"),

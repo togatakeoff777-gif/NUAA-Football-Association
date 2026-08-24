@@ -34,6 +34,7 @@ const navigationGroups: Array<{
     module: "referees",
     items: [
       { href: "/admin/referees", label: "裁判员", english: "Referees" },
+      { href: "/admin/referees/admissions", label: "准入申请", english: "Admissions" },
       { href: "/admin/referees/availability", label: "可执裁时间", english: "Availability" },
       { href: "/admin/appointments", label: "选派管理", english: "Appointments" },
       { href: "/admin/conflicts", label: "冲突报告", english: "Conflicts" },

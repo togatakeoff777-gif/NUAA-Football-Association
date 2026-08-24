@@ -62,12 +62,19 @@ export default async function OpenMatchDetailPage({
   const positions = match.positionRequirements.length
     ? match.positionRequirements.map((item) => ({ key: item.key, label: item.label, count: item.count, order: item.sortOrder }))
     : fallbackPositions;
-  const eligible =
+  const readyPositionKeys = new Set(
+    session?.referee.capabilities
+      .filter((capability) =>
+        capability.format === match.competition.format && capability.status === "READY")
+      .map((capability) => capability.positionKey) ?? [],
+  );
+  const eligiblePositions = positions.filter((position) => readyPositionKeys.has(position.key));
+  const eligible = Boolean(
     session &&
     !session.referee.mustChangePassword &&
-    (match.competition.format === "ELEVEN_A_SIDE"
-      ? session.referee.elevenASide
-      : session.referee.futsal);
+    session.referee.assignmentEligibility === "ELIGIBLE" &&
+    eligiblePositions.length,
+  );
 
   let applicationPanel = (
     <div className="functional-empty functional-empty-compact">
@@ -80,8 +87,8 @@ export default async function OpenMatchDetailPage({
     applicationPanel = (
       <RefereeApplicationForm
         matchId={match.id}
-        positions={positions.map(({ key, label }) => ({ key, label }))}
-        referee={session.referee}
+        positions={eligiblePositions.map(({ key, label }) => ({ key, label }))}
+        referee={session!.referee}
       />
     );
   } else if (accepting && !workspaceAvailable) {
@@ -103,10 +110,17 @@ export default async function OpenMatchDetailPage({
       </div>
     );
   } else if (accepting && !eligible) {
+    const eligibilityMessage = session?.referee.mustChangePassword
+      ? { title: "请先修改初始密码", detail: <Link href="/referees/workspace/account">前往账号与密码设置 →</Link> }
+      : session?.referee.assignmentEligibility === "SUSPENDED"
+        ? { title: "正式选派资格已暂停", detail: "当前不能提交正式比赛报名，请联系裁判管理员核实。" }
+        : session?.referee.assignmentEligibility !== "ELIGIBLE"
+          ? { title: "尚未获得正式选派资格", detail: "你仍可使用工作区、维护资料与可执裁时间。" }
+          : { title: "当前没有本场赛制的 READY 岗位", detail: "请联系裁判管理员核验具体赛制与岗位能力。" };
     applicationPanel = (
       <div className="functional-empty functional-empty-compact">
-        <strong>{session?.referee.mustChangePassword ? "请先修改初始密码" : "当前账号不适用该赛制"}</strong>
-        <p>{session?.referee.mustChangePassword ? <Link href="/referees/workspace/account">前往账号与密码设置 →</Link> : "如需更新可执裁赛制，请联系协会管理员核验名录信息。"}</p>
+        <strong>{eligibilityMessage.title}</strong>
+        <p>{eligibilityMessage.detail}</p>
       </div>
     );
   }

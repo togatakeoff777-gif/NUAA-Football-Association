@@ -74,9 +74,10 @@
 .admin-panel-header h2 { font-size: 18px; }
 .admin-panel-header p { margin-top: 4px; color: var(--admin-muted); font-size: 12px; line-height: 1.5; }
 .admin-status-badge { display: inline-flex; align-items: center; min-height: 28px; padding: 3px 10px; border-radius: 999px; background: #edf2f7; color: #46596f; font-size: 12px; font-weight: 650; white-space: nowrap; }
-.admin-status-badge[data-status="PUBLISHED"], .admin-status-badge[data-status="ACTIVE"], .admin-status-badge[data-status="RESOLVED"], .admin-status-badge[data-status="COMPLETED"] { background: #e4f4ed; color: #187054; }
-.admin-status-badge[data-status="PENDING"], .admin-status-badge[data-status="DRAFT"], .admin-status-badge[data-status="WITHDRAWN"] { background: #fff2d6; color: #80570b; }
-.admin-status-badge[data-status="CANCELLED"], .admin-status-badge[data-status="INACTIVE"], .admin-status-badge[data-status="DISMISSED"] { background: #f9e8eb; color: #913647; }
+.admin-status-badge[data-status="PUBLISHED"], .admin-status-badge[data-status="ACTIVE"], .admin-status-badge[data-status="ELIGIBLE"], .admin-status-badge[data-status="QUALIFIED"], .admin-status-badge[data-status="APPROVED"], .admin-status-badge[data-status="RESOLVED"], .admin-status-badge[data-status="COMPLETED"] { background: #e4f4ed; color: #187054; }
+.admin-status-badge[data-status="PENDING"], .admin-status-badge[data-status="PENDING_ACTIVATION"], .admin-status-badge[data-status="PENDING_ASSESSMENT"], .admin-status-badge[data-status="IN_TRAINING"], .admin-status-badge[data-status="DRAFT"], .admin-status-badge[data-status="WITHDRAWN"] { background: #fff2d6; color: #80570b; }
+.admin-status-badge[data-status="REJECTED"], .admin-status-badge[data-status="CANCELLED"], .admin-status-badge[data-status="INACTIVE"], .admin-status-badge[data-status="SUSPENDED"], .admin-status-badge[data-status="DISMISSED"] { background: #f9e8eb; color: #913647; }
+.admin-status-badge[data-status="NOT_ELIGIBLE"], .admin-status-badge[data-status="ARCHIVED"] { background: #edf2f7; color: #46596f; }
 .admin-data-table { width: 100%; border-collapse: collapse; }
 .admin-data-table th { padding: 12px 14px; border-bottom: 1px solid var(--admin-line); background: #f4f7fb; color: #42546a; font-size: var(--admin-type-table-head); font-weight: 600; letter-spacing: .01em; text-align: left; white-space: nowrap; }
 .admin-data-table td { padding: 14px; border-bottom: 1px solid #edf1f5; font-size: var(--admin-type-table-body); line-height: 1.45; vertical-align: middle; }

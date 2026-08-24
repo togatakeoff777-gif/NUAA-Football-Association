@@ -2,6 +2,7 @@ type RoleName = "super" | "content" | "competition" | "referee";
 type Permission = "dashboard" | "content" | "media" | "competition" | "referee" | "system";
 
 const baseUrl = process.env.R1_2_SMOKE_BASE_URL ?? "http://localhost:3102";
+const mutationOrigin = process.env.R1_2_SMOKE_ORIGIN ?? baseUrl;
 const password = process.env.R1_2_SMOKE_PASSWORD ?? "Smoke-Password-2026!";
 const usernames: Record<RoleName, string> = {
   super: "smoke-super",
@@ -32,7 +33,7 @@ function expectAllowedStatus(label: string, status: number) {
 async function login(role: RoleName) {
   const response = await fetch(`${baseUrl}/api/referees/admin/login`, {
     method: "POST",
-    headers: { "content-type": "application/json", origin: baseUrl },
+    headers: { "content-type": "application/json", origin: mutationOrigin },
     body: JSON.stringify({ username: usernames[role], password }),
     redirect: "manual",
   });
@@ -49,7 +50,7 @@ async function apiRequest(input: { path: string; method: string; cookie?: string
     headers: {
       ...(body === undefined ? {} : { "content-type": "application/json" }),
       ...(input.cookie ? { cookie: input.cookie } : {}),
-      ...(input.origin === null ? {} : { origin: input.origin ?? baseUrl }),
+      ...(input.origin === null ? {} : { origin: input.origin ?? mutationOrigin }),
     },
     body,
     redirect: "manual",
@@ -57,9 +58,13 @@ async function apiRequest(input: { path: string; method: string; cookie?: string
 }
 
 async function verifyLegacyApiMatrix(cookies: Record<RoleName, string>) {
+  const admissionId = process.env.R1_3A_ADMISSION_ID ?? "missing-admission";
   const routes: Array<{ method: string; path: string; permission: Permission }> = [
     { method: "POST", path: "/api/referees/admin/account/password", permission: "dashboard" },
     { method: "POST", path: "/api/referees/admin/accounts", permission: "referee" },
+    { method: "GET", path: "/api/referees/admin/admission-applications", permission: "referee" },
+    { method: "GET", path: `/api/referees/admin/admission-applications/${admissionId}`, permission: "referee" },
+    { method: "PATCH", path: `/api/referees/admin/admission-applications/${admissionId}`, permission: "referee" },
     { method: "PATCH", path: "/api/referees/admin/accounts/missing-account", permission: "referee" },
     { method: "POST", path: "/api/referees/admin/accounts/missing-account", permission: "referee" },
     { method: "POST", path: "/api/referees/admin/admin-accounts", permission: "system" },
@@ -106,6 +111,8 @@ async function verifyAdminPageMatrix(cookies: Record<RoleName, string>) {
     { path: "/admin/matches", permission: "dashboard" },
     { path: "/admin/organizations", permission: "dashboard" },
     { path: "/admin/referees", permission: "referee" },
+    { path: "/admin/referees/admissions", permission: "referee" },
+    { path: `/admin/referees/admissions/${process.env.R1_3A_ADMISSION_ID ?? "missing-admission"}`, permission: "referee" },
     { path: "/admin/referees/availability", permission: "referee" },
     { path: "/admin/appointments", permission: "referee" },
     { path: "/admin/conflicts", permission: "referee" },
@@ -188,7 +195,7 @@ async function verifyMedia(cookies: Record<RoleName, string>) {
     method: "POST",
     headers: {
       cookie: cookies.content,
-      origin: baseUrl,
+      origin: mutationOrigin,
       "content-type": "application/pdf",
       "x-nuaafa-filename": encodeURIComponent("R1-2 处罚决定（测试）.pdf"),
       "x-nuaafa-visibility": "PRIVATE",

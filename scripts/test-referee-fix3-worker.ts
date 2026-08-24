@@ -85,14 +85,14 @@ async function main() {
     const zhiwei = await verifier.affiliationUnit.findUniqueOrThrow({ where: { name: "致微书院" } });
     const directReferee = await service.createRefereeAccount({
       publicCode: "FIX3-GRADE", name: "年级归属测试裁判", initialPassword: "Fix3-Test-Password-2026", status: "ACTIVE",
-      elevenASide: true, futsal: false, trainingStatus: "IN_PROGRESS", publicDirectoryEnabled: true,
+      elevenASide: true, futsal: false, trainingStatus: "IN_TRAINING", assignmentEligibility: "ELIGIBLE", publicDirectoryEnabled: true,
       publicBio: "公开简介", internalNote: "内部备注", phone: "13800000000", studentId: "2400000000",
       collegeId: aiCollege.id, grade: "大一", currentAffiliationUnitId: zhiyuan.id,
       capabilities: [{ format: "ELEVEN_A_SIDE", positionKey: "REFEREE", status: "READY" }],
     }, actor);
     const baseUpdate = {
       publicCode: directReferee.publicCode, name: directReferee.name, status: "ACTIVE" as const,
-      elevenASide: true, futsal: false, trainingStatus: "IN_PROGRESS" as const,
+      elevenASide: true, futsal: false, trainingStatus: "IN_TRAINING" as const, assignmentEligibility: "ELIGIBLE" as const,
       publicDirectoryEnabled: true, publicBio: "公开简介", internalNote: "内部备注",
       phone: "13800000000", studentId: "2400000000", collegeId: aiCollege.id,
       currentAffiliationUnitId: zhiyuan.id,
@@ -123,7 +123,7 @@ async function main() {
     async function organizationWarning(collegeId: string, unitId: string, unitName: string, code: string) {
       const referee = await service.createRefereeAccount({
         publicCode: code, name: code, initialPassword: "Fix3-Test-Password-2026", status: "ACTIVE",
-        elevenASide: true, futsal: false, trainingStatus: "COMPLETED", publicDirectoryEnabled: false,
+        elevenASide: true, futsal: false, trainingStatus: "QUALIFIED", assignmentEligibility: "ELIGIBLE", publicDirectoryEnabled: false,
         collegeId, capabilities: [{ format: "ELEVEN_A_SIDE", positionKey: "REFEREE", status: "READY" }],
       }, actor);
       const team = await verifier.team.create({ data: { competitionId: competition.id, name: unitName, teamType: "ORGANIZATION" } });
@@ -150,7 +150,7 @@ async function main() {
 
     const capabilityReferee = await service.createRefereeAccount({
       publicCode: "FIX3-CAP", name: "批量能力测试", initialPassword: "Fix3-Test-Password-2026", status: "ACTIVE",
-      elevenASide: true, futsal: true, trainingStatus: "IN_PROGRESS", publicDirectoryEnabled: false,
+      elevenASide: true, futsal: true, trainingStatus: "IN_TRAINING", assignmentEligibility: "ELIGIBLE", publicDirectoryEnabled: false,
       capabilities: Object.entries(initialStates).map(([identity, status]) => {
         const [format, positionKey] = identity.split(":");
         return { format: format as "ELEVEN_A_SIDE" | "FUTSAL", positionKey: positionKey as never, status };
@@ -159,7 +159,7 @@ async function main() {
     assert((await verifier.refereePositionCapability.count({ where: { refereeId: capabilityReferee.id, status: "READY" } })) === 10, "表单批量选择在保存前错误写入数据库。");
     await service.updateRefereeAccount(capabilityReferee.id, {
       publicCode: capabilityReferee.publicCode, name: capabilityReferee.name, status: "ACTIVE",
-      elevenASide: true, futsal: true, trainingStatus: "IN_PROGRESS", publicDirectoryEnabled: false,
+      elevenASide: true, futsal: true, trainingStatus: "IN_TRAINING", assignmentEligibility: "ELIGIBLE", publicDirectoryEnabled: false,
       capabilities: Object.entries(individuallyOverridden).map(([identity, status]) => {
         const [format, positionKey] = identity.split(":");
         return { format: format as "ELEVEN_A_SIDE" | "FUTSAL", positionKey: positionKey as never, status };

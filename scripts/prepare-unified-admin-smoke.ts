@@ -79,16 +79,47 @@ async function main() {
       campus: "天目湖",
       format: "ELEVEN_A_SIDE",
       status: "ONGOING",
-      isTestData: true,
+      isTestData: false,
     } });
-    await prisma.referee.create({ data: {
+    const smokeReferee = await prisma.referee.create({ data: {
       publicCode: "SMOKE-R1-001",
       name: "R1 浏览器隔离测试裁判",
+      passwordHash,
+      mustChangePassword: true,
       status: "ACTIVE",
+      trainingStatus: "PENDING_ASSESSMENT",
+      assignmentEligibility: "NOT_ELIGIBLE",
       elevenASide: true,
       currentAffiliationUnitId: null,
+      capabilities: { create: { format: "ELEVEN_A_SIDE", positionKey: "REFEREE", status: "READY" } },
     } });
-    console.log(JSON.stringify({ databasePath, uploadRoot, password, competitionId: competition.id, accounts: accounts.map(({ username }) => username), coverMediaId: cover.id, pdfMediaId: pdf.id, disciplineId: discipline.id, draftId: draft.id }));
+    const teams = await Promise.all([
+      prisma.team.create({ data: { competitionId: competition.id, name: "R1 Smoke 主队" } }),
+      prisma.team.create({ data: { competitionId: competition.id, name: "R1 Smoke 客队" } }),
+    ]);
+    const openMatch = await prisma.match.create({ data: {
+      slug: "r1-3a-smoke-open-match",
+      competitionId: competition.id,
+      stage: "R1-3A Smoke",
+      kickoff: new Date("2027-08-30T10:00:00.000Z"),
+      endAt: new Date("2027-08-30T12:00:00.000Z"),
+      venue: "R1-3A Smoke 场地",
+      homeTeamId: teams[0].id,
+      awayTeamId: teams[1].id,
+      status: "SCHEDULED",
+      applicationWindowStatus: "OPEN",
+      applicationDeadline: new Date("2027-08-29T10:00:00.000Z"),
+      isTestData: false,
+      positionRequirements: { create: { key: "REFEREE", label: "裁判员", count: 1, sortOrder: 10 } },
+    } });
+    const admission = await prisma.refereeAdmissionApplication.create({ data: {
+      name: "R1-3A 待审核申请人",
+      studentId: "16269999",
+      phone: "13800000999",
+      qq: "123456789",
+      note: "隔离 Browser / HTTP smoke",
+    } });
+    console.log(JSON.stringify({ databasePath, uploadRoot, password, competitionId: competition.id, openMatchSlug: openMatch.slug, admissionId: admission.id, refereeId: smokeReferee.id, accounts: accounts.map(({ username }) => username), coverMediaId: cover.id, pdfMediaId: pdf.id, disciplineId: discipline.id, draftId: draft.id }));
   } finally {
     await prisma.$disconnect();
   }

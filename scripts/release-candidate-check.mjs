@@ -108,6 +108,10 @@ async function main() {
   await npm(["run", "restore:rehearsal"], "isolated restore and application rehearsal");
   await npm(["run", "test:clean-install"], "isolated npm ci reproducibility");
 
+  await run("git", ["diff", "--check"], "final git diff --check");
+  const finalStatus = await run("git", ["status", "--short"], "final clean working tree", { capture: true });
+  if (finalStatus.stdout.trim()) throw new Error("Working tree is not clean after all RC checks.");
+
   console.log(JSON.stringify({
     classification: securityClassification,
     mandatoryGateCount: gates.length,

@@ -147,6 +147,25 @@ async function main() {
     );
     assert((await readFile(existingDatabase, "utf8")) === "DO_NOT_OVERWRITE", "Existing restore destination was modified.");
 
+    const corruptStagedDatabase = path.join(root, "corrupt-staged-restore.sqlite");
+    const corruptStagedUploads = path.join(root, "corrupt-staged-restore-uploads");
+    await rejects(
+      () => restoreCombinedBackup({
+        backupDirectory: validBackups[2],
+        databasePath: corruptStagedDatabase,
+        uploadRoot: corruptStagedUploads,
+        allowedTargetRoot: root,
+        onPhase: async (phase, staging) => {
+          if (phase !== "uploads-copy-complete") return;
+          const stagedUpload = path.join(staging.uploadRoot, ...validKey.split("/"));
+          await writeFile(stagedUpload, Buffer.alloc(validBytes.length, 0x58));
+        },
+      }),
+      "Corrupted staged restore upload was accepted.",
+    );
+    await rejects(() => access(corruptStagedDatabase), "Corrupted staged restore published the database destination.");
+    await rejects(() => access(corruptStagedUploads), "Corrupted staged restore published the upload destination.");
+
     const malformed = path.join(retentionRoot, "malformed-backup");
     await mkdir(malformed);
     await writeFile(path.join(malformed, "manifest.json"), "not-json");
@@ -249,6 +268,7 @@ async function main() {
         preCompletionFailureRejected: true,
         corruptionRejected: true,
         existingRestoreDestinationRejected: true,
+        stagedUploadCorruptionRejectedBeforePublish: true,
       },
       retention: {
         dryRun: true,

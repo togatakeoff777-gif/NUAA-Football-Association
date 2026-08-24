@@ -69,6 +69,8 @@ export type CombinedBackupPhase =
   | "manifest-complete"
   | "completion-publish";
 
+export type CombinedRestorePhase = "uploads-copy-complete";
+
 const storageKeyPattern = /^[0-9]{4}\/[0-9]{2}\/[0-9a-f-]+\.(?:jpg|jpeg|png|webp|pdf)$/;
 const sha256Pattern = /^[0-9a-f]{64}$/i;
 const backupIdPattern = /^nuaafa-[0-9]{8}T[0-9]{6}Z-[0-9a-f]{12}$/;
@@ -503,6 +505,10 @@ export async function restoreCombinedBackup(input: {
   databasePath: string;
   uploadRoot: string;
   allowedTargetRoot: string;
+  onPhase?: (
+    phase: CombinedRestorePhase,
+    staging: { uploadRoot: string },
+  ) => void | Promise<void>;
 }) {
   const { root, manifest, database: sourceDatabase } = await readAndVerifyCombinedBackup(input.backupDirectory);
   const allowedTargetRoot = path.resolve(input.allowedTargetRoot);
@@ -532,6 +538,7 @@ export async function restoreCombinedBackup(input: {
       await mkdir(path.dirname(target), { recursive: true });
       await copyFile(path.join(root, "uploads", ...file.storageKey.split("/")), target);
     }
+    await input.onPhase?.("uploads-copy-complete", { uploadRoot: stagedUploads });
     const stagedDatabaseBytes = await readFile(stagedDatabase);
     if (stagedDatabaseBytes.length !== manifest.database.bytes || sha256(stagedDatabaseBytes) !== manifest.database.sha256) {
       throw new Error("Staged restore database checksum or size validation failed.");
@@ -542,6 +549,14 @@ export async function restoreCombinedBackup(input: {
         stagedFiles.map((file) => file.storageKey).sort().join("\n")
     ) {
       throw new Error("Staged restore validation failed.");
+    }
+    for (const file of manifest.uploads.files) {
+      const target = safeArtifactPath(stagedUploads, file.storageKey);
+      const info = await assertRegularFile(target, `Staged restore upload ${file.storageKey}`);
+      const bytes = await readFile(target);
+      if (info.size !== file.bytes || bytes.length !== file.bytes || sha256(bytes) !== file.sha256) {
+        throw new Error(`Staged restore upload checksum or size validation failed: ${file.storageKey}`);
+      }
     }
     await mkdir(path.dirname(databasePath), { recursive: true });
     await mkdir(path.dirname(uploadRoot), { recursive: true });

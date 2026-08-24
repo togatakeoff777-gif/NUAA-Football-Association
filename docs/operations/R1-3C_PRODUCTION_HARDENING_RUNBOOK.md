@@ -293,7 +293,7 @@ Stop immediately if any preflight, backup, migration, reconciliation, health, RB
 9. **Content-source switch:** change to the database source only after exact reconciliation passes.
 10. **Application restart:** restart only the approved release/service with the reviewed environment.
 11. **Health:** require `/health`, `/api/health`, service status, and no new 5xx.
-12. **Four-role RBAC smoke:** verify SUPER_ADMIN, CONTENT_EDITOR, COMPETITION_ADMIN, and REFEREE_MANAGER allow/deny boundaries.
+12. **Four-role RBAC smoke:** verify SUPER_ADMIN, CONTENT_EDITOR, COMPETITION_ADMIN, and REFEREE_ADMIN allow/deny boundaries.
 13. **News smoke:** list, DB detail, publish visibility, and public API.
 14. **Media smoke:** PUBLIC/PRIVATE access, real upload/read, 20 MB PDF, timeout/concurrency, staging cleanup, RFC5987, and `nosniff`.
 15. **Referee smoke:** admission, eligibility, capability, availability, conflict, application, appointment, stale publish, and role boundaries.

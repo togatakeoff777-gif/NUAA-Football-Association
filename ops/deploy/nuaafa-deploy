@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+if [ "${EUID:-$(id -u)}" -ne 0 ]; then
+  echo "Run this command as root." >&2
+  exit 1
+fi
+
+umask 077
+cd /
+
+repository=git@github-nuaafa:togatakeoff777-gif/NUAA-Football-Association.git
+release_root=/srv/nuaafa/releases
+shared=/srv/nuaafa/shared
+current_link=/srv/nuaafa/current
+requested_commit=""
+dry_run=false
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --dry-run)
+      dry_run=true
+      ;;
+    -h|--help)
+      echo "Usage: nuaafa-deploy [--dry-run] [40-character-commit]"
+      exit 0
+      ;;
+    -*)
+      echo "Unknown option: $1" >&2
+      exit 2
+      ;;
+    *)
+      if [ -n "$requested_commit" ]; then
+        echo "Only one commit may be specified." >&2
+        exit 2
+      fi
+      requested_commit="$1"
+      ;;
+  esac
+  shift
+done
+
+exec 9>/run/lock/nuaafa-deploy.lock
+flock -n 9 || {
+  echo "Another NUAAFA deployment is already running." >&2
+  exit 1
+}
+
+if [ -n "$requested_commit" ]; then
+  target_commit="$requested_commit"
+else
+  target_commit=$(runuser -u nuaafa -- git ls-remote "$repository" refs/heads/main | awk '{print $1}')
+fi
+
+if [[ ! "$target_commit" =~ ^[0-9a-f]{40}$ ]]; then
+  echo "Unable to resolve a valid deployment commit." >&2
+  exit 1
+fi
+
+current_release=$(readlink -f "$current_link" 2>/dev/null || true)
+current_commit=""
+if [ -n "$current_release" ] && [ -d "$current_release/.git" ]; then
+  current_commit=$(runuser -u nuaafa -- git -C "$current_release" rev-parse HEAD)
+fi
+
+if [ "$target_commit" = "$current_commit" ]; then
+  echo "Already deployed: $target_commit"
+  exit 0
+fi
+
+if [ "$dry_run" = true ]; then
+  echo "Would deploy: $target_commit"
+  echo "Current: ${current_commit:-none}"
+  exit 0
+fi
+
+release="$release_root/$target_commit"
+if [ ! -d "$release/.git" ]; then
+  runuser -u nuaafa -- git clone --no-checkout "$repository" "$release"
+fi
+
+runuser -u nuaafa -- git -C "$release" fetch origin
+runuser -u nuaafa -- git -C "$release" checkout --detach "$target_commit"
+ln -sfn "$shared/.env.production" "$release/.env.production"
+rm -f "$release/prisma/dev.db"
+ln -s "$shared/prisma/dev.db" "$release/prisma/dev.db"
+chown -h nuaafa:nuaafa "$release/.env.production" "$release/prisma/dev.db"
+
+runuser -u nuaafa -- bash -lc "set -e; cd '$release'; npm ci; npm run lint; npm run check:unicode; npm run test:referee-flow; npm audit --omit=dev --audit-level=critical"
+
+/usr/local/sbin/nuaafa-db-backup
+runuser -u nuaafa -- bash -lc "set -e; cd '$release'; DOTENV_CONFIG_PATH=.env.production npx prisma migrate deploy; npm run build; test -f .next/BUILD_ID"
+
+temporary_link=/srv/nuaafa/.current.new
+rm -f "$temporary_link"
+ln -s "$release" "$temporary_link"
+chown -h nuaafa:nuaafa "$temporary_link"
+mv -Tf "$temporary_link" "$current_link"
+
+if ! systemctl restart nuaafa.service; then
+  if [ -n "$current_release" ]; then
+    ln -sfn "$current_release" "$current_link"
+    chown -h nuaafa:nuaafa "$current_link"
+    systemctl restart nuaafa.service || true
+  fi
+  echo "Service restart failed; restored the previous release link." >&2
+  exit 1
+fi
+
+healthy=false
+for _ in $(seq 1 20); do
+  if curl --fail --silent --show-error --max-time 5 http://127.0.0.1:3001/api/health >/dev/null; then
+    healthy=true
+    break
+  fi
+  sleep 1
+done
+
+if [ "$healthy" != true ]; then
+  if [ -n "$current_release" ]; then
+    ln -sfn "$current_release" "$current_link"
+    chown -h nuaafa:nuaafa "$current_link"
+    systemctl restart nuaafa.service || true
+  fi
+  echo "Health check failed; restored the previous release link. Database migrations were not rolled back." >&2
+  exit 1
+fi
+
+echo "Deployed: $target_commit"
+echo "Previous: ${current_commit:-none}"

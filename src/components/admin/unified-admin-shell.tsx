@@ -25,6 +25,7 @@ const navigationGroups: Array<{
     module: "competitions",
     items: [
       { href: "/admin/competitions", label: "赛事管理", english: "Competitions" },
+      { href: "/admin/competitions/import", label: "批量导入", english: "Import" },
       { href: "/admin/matches", label: "比赛管理", english: "Matches" },
       { href: "/admin/organizations", label: "组织与球队", english: "Organizations" },
     ],

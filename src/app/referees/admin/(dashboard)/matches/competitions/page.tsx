@@ -31,7 +31,7 @@ export default async function AdminCompetitionsPage() {
       eyebrow="COMPETITIONS"
       title="赛事管理"
       description="先建立赛事，再在赛事范围内维护参赛球队、具体比赛与裁判选派。"
-      actions={canWrite ? <Link className="admin-button" href="/referees/admin/matches/competitions/new">+ 新建赛事</Link> : <span className="admin-status-badge">只读权限</span>}
+      actions={canWrite ? <><Link className="admin-button admin-button-secondary" href="/admin/competitions/import">批量导入</Link><Link className="admin-button" href="/referees/admin/matches/competitions/new">+ 新建赛事</Link></> : <span className="admin-status-badge">只读权限</span>}
     />
     <AdminMatchNavigation active="competitions" />
     <AdminPanel title={`赛事列表 · ${competitions.length}`} description="Competition 是球队与比赛的上级对象；R1 支持手工维护，保留未来官方数据同步字段。">

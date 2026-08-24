@@ -24,6 +24,8 @@
     "test:unified-admin-r1": "tsx scripts/test-unified-admin-r1.ts",
     "test:unified-admin-r1-2": "tsx scripts/test-unified-admin-r1-2.ts",
     "test:unified-admin-r1-2:http": "tsx scripts/test-unified-admin-r1-2-http.ts",
+    "test:competition-import": "tsx scripts/test-competition-import.ts",
+    "test:competition-import:http": "tsx scripts/test-competition-import-http.ts",
     "test:unified-admin-migration": "tsx scripts/test-unified-admin-migration.ts",
     "smoke:unified-admin:prepare": "tsx scripts/prepare-unified-admin-smoke.ts",
     "smoke:referee-r1-3a:http": "tsx scripts/smoke-referee-r1-3a-http.ts",
@@ -46,7 +48,8 @@
     "dotenv": "^17.4.2",
     "next": "16.3.2",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "read-excel-file": "^9.3.10"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

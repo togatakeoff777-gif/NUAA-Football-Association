@@ -280,6 +280,34 @@
 .admin-import-preview p { margin: 6px 0 0; color: var(--admin-muted); }
 .admin-import-preview ol { columns: 2; margin: 10px 0 0; padding-left: 20px; }
 .admin-import-error { color: #a52b2b !important; font-weight: 750; }
+.admin-import-workflow { display: grid; gap: 20px; }
+.admin-import-workflow .admin-panel + .admin-panel { margin-top: 0; }
+.admin-import-methods { display: flex; flex-wrap: wrap; gap: 8px; }
+.admin-import-methods button { min-height: 38px; padding: 0 16px; border: 1px solid var(--admin-line); border-radius: 3px; background: #fff; color: var(--admin-muted); font-weight: 700; cursor: pointer; }
+.admin-import-methods button.is-active { border-color: var(--admin-blue); background: #edf4fb; color: var(--admin-blue); }
+.admin-import-safety-note { padding: 12px 14px; border-left: 3px solid var(--admin-blue); background: #f5f8fc; color: var(--admin-muted); font-size: 12px; line-height: 1.65; }
+.admin-import-summary { display: grid; grid-template-columns: repeat(8,minmax(70px,1fr)); gap: 8px; margin-bottom: 16px; }
+.admin-import-summary div { padding: 10px; border: 1px solid var(--admin-line); background: #f8fafc; }
+.admin-import-summary span { display: block; color: var(--admin-muted); font-size: 11px; }
+.admin-import-summary strong { display: block; margin-top: 4px; font-size: 20px; }
+.admin-import-summary div[data-key="conflictRows"] strong, .admin-import-summary div[data-key="errorRows"] strong { color: #a52b2b; }
+.admin-import-team-plan, .admin-import-warning { margin: 8px 0; color: #8a5a00; font-size: 12px; line-height: 1.55; }
+.admin-import-table { min-width: 1100px; }
+.admin-import-table td:nth-child(2) { max-width: 420px; }
+.admin-import-table td small { display: block; line-height: 1.6; overflow-wrap: anywhere; }
+.admin-import-table td code { display: block; margin-top: 6px; color: var(--admin-muted); font-size: 10px; overflow-wrap: anywhere; }
+.admin-import-table details { margin-top: 8px; }
+.admin-import-table pre { max-width: 420px; overflow: auto; padding: 8px; background: #f4f6f8; font-size: 10px; }
+.admin-import-team-action { display: block; margin: 3px 0; font-size: 11px; }
+.admin-import-blocked, .admin-import-confirm { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 16px; padding: 14px; border: 1px solid #e0b7b7; background: #fff7f7; }
+.admin-import-blocked p, .admin-import-confirm p { margin-top: 4px; color: var(--admin-muted); font-size: 12px; }
+.admin-import-blocked div div { display: flex; gap: 12px; margin-top: 8px; }
+.admin-import-blocked a { color: var(--admin-blue); font-size: 12px; }
+.admin-import-confirm { border-color: #b9d3c1; background: #f5fbf7; }
+.admin-import-result dl { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
+.admin-import-result dl div { padding: 12px; border: 1px solid var(--admin-line); }
+.admin-import-result dt { color: var(--admin-muted); font-size: 11px; }
+.admin-import-result dd { margin-top: 5px; font-size: 18px; font-weight: 750; overflow-wrap: anywhere; }
 .admin-report-summary { display: grid; gap: 5px; padding: 13px; border: 1px solid var(--admin-line); background: #f8fafc; }
 .admin-report-summary strong { font-size: 13px; }
 .admin-report-summary span { color: var(--admin-muted); font-size: 10px; }
@@ -350,6 +378,7 @@
   .admin-dashboard-grid { grid-template-columns: 1fr; }
   .admin-filter-bar { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .admin-copy-form { grid-template-columns: 1fr 1fr; }
+  .admin-import-summary { grid-template-columns: repeat(4,minmax(70px,1fr)); }
 }
 
 @media (max-width: 760px) {
@@ -392,6 +421,8 @@
   .admin-assignment-primary-actions .admin-button { flex: 1; }
   .admin-compact-empty { align-items: flex-start; flex-direction: column; }
   .admin-history-details > summary { align-items: flex-start; }
+  .admin-import-summary, .admin-import-result dl { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .admin-import-blocked, .admin-import-confirm { align-items: stretch; flex-direction: column; }
 }
 .admin-rich-text-editor { display: grid; gap: 12px; }
 .admin-rich-text-toolbar { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; border: 1px solid var(--admin-border, #dbe3ef); border-radius: 10px; background: #f7f9fc; }

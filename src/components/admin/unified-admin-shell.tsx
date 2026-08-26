@@ -90,7 +90,7 @@ export function UnifiedAdminShell({
 
   async function logout() {
     await api("/api/referees/admin/logout", "POST");
-    router.replace("/referees/admin/login?next=/admin");
+    router.replace("/admin/login");
     router.refresh();
   }
 
@@ -127,7 +127,11 @@ export function UnifiedAdminShell({
           <small>V2.9 · Foundation</small>
         </div>
         <nav aria-label="统一管理后台导航" className="admin-navigation">
-          {navigationGroups.map((group) => {
+          {mustChangePassword ? (
+            <div className="admin-nav-group">
+              <span className="admin-nav-label">账号安全</span>
+            </div>
+          ) : navigationGroups.map((group) => {
             if (group.module && !allowedModules.includes(group.module)) return null;
             return (
               <div className="admin-nav-group" key={group.label}>
@@ -163,23 +167,33 @@ export function UnifiedAdminShell({
             {accountOpen ? <div className="admin-account-menu">
               <strong>{actorName}</strong><span>{roleLabels.join(" / ")}{isLegacy ? " · 兼容登录" : ""}</span>
               {!isLegacy ? <button onClick={() => { setPasswordOpen(true); setAccountOpen(false); }} type="button">修改个人密码</button> : null}
-              {allowedModules.includes("system") ? <Link href="/admin/system/admins" onClick={() => setAccountOpen(false)}>管理员账号</Link> : null}
+              {!mustChangePassword && allowedModules.includes("system") ? <Link href="/admin/system/admins" onClick={() => setAccountOpen(false)}>管理员账号</Link> : null}
               <button onClick={logout} type="button">退出后台</button>
             </div> : null}
           </div>
         </header>
         {mustChangePassword ? <button className="admin-password-alert" onClick={() => setPasswordOpen(true)} type="button">当前账号须完成首次密码修改 →</button> : null}
-        <main className="admin-content" id="main-content">{children}</main>
+        <main className="admin-content" id="main-content">
+          {mustChangePassword ? (
+            <section className="admin-panel" role="status">
+              <header className="admin-panel-header">
+                <div><h2>首次登录需要修改密码</h2><p>完成账号安全验证后，系统才会开放已授权的后台功能。</p></div>
+              </header>
+              <div className="admin-empty-state"><strong>{actorName}</strong><p>{roleLabels.join(" / ")}</p></div>
+            </section>
+          ) : children}
+        </main>
       </div>
       {passwordOpen && !isLegacy ? <div aria-modal="true" className="admin-modal-backdrop" role="dialog">
         <div className="admin-modal admin-modal-compact">
-          <header><div><span>ACCOUNT SECURITY</span><h2>修改个人密码</h2></div><button aria-label="关闭" onClick={() => setPasswordOpen(false)} type="button">×</button></header>
+          <header><div><span>ACCOUNT SECURITY</span><h2>{mustChangePassword ? "完成首次密码修改" : "修改个人密码"}</h2></div>{!mustChangePassword ? <button aria-label="关闭" onClick={() => setPasswordOpen(false)} type="button">×</button> : null}</header>
           <form className="admin-form" onSubmit={changePassword}>
+            {mustChangePassword ? <p className="admin-form-message">修改成功前不能使用后台业务功能。你也可以安全退出登录。</p> : null}
             <label><span>当前密码</span><input autoComplete="current-password" name="currentPassword" required type="password" /></label>
             <label><span>新密码</span><input autoComplete="new-password" minLength={12} name="newPassword" required type="password" /></label>
             <label><span>再次输入新密码</span><input autoComplete="new-password" minLength={12} name="confirmation" required type="password" /></label>
             <p aria-live="polite" className="admin-form-message">{message}</p>
-            <footer><button className="admin-button admin-button-secondary" onClick={() => setPasswordOpen(false)} type="button">取消</button><button className="admin-button" type="submit">保存新密码</button></footer>
+            <footer>{mustChangePassword ? <button className="admin-button admin-button-secondary" onClick={logout} type="button">退出登录</button> : <button className="admin-button admin-button-secondary" onClick={() => setPasswordOpen(false)} type="button">取消</button>}<button className="admin-button" type="submit">保存新密码</button></footer>
           </form>
         </div>
       </div> : null}

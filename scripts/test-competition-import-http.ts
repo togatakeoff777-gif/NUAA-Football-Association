@@ -64,7 +64,7 @@ async function main() {
     const cookies = Object.fromEntries(await Promise.all((Object.keys(usernames) as RoleName[]).map(async (role) => [role, await login(role)] as const))) as Record<RoleName, string>;
 
     const unauthenticatedPage = await fetch(`${baseUrl}/admin/competitions/import`, { redirect: "manual" });
-    assert([303, 307, 308].includes(unauthenticatedPage.status) && unauthenticatedPage.headers.get("location")?.includes("/referees/admin/login"), "Unauthenticated import page did not redirect to login.");
+    assert([303, 307, 308].includes(unauthenticatedPage.status) && unauthenticatedPage.headers.get("location")?.includes("/admin/login"), "Unauthenticated import page did not redirect to the unified login.");
     for (const role of ["super", "competition"] as const) {
       const response = await fetch(`${baseUrl}/admin/competitions/import`, { headers: { cookie: cookies[role] }, redirect: "manual" });
       expectStatus(`${role} import page`, response.status, 200);

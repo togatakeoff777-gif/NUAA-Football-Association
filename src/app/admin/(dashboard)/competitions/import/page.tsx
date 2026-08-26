@@ -18,6 +18,6 @@ export default async function UnifiedCompetitionImportPage() {
       description="对已有赛事执行球队或赛程导入：解析、逐行校验、reconciliation、Preview，再原子提交。"
       actions={<><Link className="admin-button admin-button-secondary" href="/admin/competitions">返回赛事管理</Link><Link className="admin-button admin-button-secondary" href="/admin/matches">手动维护比赛</Link></>}
     />
-    {!competitions.length ? <section className="admin-panel"><div className="admin-empty-state"><strong>请先创建赛事</strong><p>R1-3B 不批量创建 Competition；请先使用现有赛事创建流程。</p><Link className="admin-button" href="/referees/admin/matches/competitions/new">手动创建赛事</Link></div></section> : <CompetitionImportManager competitions={competitions} />}
+    {!competitions.length ? <section className="admin-panel"><div className="admin-empty-state"><strong>请先创建赛事</strong><p>R1-3B 不批量创建 Competition；请先使用现有赛事创建流程。</p><Link className="admin-button" href="/admin/competitions/new">手动创建赛事</Link></div></section> : <CompetitionImportManager competitions={competitions} />}
   </>;
 }

@@ -19,6 +19,7 @@ export async function authenticateAdminCredentials(username: string, password: s
       role: true,
       isActive: true,
       mustChangePassword: true,
+      unifiedRoles: { select: { role: true }, orderBy: { role: "asc" } },
     },
   });
   if (!account?.isActive || !(await verifyPassword(password, account.passwordHash))) return null;

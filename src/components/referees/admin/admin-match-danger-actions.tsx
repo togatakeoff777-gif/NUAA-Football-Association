@@ -54,7 +54,7 @@ export function AdminMatchDangerActions({
       });
       const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error || "比赛删除失败。");
-      router.push("/referees/admin/matches");
+      router.push("/admin/matches");
       router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "比赛删除失败。");

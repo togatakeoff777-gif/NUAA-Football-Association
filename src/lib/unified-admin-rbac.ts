@@ -22,6 +22,8 @@ export type UnifiedAdminActor = {
   roles: UnifiedAdminRole[];
 };
 
+export const unifiedAdminPasswordChangeRequiredCode = "ADMIN_PASSWORD_CHANGE_REQUIRED" as const;
+
 export const allUnifiedAdminPermissions = [
   "dashboard:read",
   "content:read",
@@ -47,10 +49,9 @@ export const unifiedAdminPermissionsByRole: Record<
     "content:write",
     "media:read",
     "media:write",
-    "competitions:read",
   ],
   COMPETITION_ADMIN: ["dashboard:read", "competitions:read", "competitions:write"],
-  REFEREE_ADMIN: ["dashboard:read", "competitions:read", "referees:read", "referees:write"],
+  REFEREE_ADMIN: ["dashboard:read", "referees:read", "referees:write"],
 };
 
 export const unifiedAdminRoleLabels: Record<UnifiedAdminRole, string> = {
@@ -61,9 +62,31 @@ export const unifiedAdminRoleLabels: Record<UnifiedAdminRole, string> = {
 };
 
 export class UnifiedAdminAccessError extends Error {
-  constructor(message: string, readonly status: 401 | 403) {
+  constructor(
+    message: string,
+    readonly status: 401 | 403,
+    readonly code?: typeof unifiedAdminPasswordChangeRequiredCode,
+  ) {
     super(message);
     this.name = "UnifiedAdminAccessError";
+  }
+}
+
+export function isUnifiedAdminPasswordChangeRequired(
+  session: Awaited<ReturnType<typeof getAdminSession>>,
+) {
+  return session?.adminAccount?.mustChangePassword === true;
+}
+
+export function assertUnifiedAdminPasswordChangeCompleted(
+  session: Awaited<ReturnType<typeof getAdminSession>>,
+) {
+  if (isUnifiedAdminPasswordChangeRequired(session)) {
+    throw new UnifiedAdminAccessError(
+      "请先修改管理员初始密码。",
+      403,
+      unifiedAdminPasswordChangeRequiredCode,
+    );
   }
 }
 
@@ -73,12 +96,28 @@ export function resolveUnifiedAdminRoles(input: {
   isLegacy?: boolean;
 }) {
   if (input.isLegacy) return ["SUPER_ADMIN"] satisfies UnifiedAdminRole[];
-  if (input.explicitRoles.length) return [...new Set(input.explicitRoles)];
+  if (input.explicitRoles.includes("SUPER_ADMIN")) {
+    return ["SUPER_ADMIN"] satisfies UnifiedAdminRole[];
+  }
+  if (input.explicitRoles.length) {
+    return unifiedAdminRoleOrder.filter((role) => input.explicitRoles.includes(role));
+  }
   if (input.legacyRole === "SUPER_ADMIN") return ["SUPER_ADMIN"] satisfies UnifiedAdminRole[];
   if (input.legacyRole === "REFEREE_MANAGER") {
     return ["REFEREE_ADMIN"] satisfies UnifiedAdminRole[];
   }
   return [] satisfies UnifiedAdminRole[];
+}
+
+export const unifiedAdminRoleOrder = [
+  "SUPER_ADMIN",
+  "CONTENT_EDITOR",
+  "COMPETITION_ADMIN",
+  "REFEREE_ADMIN",
+] as const satisfies readonly UnifiedAdminRole[];
+
+export function normalizeUnifiedAdminRoles(roles: readonly UnifiedAdminRole[]) {
+  return resolveUnifiedAdminRoles({ explicitRoles: roles });
 }
 
 export function hasUnifiedAdminPermission(

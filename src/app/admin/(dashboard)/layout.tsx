@@ -6,6 +6,7 @@ import { getAdminSession } from "@/lib/referee-auth";
 import {
   getUnifiedAdminActor,
   hasUnifiedAdminPermission,
+  isUnifiedAdminPasswordChangeRequired,
   unifiedAdminRoleLabels,
 } from "@/lib/unified-admin-rbac";
 import "@/styles/referee-admin.css";
@@ -20,23 +21,26 @@ export const dynamic = "force-dynamic";
 export default async function UnifiedAdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getAdminSession();
   const actor = await getUnifiedAdminActor(session);
-  if (!session || !actor) redirect("/referees/admin/login?next=/admin");
-  const allowedModules = [
-    hasUnifiedAdminPermission(actor.roles, "content:read") || hasUnifiedAdminPermission(actor.roles, "media:read") ? "content" : null,
-    hasUnifiedAdminPermission(actor.roles, "competitions:read") ? "competitions" : null,
-    hasUnifiedAdminPermission(actor.roles, "referees:read") ? "referees" : null,
-    hasUnifiedAdminPermission(actor.roles, "system:read") ? "system" : null,
-  ].filter((item): item is UnifiedAdminModule => Boolean(item));
+  if (!session || !actor) redirect("/admin/login?next=/admin");
+  const passwordChangeRequired = isUnifiedAdminPasswordChangeRequired(session);
+  const allowedModules = passwordChangeRequired
+    ? []
+    : [
+        hasUnifiedAdminPermission(actor.roles, "content:read") || hasUnifiedAdminPermission(actor.roles, "media:read") ? "content" : null,
+        hasUnifiedAdminPermission(actor.roles, "competitions:read") ? "competitions" : null,
+        hasUnifiedAdminPermission(actor.roles, "referees:read") ? "referees" : null,
+        hasUnifiedAdminPermission(actor.roles, "system:read") ? "system" : null,
+      ].filter((item): item is UnifiedAdminModule => Boolean(item));
 
   return (
     <UnifiedAdminShell
       actorName={actor.displayName}
       allowedModules={allowedModules}
       isLegacy={actor.isLegacy}
-      mustChangePassword={session.adminAccount?.mustChangePassword ?? false}
+      mustChangePassword={passwordChangeRequired}
       roleLabels={actor.roles.map((role) => unifiedAdminRoleLabels[role])}
     >
-      {children}
+      {passwordChangeRequired ? null : children}
     </UnifiedAdminShell>
   );
 }

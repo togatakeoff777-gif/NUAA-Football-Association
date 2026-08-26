@@ -438,3 +438,9 @@
 .admin-rich-text-media label { flex: 1; }
 .admin-rich-text-editor > textarea { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 @media (max-width: 720px) { .admin-rich-text-media { align-items: stretch; flex-direction: column; } }
+.admin-role-selector { display: grid; gap: 10px; margin: 0; padding: 0; border: 0; }
+.admin-role-selector legend { margin-bottom: 6px; font-weight: 800; }
+.admin-role-selector label { display: flex; align-items: flex-start; gap: 10px; padding: 12px; border: 1px solid var(--admin-line); border-radius: 10px; }
+.admin-role-selector label input { margin-top: 3px; }
+.admin-role-selector label span { display: grid; gap: 2px; }
+.admin-role-selector label small, .admin-role-selector > p { color: var(--admin-muted); }

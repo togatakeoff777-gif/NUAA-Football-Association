@@ -2,7 +2,13 @@ import { NextResponse } from "next/server";
 
 import type { AdminActor } from "@/lib/referee-service";
 import { getAdminSession, isSameOrigin } from "@/lib/referee-auth";
-import { getUnifiedAdminActor, hasUnifiedAdminPermission, type UnifiedAdminPermission } from "@/lib/unified-admin-rbac";
+import {
+  isUnifiedAdminPasswordChangeRequired,
+  getUnifiedAdminActor,
+  hasUnifiedAdminPermission,
+  unifiedAdminPasswordChangeRequiredCode,
+  type UnifiedAdminPermission,
+} from "@/lib/unified-admin-rbac";
 
 type LegacyAdminAuthorization =
   | { ok: true; actor: AdminActor }
@@ -11,7 +17,7 @@ type LegacyAdminAuthorization =
 export async function authorizeLegacyAdminRequest(
   request: Request,
   permission: UnifiedAdminPermission,
-  options: { mutation?: boolean } = { mutation: true },
+  options: { mutation?: boolean; allowPasswordChangeRequired?: boolean } = { mutation: true },
 ): Promise<LegacyAdminAuthorization> {
   if (options.mutation !== false && !isSameOrigin(request)) {
     return { ok: false, response: NextResponse.json({ error: "请求来源无效。" }, { status: 403 }) };
@@ -23,6 +29,21 @@ export async function authorizeLegacyAdminRequest(
   }
   if (!hasUnifiedAdminPermission(actor.roles, permission)) {
     return { ok: false, response: NextResponse.json({ error: "当前管理员没有执行此操作的权限。" }, { status: 403 }) };
+  }
+  if (
+    isUnifiedAdminPasswordChangeRequired(session) &&
+    options.allowPasswordChangeRequired !== true
+  ) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        {
+          error: "请先修改管理员初始密码。",
+          code: unifiedAdminPasswordChangeRequiredCode,
+        },
+        { status: 403 },
+      ),
+    };
   }
   return {
     ok: true,

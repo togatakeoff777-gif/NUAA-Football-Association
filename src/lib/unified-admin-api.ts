@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { isSameOrigin } from "@/lib/referee-auth";
+import { getAdminSession, isSameOrigin } from "@/lib/referee-auth";
 import { RefereeServiceError } from "@/lib/referee-service-error";
 import {
-  requireUnifiedAdminActor,
+  assertUnifiedAdminPasswordChangeCompleted,
+  assertUnifiedAdminPermission,
+  getUnifiedAdminActor,
   UnifiedAdminAccessError,
   type UnifiedAdminPermission,
 } from "@/lib/unified-admin-rbac";
@@ -23,7 +25,12 @@ export async function authorizeUnifiedAdminRequest(
   if (options.mutation && !isSameOrigin(request)) {
     throw new UnifiedAdminAccessError("请求来源无效。", 403);
   }
-  return requireUnifiedAdminActor(permission);
+  const session = await getAdminSession();
+  const actor = await getUnifiedAdminActor(session);
+  if (!session || !actor) throw new UnifiedAdminAccessError("请先登录管理员后台。", 401);
+  assertUnifiedAdminPermission(actor, permission);
+  assertUnifiedAdminPasswordChangeCompleted(session);
+  return actor;
 }
 
 export function unifiedAdminErrorResponse(error: unknown, fallback: string) {
@@ -32,7 +39,13 @@ export function unifiedAdminErrorResponse(error: unknown, fallback: string) {
     error instanceof UnifiedAdminInputError ||
     error instanceof RefereeServiceError
   ) {
-    return NextResponse.json({ error: error.message }, { status: error.status });
+    return NextResponse.json(
+      {
+        error: error.message,
+        ...(error instanceof UnifiedAdminAccessError && error.code ? { code: error.code } : {}),
+      },
+      { status: error.status },
+    );
   }
   console.error(error);
   return NextResponse.json({ error: fallback }, { status: 500 });

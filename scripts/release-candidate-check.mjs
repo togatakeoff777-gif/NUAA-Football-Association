@@ -92,6 +92,7 @@ async function main() {
   const regressionScripts = [
     "test:unified-admin-r1",
     "test:unified-admin-r1-2",
+    "test:unified-admin-rbac",
     "test:unified-admin-migration",
     "test:referee-r1",
     "test:referee-admission",

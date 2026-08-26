@@ -93,13 +93,13 @@ async function main() {
     ] });
     assert((await credentials.authenticateAdminCredentials("r1-content", "Unified-R1-Password-2026!"))?.id === contentAccount.id, "AdminAccount authentication was not reused.");
     assert(auth.getSafeAdminReturnTo("/admin/content/news") === "/admin/content/news", "Safe admin return path was rejected.");
-    assert(auth.getSafeAdminReturnTo("//evil.example") === "/referees/admin", "Protocol-relative return path was accepted.");
+    assert(auth.getSafeAdminReturnTo("//evil.example") === "/admin", "Protocol-relative return path was accepted.");
 
     const expected: Record<string, string[]> = {
       SUPER_ADMIN: [...rbac.allUnifiedAdminPermissions],
-      CONTENT_EDITOR: ["dashboard:read", "content:read", "content:write", "media:read", "media:write", "competitions:read"],
+      CONTENT_EDITOR: ["dashboard:read", "content:read", "content:write", "media:read", "media:write"],
       COMPETITION_ADMIN: ["dashboard:read", "competitions:read", "competitions:write"],
-      REFEREE_ADMIN: ["dashboard:read", "competitions:read", "referees:read", "referees:write"],
+      REFEREE_ADMIN: ["dashboard:read", "referees:read", "referees:write"],
     };
     for (const [role, permissions] of Object.entries(expected)) {
       for (const permission of rbac.allUnifiedAdminPermissions) {

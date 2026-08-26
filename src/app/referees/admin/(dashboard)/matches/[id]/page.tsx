@@ -11,7 +11,7 @@ import { getPositionTemplate } from "@/lib/referee-roles";
 import { getCompletedRefereeStatistics } from "@/lib/referee-r1-service";
 import { prisma } from "@/lib/prisma";
 
-export default async function AdminMatchDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function AdminMatchDetailPage({ params, appointmentOnly = false }: { params: Promise<{ id: string }>; appointmentOnly?: boolean }) {
   const { id } = await params;
   const [match, referees, statistics] = await Promise.all([
     prisma.match.findUnique({
@@ -61,14 +61,10 @@ export default async function AdminMatchDetailPage({ params }: { params: Promise
       <div><span>{match.competition.name}</span><h1>{match.homeTeam.name} vs {match.awayTeam.name}</h1><p>{match.round ? `${match.round} · ` : ""}{match.stage}</p>
         <dl className="admin-detail-meta"><div><dt>开球时间</dt><dd>{formatRefereeDateTime(match.kickoff)}</dd></div><div><dt>比赛场地</dt><dd>{match.venue}</dd></div><div><dt>比赛状态</dt><dd>{matchStatusLabels[match.status]}</dd></div><div><dt>当前选派</dt><dd>{appointmentStatusLabels[match.appointment?.status ?? "NONE"]}</dd></div></dl>
       </div>
-      <div className="admin-detail-actions">
-        <Link className="admin-button admin-button-secondary" href={`/referees/admin/matches/${match.id}/edit`}>编辑比赛</Link>
-        <AdminMatchDangerActions
-          matchId={match.id}
-          matchLabel={matchLabel}
-          protectedReason={deletionProtected ? "该比赛已经存在正式选派或历史记录，不能直接删除。请使用“取消比赛”保留业务历史。" : undefined}
-        />
-      </div>
+      {!appointmentOnly ? <div className="admin-detail-actions">
+        <Link className="admin-button admin-button-secondary" href={`/admin/matches/${match.id}/edit`}>编辑比赛</Link>
+        <AdminMatchDangerActions matchId={match.id} matchLabel={matchLabel} protectedReason={deletionProtected ? "该比赛已经存在正式选派或历史记录，不能直接删除。请使用“取消比赛”保留业务历史。" : undefined} />
+      </div> : null}
     </section>
     <AdminAppointmentEditor
       applications={match.applications.map((item) => ({ id: item.id, referee: `${item.referee.publicCode} · ${item.referee.name}`, status: item.status, statusLabel: applicationStatusLabels[item.status], preferred: parsePreferredPositions(item.preferredPositions).map((key) => getPositionTemplate(match.competition.format).find((position) => position.key === key)?.label ?? key).join(" / "), note: item.note, createdAt: formatRefereeDateTime(item.createdAt) }))}

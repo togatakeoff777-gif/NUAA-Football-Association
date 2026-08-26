@@ -8,6 +8,7 @@ import {
 } from "@/lib/referee-credentials";
 import { isSessionFresh } from "@/lib/referee-security";
 import { SITE_ORIGIN } from "@/lib/site-metadata";
+import { getSafeUnifiedAdminNext } from "@/lib/unified-admin-legacy-routes";
 
 const sessionCookieName = "nuaa_referee_admin";
 const sessionDurationMs = 12 * 60 * 60 * 1000;
@@ -27,21 +28,15 @@ export function getAdminConfigurationIssue() {
 }
 
 export function getSafeAdminReturnTo(value: string | string[] | undefined) {
-  const candidate = Array.isArray(value) ? value[0] : value;
-  if (!candidate || candidate.includes("\\") || candidate.startsWith("//")) {
-    return "/referees/admin";
-  }
-  return /^\/(?:admin|referees\/admin)(?:\/|$)/.test(candidate)
-    ? candidate
-    : "/referees/admin";
+  return getSafeUnifiedAdminNext(value) ?? "/admin";
 }
 
 export async function createAdminSession(username: string, password: string) {
   const secret = getSessionSecret();
-  if (!secret) return false;
+  if (!secret) return null;
   const account = await authenticateAdminCredentials(username, password);
   const legacyAuthenticated = !username.trim() && await verifyAdminCredentials(password);
-  if (!account && !legacyAuthenticated) return false;
+  if (!account && !legacyAuthenticated) return null;
 
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Date.now() + sessionDurationMs);
@@ -69,7 +64,12 @@ export async function createAdminSession(username: string, password: string) {
     expires: expiresAt,
     path: "/",
   });
-  return true;
+  return {
+    explicitRoles: account?.unifiedRoles.map(({ role }) => role) ?? [],
+    legacyRole: account?.role,
+    isLegacy: !account,
+    mustChangePassword: account?.mustChangePassword ?? false,
+  };
 }
 
 export async function getAdminSession() {

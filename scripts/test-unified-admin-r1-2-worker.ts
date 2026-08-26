@@ -179,9 +179,9 @@ async function main() {
     await writeFile(migratedPath, savedMedia);
 
     for (const [role, allowed] of Object.entries({
-      CONTENT_EDITOR: ["dashboard:read", "content:read", "content:write", "media:read", "media:write", "competitions:read"],
+      CONTENT_EDITOR: ["dashboard:read", "content:read", "content:write", "media:read", "media:write"],
       COMPETITION_ADMIN: ["dashboard:read", "competitions:read", "competitions:write"],
-      REFEREE_ADMIN: ["dashboard:read", "competitions:read", "referees:read", "referees:write"],
+      REFEREE_ADMIN: ["dashboard:read", "referees:read", "referees:write"],
       SUPER_ADMIN: [...rbac.allUnifiedAdminPermissions],
     })) {
       for (const permission of rbac.allUnifiedAdminPermissions) assert(rbac.hasUnifiedAdminPermission([role as keyof typeof rbac.unifiedAdminPermissionsByRole], permission) === allowed.includes(permission), `4-role RBAC mismatch: ${role}/${permission}`);

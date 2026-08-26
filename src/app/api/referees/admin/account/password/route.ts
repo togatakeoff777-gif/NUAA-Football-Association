@@ -7,7 +7,9 @@ import { RefereeServiceError } from "@/lib/referee-service";
 import { isRecord, readShortText } from "@/lib/referee-validation";
 
 export async function POST(request: Request) {
-  const authorization = await authorizeLegacyAdminRequest(request, "dashboard:read");
+  const authorization = await authorizeLegacyAdminRequest(request, "dashboard:read", {
+    allowPasswordChangeRequired: true,
+  });
   if (!authorization.ok) return authorization.response;
   const session = await getAdminSession();
   if (!session) return NextResponse.json({ error: "请先登录管理员后台。" }, { status: 401 });

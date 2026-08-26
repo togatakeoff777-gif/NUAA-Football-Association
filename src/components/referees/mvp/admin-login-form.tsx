@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function AdminLoginForm({ returnTo = "/referees/admin" }: { returnTo?: string }) {
+export function AdminLoginForm({ next }: { next?: string }) {
   const router = useRouter();
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -18,12 +18,13 @@ export function AdminLoginForm({ returnTo = "/referees/admin" }: { returnTo?: st
       body: JSON.stringify({
         username: form.get("username"),
         password: form.get("password"),
+        next,
       }),
     });
-    const result = (await response.json()) as { error?: string };
+    const result = (await response.json()) as { error?: string; returnTo?: string };
     setSubmitting(false);
     if (!response.ok) return setMessage(result.error ?? "登录失败。" );
-    router.replace(returnTo);
+    router.replace(result.returnTo ?? "/admin");
     router.refresh();
   }
 
@@ -31,7 +32,7 @@ export function AdminLoginForm({ returnTo = "/referees/admin" }: { returnTo?: st
     <form className="referee-form referee-login-form" onSubmit={submit}>
       <label><span>管理员账号</span><input autoComplete="username" maxLength={64} name="username" placeholder="实名账号；兼容模式可留空" /></label>
       <label><span>管理员密码</span><input autoComplete="current-password" maxLength={256} name="password" required type="password" /></label>
-      <button disabled={submitting} type="submit">{submitting ? "验证中…" : "登录裁判管理后台"}</button>
+      <button disabled={submitting} type="submit">{submitting ? "验证中…" : "登录统一管理后台"}</button>
       <p aria-live="polite" className="referee-form-message">{message}</p>
     </form>
   );

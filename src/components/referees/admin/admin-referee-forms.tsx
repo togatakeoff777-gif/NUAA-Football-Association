@@ -146,7 +146,7 @@ export function RefereeCreateForm({ colleges }: { colleges: CollegeOption[] }) {
     const result = (await response.json()) as { error?: string; refereeId?: string };
     setSubmitting(false);
     if (!response.ok) { setMessage(result.error ?? "创建失败。"); return; }
-    router.push(`/referees/admin/referees/${result.refereeId}`);
+    router.push(`/admin/referees/${result.refereeId}`);
     router.refresh();
   }
   return <form className="admin-form admin-form-section" onSubmit={submit}>

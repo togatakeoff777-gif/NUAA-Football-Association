@@ -1,0 +1,265 @@
+import { readFile, readdir } from "node:fs/promises";
+import path from "node:path";
+
+import { createClient } from "@libsql/client";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { PrismaClient } from "../src/generated/prisma-v29/client";
+import type { UnifiedAdminActor } from "../src/lib/unified-admin-rbac";
+
+function assert(condition: unknown, message: string): asserts condition {
+  if (!condition) throw new Error(message);
+}
+
+async function rejects(action: () => unknown | Promise<unknown>, expected: string) {
+  try {
+    await action();
+  } catch (error) {
+    assert(error instanceof Error && error.message.includes(expected), `Expected rejection containing ${expected}.`);
+    return;
+  }
+  throw new Error(`Expected rejection containing ${expected}.`);
+}
+
+async function applyMigrations(url: string) {
+  const client = createClient({ url });
+  const entries = (await readdir(path.resolve("prisma/migrations"), { withFileTypes: true }))
+    .filter((entry) => entry.isDirectory())
+    .sort((a, b) => a.name.localeCompare(b.name));
+  for (const entry of entries) {
+    await client.executeMultiple(await readFile(path.resolve("prisma/migrations", entry.name, "migration.sql"), "utf8"));
+  }
+  client.close();
+}
+
+async function main() {
+  const databasePath = process.env.UNIFIED_ADMIN_RBAC_DATABASE_PATH;
+  if (!databasePath) throw new Error("UNIFIED_ADMIN_RBAC_DATABASE_PATH is required.");
+  const url = `file:${databasePath.replaceAll("\\", "/")}`;
+  process.env.DATABASE_URL = url;
+  process.env.REFEREE_ADMIN_SESSION_SECRET = "unified-admin-rbac-test-secret-2026";
+  await applyMigrations(url);
+
+  const verifier = new PrismaClient({ adapter: new PrismaLibSql({ url }) });
+  const { hashPassword, verifyPassword } = await import("../src/lib/referee-security");
+  const rbac = await import("../src/lib/unified-admin-rbac");
+  const routing = await import("../src/lib/unified-admin-routing");
+  const legacyRoutes = await import("../src/lib/unified-admin-legacy-routes");
+  const accounts = await import("../src/lib/unified-admin-account-service");
+  const refereeR1Service = await import("../src/lib/referee-r1-service");
+  const { prisma } = await import("../src/lib/prisma");
+
+  try {
+    const passwordHash = await hashPassword("Legacy-Super-Password-2026!");
+    const legacySuper = await verifier.adminAccount.create({
+      data: { username: "nuaafa", displayName: "现有实名管理员", passwordHash, role: "SUPER_ADMIN" },
+    });
+    const superActor: UnifiedAdminActor = {
+      id: "service-test-super",
+      displayName: "服务测试超级管理员",
+      isLegacy: false,
+      roles: ["SUPER_ADMIN"],
+    };
+
+    assert(rbac.resolveUnifiedAdminRoles({ explicitRoles: [], legacyRole: "SUPER_ADMIN" }).join() === "SUPER_ADMIN", "Legacy SUPER_ADMIN fallback failed.");
+    assert(rbac.resolveUnifiedAdminRoles({ explicitRoles: ["SUPER_ADMIN", "CONTENT_EDITOR"] }).join() === "SUPER_ADMIN", "SUPER_ADMIN was not normalized.");
+    assert(!rbac.hasUnifiedAdminPermission(["CONTENT_EDITOR"], "competitions:read"), "CONTENT_EDITOR retained competition operations.");
+    assert(!rbac.hasUnifiedAdminPermission(["CONTENT_EDITOR"], "referees:read"), "CONTENT_EDITOR retained referee operations.");
+    assert(!rbac.hasUnifiedAdminPermission(["REFEREE_ADMIN"], "competitions:read"), "REFEREE_ADMIN retained competition management.");
+    assert(!rbac.hasUnifiedAdminPermission(["COMPETITION_ADMIN"], "referees:read"), "COMPETITION_ADMIN retained referee management.");
+    const combined = rbac.resolveUnifiedAdminRoles({ explicitRoles: ["COMPETITION_ADMIN", "REFEREE_ADMIN"] });
+    assert(rbac.hasUnifiedAdminPermission(combined, "competitions:write") && rbac.hasUnifiedAdminPermission(combined, "referees:write"), "Combined roles did not union permissions.");
+    assert(!rbac.hasUnifiedAdminPermission(combined, "content:read") && !rbac.hasUnifiedAdminPermission(combined, "system:read"), "Combined roles gained content/system access.");
+    assert(
+      rbac.isUnifiedAdminPasswordChangeRequired({ adminAccount: { mustChangePassword: true } } as never),
+      "Persistent required-change session was not detected.",
+    );
+    assert(
+      !rbac.isUnifiedAdminPasswordChangeRequired({ adminAccount: null } as never),
+      "Synthetic legacy administrator was incorrectly marked as password-change-required.",
+    );
+
+    assert(routing.getUnifiedAdminDefaultLanding(["SUPER_ADMIN"]) === "/admin", "SUPER_ADMIN landing mismatch.");
+    assert(routing.getUnifiedAdminDefaultLanding(["CONTENT_EDITOR"]) === "/admin/content/news", "CONTENT_EDITOR landing mismatch.");
+    assert(routing.getUnifiedAdminDefaultLanding(["COMPETITION_ADMIN"]) === "/admin/competitions", "COMPETITION_ADMIN landing mismatch.");
+    assert(routing.getUnifiedAdminDefaultLanding(["REFEREE_ADMIN"]) === "/admin/referees", "REFEREE_ADMIN landing mismatch.");
+    assert(routing.getUnifiedAdminDefaultLanding(combined) === "/admin", "Multi-role landing mismatch.");
+    assert(routing.getAuthorizedUnifiedAdminReturnTo("/admin/media", ["CONTENT_EDITOR"]) === "/admin/media", "Authorized next was rejected.");
+    assert(routing.getAuthorizedUnifiedAdminReturnTo("/admin/competitions", ["CONTENT_EDITOR"]) === "/admin/content/news", "Unauthorized next was accepted.");
+    assert(routing.getAuthorizedUnifiedAdminReturnTo("//evil.invalid", ["SUPER_ADMIN"]) === "/admin", "Open redirect was accepted.");
+    assert(routing.getAuthorizedUnifiedAdminReturnTo("admin/media", ["SUPER_ADMIN"]) === "/admin", "Relative next was accepted.");
+    assert(routing.getUnifiedAdminRoutePermission("/admin/referees/new") === "referees:write", "New referee route was not classified as a write page.");
+    assert(legacyRoutes.mapLegacyAdminPathToUnified("/referees/admin/matches/match-1/edit?tab=core") === "/admin/matches/match-1/edit?tab=core", "Legacy match deep link mapping failed.");
+    assert(legacyRoutes.mapLegacyAdminPathToUnified("/referees/admin/referees/ref-1") === "/admin/referees/ref-1", "Legacy referee deep link mapping failed.");
+
+    const content = await accounts.createUnifiedAdminAccount({
+      username: "content-owner",
+      displayName: "宣传负责人",
+      password: "Content-Password-2026!",
+      roles: ["CONTENT_EDITOR"],
+    }, superActor);
+    assert(content.mustChangePassword && content.roles.join() === "CONTENT_EDITOR", "Single-role account creation failed.");
+    const requiredPasswordAccount = await accounts.createUnifiedAdminAccount({
+      username: "required-password-owner",
+      displayName: "首次改密管理员",
+      password: "Required-Password-2026!",
+      roles: ["CONTENT_EDITOR"],
+    }, superActor);
+    const currentRequiredSession = await verifier.adminSession.create({
+      data: {
+        tokenHash: "required-password-current-session",
+        expiresAt: new Date(Date.now() + 60_000),
+        adminAccountId: requiredPasswordAccount.id,
+      },
+    });
+    const otherRequiredSession = await verifier.adminSession.create({
+      data: {
+        tokenHash: "required-password-other-session",
+        expiresAt: new Date(Date.now() + 60_000),
+        adminAccountId: requiredPasswordAccount.id,
+      },
+    });
+    await rejects(() => refereeR1Service.changeAdminPassword({
+      adminAccountId: requiredPasswordAccount.id,
+      currentSessionId: currentRequiredSession.id,
+      currentPassword: "Wrong-Password-2026!",
+      newPassword: "Required-Password-New-2026!",
+    }), "当前管理员密码不正确");
+    const afterFailedPasswordChange = await verifier.adminAccount.findUniqueOrThrow({
+      where: { id: requiredPasswordAccount.id },
+    });
+    assert(
+      afterFailedPasswordChange.mustChangePassword &&
+      await verifier.adminSession.count({ where: { adminAccountId: requiredPasswordAccount.id } }) === 2,
+      "Failed password change cleared the required flag or invalidated sessions.",
+    );
+    await rejects(() => refereeR1Service.changeAdminPassword({
+      adminAccountId: requiredPasswordAccount.id,
+      currentSessionId: currentRequiredSession.id,
+      currentPassword: "Required-Password-2026!",
+      newPassword: "Required-Password-2026!",
+    }), "新密码不能与当前密码相同");
+    await refereeR1Service.changeAdminPassword({
+      adminAccountId: requiredPasswordAccount.id,
+      currentSessionId: currentRequiredSession.id,
+      currentPassword: "Required-Password-2026!",
+      newPassword: "Required-Password-New-2026!",
+    });
+    const afterSuccessfulPasswordChange = await verifier.adminAccount.findUniqueOrThrow({
+      where: { id: requiredPasswordAccount.id },
+    });
+    assert(
+      !afterSuccessfulPasswordChange.mustChangePassword &&
+      await verifyPassword("Required-Password-New-2026!", afterSuccessfulPasswordChange.passwordHash) &&
+      !await verifyPassword("Required-Password-2026!", afterSuccessfulPasswordChange.passwordHash),
+      "Successful password change did not replace the hash or clear the required flag.",
+    );
+    assert(
+      await verifier.adminSession.count({ where: { id: currentRequiredSession.id } }) === 1 &&
+      await verifier.adminSession.count({ where: { id: otherRequiredSession.id } }) === 0,
+      "Successful password change did not preserve only the current session.",
+    );
+    assert(
+      await verifier.auditLog.count({
+        where: {
+          actorId: requiredPasswordAccount.id,
+          action: "ADMIN_PASSWORD_CHANGED",
+        },
+      }) === 1,
+      "Successful password change was not audited exactly once.",
+    );
+    const multi = await accounts.createUnifiedAdminAccount({
+      username: "competition-director",
+      displayName: "竞赛部部长",
+      password: "Competition-Director-2026!",
+      roles: ["COMPETITION_ADMIN", "REFEREE_ADMIN", "COMPETITION_ADMIN"],
+    }, superActor);
+    assert(multi.roles.join() === "COMPETITION_ADMIN,REFEREE_ADMIN", "Multi-role account creation/deduplication failed.");
+    const explicitSuper = await accounts.createUnifiedAdminAccount({
+      username: "explicit-super",
+      displayName: "第二超级管理员",
+      password: "Explicit-Super-Password-2026!",
+      roles: ["SUPER_ADMIN", "CONTENT_EDITOR", "REFEREE_ADMIN"],
+    }, superActor);
+    assert(explicitSuper.roles.join() === "SUPER_ADMIN" && explicitSuper.unifiedRoles.length === 1, "SUPER_ADMIN persistence normalization failed.");
+    await rejects(() => accounts.updateUnifiedAdminAccount(
+      { id: explicitSuper.id, isActive: false },
+      { ...superActor, id: explicitSuper.id },
+    ), "不能停用当前登录账号");
+    assert((await verifier.adminAccount.findUniqueOrThrow({ where: { id: explicitSuper.id } })).isActive, "Self-disable rejection changed account state.");
+
+    const updated = await accounts.updateUnifiedAdminAccount({
+      id: content.id,
+      roles: ["COMPETITION_ADMIN", "REFEREE_ADMIN"],
+    }, superActor);
+    assert(updated.roles.join() === "COMPETITION_ADMIN,REFEREE_ADMIN", "Existing role assignment update failed.");
+    await verifier.adminSession.create({
+      data: {
+        tokenHash: "ordinary-admin-session-proof",
+        expiresAt: new Date(Date.now() + 60_000),
+        adminAccountId: multi.id,
+      },
+    });
+    await accounts.updateUnifiedAdminAccount({ id: multi.id, isActive: false }, superActor);
+    assert(!(await verifier.adminAccount.findUniqueOrThrow({ where: { id: multi.id } })).isActive, "Ordinary admin disable failed.");
+    assert(await verifier.adminSession.count({ where: { adminAccountId: multi.id } }) === 0, "Account disable did not invalidate sessions atomically.");
+    await accounts.updateUnifiedAdminAccount({ id: multi.id, isActive: true }, superActor);
+    assert((await verifier.adminAccount.findUniqueOrThrow({ where: { id: multi.id } })).isActive, "Ordinary admin re-enable failed.");
+
+    await accounts.updateUnifiedAdminAccount({ id: legacySuper.id, roles: ["CONTENT_EDITOR"] }, superActor);
+    const lastSuperBefore = await verifier.adminAccount.findUniqueOrThrow({
+      where: { id: explicitSuper.id },
+      include: { unifiedRoles: true },
+    });
+    const lastSuperAuditCount = await verifier.auditLog.count({ where: { entityId: explicitSuper.id } });
+    await rejects(() => accounts.updateUnifiedAdminAccount({ id: explicitSuper.id, isActive: false }, superActor), "至少一个已启用的超级管理员");
+    await rejects(() => accounts.updateUnifiedAdminAccount({ id: explicitSuper.id, roles: ["REFEREE_ADMIN"] }, superActor), "至少一个已启用的超级管理员");
+    await rejects(() => accounts.updateUnifiedAdminAccount({ id: explicitSuper.id, roles: ["REFEREE_ADMIN"], isActive: false }, superActor), "至少一个已启用的超级管理员");
+    const lastSuperAfter = await verifier.adminAccount.findUniqueOrThrow({
+      where: { id: explicitSuper.id },
+      include: { unifiedRoles: true },
+    });
+    assert(
+      lastSuperAfter.isActive === lastSuperBefore.isActive &&
+      lastSuperAfter.role === lastSuperBefore.role &&
+      lastSuperAfter.unifiedRoles.map(({ role }) => role).join() === lastSuperBefore.unifiedRoles.map(({ role }) => role).join() &&
+      await verifier.auditLog.count({ where: { entityId: explicitSuper.id } }) === lastSuperAuditCount,
+      "Rejected last-SUPER_ADMIN mutations produced partial writes or audit rows.",
+    );
+    await rejects(() => accounts.createUnifiedAdminAccount({ username: "wrong-role", displayName: "越权账号", password: "Wrong-Role-Password-2026!", roles: ["CONTENT_EDITOR"] }, { ...superActor, roles: ["CONTENT_EDITOR"] }), "没有执行此操作的权限");
+
+    const stored = await verifier.adminAccount.findUniqueOrThrow({ where: { id: content.id }, include: { unifiedRoles: true } });
+    assert(stored.passwordHash !== "Content-Password-2026!" && stored.unifiedRoles.length === 2, "Password hashing or role persistence failed.");
+    const auditRows = await verifier.auditLog.findMany({ where: { entityType: "AdminAccount" }, orderBy: { createdAt: "asc" } });
+    const auditText = auditRows.map((row) => `${row.summary}\n${row.metadata ?? ""}`).join("\n");
+    assert(auditRows.some((row) => row.action === "ADMIN_ACCOUNT_CREATED"), "Account creation was not audited.");
+    assert(auditRows.some((row) => row.action === "ADMIN_ROLE_ASSIGNMENTS_UPDATED"), "Role update was not audited.");
+    assert(auditRows.some((row) => row.action === "ADMIN_ACCOUNT_STATUS_UPDATED"), "Status update was not audited.");
+    assert(!auditText.includes("Content-Password-2026!") && !auditText.includes(stored.passwordHash), "Audit metadata leaked password material.");
+
+    console.log(JSON.stringify({
+      legacySuperFallback: true,
+      roleIsolation: true,
+      multiRoleUnion: true,
+      safeRoleBasedLanding: true,
+      legacyDeepLinkMapping: true,
+      accountCreateEditDisable: true,
+      superNormalization: true,
+      lastActiveSuperProtection: true,
+      passwordHashOnly: true,
+      requiredPasswordChange: true,
+      requiredPasswordFailureAtomicity: true,
+      requiredPasswordSessionInvalidation: true,
+      syntheticLegacyPasswordCompatibility: true,
+      safeAuditMetadata: true,
+      auditLogCount: auditRows.length,
+    }, null, 2));
+  } finally {
+    await verifier.$disconnect();
+    await prisma.$disconnect();
+  }
+}
+
+main().catch((error) => {
+  console.error(error instanceof Error ? error.stack ?? error.message : error);
+  process.exitCode = 1;
+});

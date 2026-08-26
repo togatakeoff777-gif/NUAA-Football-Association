@@ -46,7 +46,7 @@ export function AdminCompetitionForm({ competition }: { competition?: AdminCompe
       setMessage(result.error ?? "赛事保存失败。");
       return;
     }
-    router.push("/referees/admin/matches/competitions");
+    router.push("/admin/competitions");
     router.refresh();
   }
   return <form className="admin-form" onSubmit={submit}>

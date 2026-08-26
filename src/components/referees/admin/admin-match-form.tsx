@@ -90,7 +90,7 @@ export function AdminMatchForm({
     const result = (await response.json()) as { error?: string; id?: string; matchId?: string };
     if (!response.ok) { setMessage(result.error ?? "保存失败。"); return; }
     const id = match?.id ?? result.matchId ?? result.id;
-    router.push(id ? `/referees/admin/matches/${id}` : "/referees/admin/matches");
+    router.push(id ? `/admin/matches/${id}` : "/admin/matches");
     router.refresh();
   }
   async function copy(event: React.FormEvent<HTMLFormElement>) {
@@ -103,7 +103,7 @@ export function AdminMatchForm({
     });
     const result = (await response.json()) as { error?: string };
     setMessage(response.ok ? "场次副本已创建并保持关闭报名。" : result.error ?? "复制失败。");
-    if (response.ok) router.push("/referees/admin/matches");
+    if (response.ok) router.push("/admin/matches");
   }
   const representedUnitIds = new Set(
     competition?.teams

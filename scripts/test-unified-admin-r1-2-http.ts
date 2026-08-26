@@ -1,22 +1,31 @@
-type RoleName = "super" | "content" | "competition" | "referee";
+type RoleName = "super" | "content" | "competition" | "referee" | "multi";
 type Permission = "dashboard" | "content" | "media" | "competition" | "referee" | "system";
 
 const baseUrl = process.env.R1_2_SMOKE_BASE_URL ?? "http://localhost:3102";
 const mutationOrigin = process.env.R1_2_SMOKE_ORIGIN ?? baseUrl;
 const password = process.env.R1_2_SMOKE_PASSWORD ?? "Smoke-Password-2026!";
+const legacyPassword = process.env.R1_2_LEGACY_PASSWORD;
+const requiredPasswordOnly = process.env.R1_2_REQUIRED_PASSWORD_ONLY === "1";
 const usernames: Record<RoleName, string> = {
   super: "smoke-super",
   content: "smoke-content",
   competition: "smoke-competition",
   referee: "smoke-referee",
+  multi: "smoke-multi",
 };
+const requiredUsernames = {
+  super: "required-super",
+  content: "required-content",
+  competition: "required-competition",
+  referee: "required-referee",
+} as const;
 
 const allowedRoles: Record<Permission, readonly RoleName[]> = {
-  dashboard: ["super", "content", "competition", "referee"],
+  dashboard: ["super", "content", "competition", "referee", "multi"],
   content: ["super", "content"],
   media: ["super", "content"],
-  competition: ["super", "competition"],
-  referee: ["super", "referee"],
+  competition: ["super", "competition", "multi"],
+  referee: ["super", "referee", "multi"],
   system: ["super"],
 };
 
@@ -30,17 +39,31 @@ function expectAllowedStatus(label: string, status: number) {
   console.log(`PASS ${label}: authorized (${status})`);
 }
 
-async function login(role: RoleName) {
+async function loginCredentials(
+  username: string,
+  loginPassword: string,
+  label: string,
+  next?: string,
+  expectedReturnTo?: string,
+) {
   const response = await fetch(`${baseUrl}/api/referees/admin/login`, {
     method: "POST",
     headers: { "content-type": "application/json", origin: mutationOrigin },
-    body: JSON.stringify({ username: usernames[role], password }),
+    body: JSON.stringify({ username, password: loginPassword, next }),
     redirect: "manual",
   });
-  expectStatus(`${role} AdminAccount login reuse`, response.status, 200);
+  expectStatus(`${label} login`, response.status, 200);
+  const body = await response.json() as { returnTo?: string };
+  if (expectedReturnTo && body.returnTo !== expectedReturnTo) {
+    throw new Error(`${label} login landing: expected ${expectedReturnTo}, received ${body.returnTo}`);
+  }
   const cookie = response.headers.get("set-cookie")?.match(/nuaa_referee_admin=[^;]+/)?.[0];
-  if (!cookie) throw new Error(`${role}: login response did not set the administrator cookie`);
+  if (!cookie) throw new Error(`${label}: login response did not set the administrator cookie`);
   return cookie;
+}
+
+async function login(role: RoleName, next?: string, expectedReturnTo?: string) {
+  return loginCredentials(usernames[role], password, `${role} AdminAccount reuse`, next, expectedReturnTo);
 }
 
 async function apiRequest(input: { path: string; method: string; cookie?: string; origin?: string | null; body?: BodyInit }) {
@@ -57,6 +80,14 @@ async function apiRequest(input: { path: string; method: string; cookie?: string
   });
 }
 
+async function expectPasswordChangeGate(label: string, response: Response) {
+  expectStatus(label, response.status, 403);
+  const body = await response.json() as { error?: string; code?: string };
+  if (body.code !== "ADMIN_PASSWORD_CHANGE_REQUIRED" || !body.error?.includes("修改管理员初始密码")) {
+    throw new Error(`${label}: required-password response contract mismatch.`);
+  }
+}
+
 async function verifyLegacyApiMatrix(cookies: Record<RoleName, string>) {
   const admissionId = process.env.R1_3A_ADMISSION_ID ?? "missing-admission";
   const routes: Array<{ method: string; path: string; permission: Permission }> = [
@@ -69,6 +100,8 @@ async function verifyLegacyApiMatrix(cookies: Record<RoleName, string>) {
     { method: "POST", path: "/api/referees/admin/accounts/missing-account", permission: "referee" },
     { method: "POST", path: "/api/referees/admin/admin-accounts", permission: "system" },
     { method: "PATCH", path: "/api/referees/admin/admin-accounts", permission: "system" },
+    { method: "POST", path: "/api/admin/system/admin-accounts", permission: "system" },
+    { method: "PATCH", path: "/api/admin/system/admin-accounts", permission: "system" },
     { method: "POST", path: "/api/referees/admin/affiliation-units", permission: "competition" },
     { method: "POST", path: "/api/referees/admin/applications", permission: "referee" },
     { method: "PATCH", path: "/api/referees/admin/applications/missing-application", permission: "referee" },
@@ -107,9 +140,9 @@ async function verifyAdminPageMatrix(cookies: Record<RoleName, string>) {
     { path: "/admin", permission: "dashboard" },
     { path: "/admin/content/news", permission: "content" },
     { path: "/admin/media", permission: "media" },
-    { path: "/admin/competitions", permission: "dashboard" },
-    { path: "/admin/matches", permission: "dashboard" },
-    { path: "/admin/organizations", permission: "dashboard" },
+    { path: "/admin/competitions", permission: "competition" },
+    { path: "/admin/matches", permission: "competition" },
+    { path: "/admin/organizations", permission: "competition" },
     { path: "/admin/referees", permission: "referee" },
     { path: "/admin/referees/admissions", permission: "referee" },
     { path: `/admin/referees/admissions/${process.env.R1_3A_ADMISSION_ID ?? "missing-admission"}`, permission: "referee" },
@@ -119,23 +152,10 @@ async function verifyAdminPageMatrix(cookies: Record<RoleName, string>) {
     { path: "/admin/statistics", permission: "referee" },
     { path: "/admin/system/admins", permission: "system" },
     { path: "/admin/system/audit", permission: "system" },
-    { path: "/referees/admin", permission: "dashboard" },
-    { path: "/referees/admin/matches", permission: "dashboard" },
-    { path: "/referees/admin/matches/new", permission: "competition" },
-    { path: "/referees/admin/matches/competitions", permission: "dashboard" },
-    { path: "/referees/admin/matches/competitions/new", permission: "competition" },
-    { path: "/referees/admin/affiliations", permission: "dashboard" },
-    { path: "/referees/admin/referees", permission: "referee" },
-    { path: "/referees/admin/referees/new", permission: "referee" },
-    { path: "/referees/admin/availability", permission: "referee" },
-    { path: "/referees/admin/conflicts", permission: "referee" },
-    { path: "/referees/admin/statistics", permission: "referee" },
-    { path: "/referees/admin/admins", permission: "system" },
-    { path: "/referees/admin/audit-log", permission: "system" },
   ];
   for (const page of pages) {
     const unauthenticated = await fetch(`${baseUrl}${page.path}`, { redirect: "manual" });
-    if (![303, 307, 308].includes(unauthenticated.status) || !unauthenticated.headers.get("location")?.includes("/referees/admin/login")) {
+    if (![303, 307, 308].includes(unauthenticated.status) || !unauthenticated.headers.get("location")?.includes("/admin/login")) {
       throw new Error(`${page.path} unauthenticated direct URL did not redirect to login`);
     }
     for (const role of Object.keys(cookies) as RoleName[]) {
@@ -146,6 +166,256 @@ async function verifyAdminPageMatrix(cookies: Record<RoleName, string>) {
       } else console.log(`PASS ${page.path} ${role} denied direct URL`);
     }
   }
+}
+
+async function verifyLegacyRedirectMatrix() {
+  const routes = [
+    ["/referees/admin", "/admin/referees"],
+    ["/referees/admin/referees", "/admin/referees"],
+    ["/referees/admin/referees/new", "/admin/referees/new"],
+    ["/referees/admin/referees/ref-1", "/admin/referees/ref-1"],
+    ["/referees/admin/availability", "/admin/referees/availability"],
+    ["/referees/admin/affiliations", "/admin/organizations"],
+    ["/referees/admin/conflicts", "/admin/conflicts"],
+    ["/referees/admin/statistics", "/admin/statistics"],
+    ["/referees/admin/admins", "/admin/system/admins"],
+    ["/referees/admin/audit-log", "/admin/system/audit"],
+    ["/referees/admin/matches", "/admin/matches"],
+    ["/referees/admin/matches/new", "/admin/matches/new"],
+    ["/referees/admin/matches/match-1", "/admin/matches/match-1"],
+    ["/referees/admin/matches/match-1/edit", "/admin/matches/match-1/edit"],
+    ["/referees/admin/matches/competitions", "/admin/competitions"],
+    ["/referees/admin/matches/competitions/new", "/admin/competitions/new"],
+    ["/referees/admin/matches/competitions/competition-1/edit", "/admin/competitions/competition-1/edit"],
+  ] as const;
+  for (const [source, destination] of routes) {
+    const response = await fetch(`${baseUrl}${source}?legacy=1`, { redirect: "manual" });
+    const location = response.headers.get("location");
+    if (![307, 308].includes(response.status) || !location) throw new Error(`${source} did not redirect (${response.status}).`);
+    const parsed = new URL(location, baseUrl);
+    if (parsed.pathname !== destination || parsed.searchParams.get("legacy") !== "1") {
+      throw new Error(`${source}: expected ${destination} with query, received ${location}`);
+    }
+    console.log(`PASS legacy redirect ${source} -> ${destination}`);
+  }
+  const loginRedirect = await fetch(`${baseUrl}/referees/admin/login?next=${encodeURIComponent("/referees/admin/statistics")}`, { redirect: "manual" });
+  const loginLocation = new URL(loginRedirect.headers.get("location") ?? "", baseUrl);
+  if (![303, 307, 308].includes(loginRedirect.status) || loginLocation.pathname !== "/admin/login" || loginLocation.searchParams.get("next") !== "/admin/statistics") {
+    throw new Error(`Legacy login next mapping failed: ${loginRedirect.status} ${loginLocation}`);
+  }
+}
+
+async function verifyNavigation(cookies: Record<RoleName, string>) {
+  const expected: Record<RoleName, { shown: string[]; hidden: string[] }> = {
+    super: { shown: ["/admin/content/news", "/admin/competitions", "/admin/referees", "/admin/system/admins"], hidden: [] },
+    content: { shown: ["/admin/content/news"], hidden: ["/admin/competitions", "/admin/referees", "/admin/system/admins"] },
+    competition: { shown: ["/admin/competitions"], hidden: ["/admin/content/news", "/admin/referees", "/admin/system/admins"] },
+    referee: { shown: ["/admin/referees"], hidden: ["/admin/content/news", "/admin/competitions", "/admin/system/admins"] },
+    multi: { shown: ["/admin/competitions", "/admin/referees"], hidden: ["/admin/content/news", "/admin/system/admins"] },
+  };
+  for (const role of Object.keys(cookies) as RoleName[]) {
+    const response = await fetch(`${baseUrl}/admin`, { headers: { cookie: cookies[role] } });
+    expectStatus(`${role} dashboard navigation`, response.status, 200);
+    const html = await response.text();
+    for (const href of expected[role].shown) if (!html.includes(`href="${href}"`)) throw new Error(`${role} navigation missing ${href}`);
+    for (const href of expected[role].hidden) if (html.includes(`href="${href}"`)) throw new Error(`${role} navigation exposed ${href}`);
+  }
+}
+
+async function verifyLoginLandings() {
+  await login("super", undefined, "/admin");
+  await login("content", undefined, "/admin/content/news");
+  await login("competition", undefined, "/admin/competitions");
+  await login("referee", undefined, "/admin/referees");
+  await login("multi", undefined, "/admin");
+  await login("content", "/admin/media", "/admin/media");
+  await login("content", "/admin/competitions", "/admin/content/news");
+  await login("super", "//attacker.invalid", "/admin");
+  await login("super", "admin/media", "/admin");
+}
+
+async function verifyRequiredPasswordChange() {
+  const requiredCookies = Object.fromEntries(await Promise.all(
+    (Object.keys(requiredUsernames) as Array<keyof typeof requiredUsernames>).map(async (role) => [
+      role,
+      await loginCredentials(requiredUsernames[role], password, `required ${role}`, "/admin/media", "/admin"),
+    ] as const),
+  )) as Record<keyof typeof requiredUsernames, string>;
+  const contentOtherSession = await loginCredentials(
+    requiredUsernames.content,
+    password,
+    "required content second session",
+    undefined,
+    "/admin",
+  );
+
+  await expectPasswordChangeGate(
+    "required CONTENT_EDITOR canonical GET",
+    await apiRequest({ path: "/api/admin/content/posts", method: "GET", cookie: requiredCookies.content }),
+  );
+  await expectPasswordChangeGate(
+    "required CONTENT_EDITOR canonical POST",
+    await apiRequest({ path: "/api/admin/content/posts", method: "POST", cookie: requiredCookies.content }),
+  );
+  await expectPasswordChangeGate(
+    "required COMPETITION_ADMIN legacy API",
+    await apiRequest({ path: "/api/referees/admin/competitions", method: "POST", cookie: requiredCookies.competition }),
+  );
+  await expectPasswordChangeGate(
+    "required REFEREE_ADMIN unified admission API",
+    await apiRequest({ path: "/api/referees/admin/admission-applications", method: "GET", cookie: requiredCookies.referee }),
+  );
+  await expectPasswordChangeGate(
+    "required REFEREE_ADMIN legacy API",
+    await apiRequest({ path: "/api/referees/admin/applications", method: "POST", cookie: requiredCookies.referee }),
+  );
+  await expectPasswordChangeGate(
+    "required SUPER_ADMIN canonical system API",
+    await apiRequest({ path: "/api/admin/system/admin-accounts", method: "POST", cookie: requiredCookies.super }),
+  );
+
+  const requiredPages: Array<{ label: string; path: string; cookie: string; forbiddenHref: string }> = [
+    { label: "CONTENT_EDITOR", path: "/admin/content/news", cookie: requiredCookies.content, forbiddenHref: "/admin/content/news" },
+    { label: "COMPETITION_ADMIN", path: "/admin/competitions", cookie: requiredCookies.competition, forbiddenHref: "/admin/competitions" },
+    { label: "REFEREE_ADMIN", path: "/admin/referees", cookie: requiredCookies.referee, forbiddenHref: "/admin/referees" },
+    { label: "SUPER_ADMIN", path: "/admin/system/admins", cookie: requiredCookies.super, forbiddenHref: "/admin/system/admins" },
+  ];
+  for (const page of requiredPages) {
+    const response = await fetch(`${baseUrl}${page.path}`, {
+      headers: { cookie: page.cookie },
+      redirect: "manual",
+    });
+    expectStatus(`required ${page.label} locked page`, response.status, 200);
+    const html = await response.text();
+    if (
+      !html.includes("完成首次密码修改") ||
+      !html.includes("修改成功前不能使用后台业务功能") ||
+      html.includes(`href="${page.forbiddenHref}"`) ||
+      html.includes("aria-label=\"关闭\"") ||
+      html.includes(">取消</button>")
+    ) {
+      throw new Error(`required ${page.label} page did not remain in the non-dismissible locked shell.`);
+    }
+    console.log(`PASS required ${page.label} server-rendered page lock`);
+  }
+  const requiredLoginPage = await fetch(`${baseUrl}/admin/login?next=${encodeURIComponent("/admin/media")}`, {
+    headers: { cookie: requiredCookies.content },
+    redirect: "manual",
+  });
+  if (![303, 307, 308].includes(requiredLoginPage.status) || new URL(requiredLoginPage.headers.get("location") ?? "", baseUrl).pathname !== "/admin") {
+    throw new Error("Existing required-change session did not return to the locked admin shell.");
+  }
+  console.log("PASS required-change login page landing");
+
+  const passwordRequest = (cookie: string, currentPassword: string, newPassword: string, origin = mutationOrigin) => apiRequest({
+    path: "/api/referees/admin/account/password",
+    method: "POST",
+    cookie,
+    origin,
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+  expectStatus(
+    "required password endpoint bad Origin",
+    (await passwordRequest(requiredCookies.content, password, "Required-Content-New-2026!", "https://attacker.invalid")).status,
+    403,
+  );
+  expectStatus(
+    "required password endpoint wrong current password",
+    (await passwordRequest(requiredCookies.content, "Wrong-Password-2026!", "Required-Content-New-2026!")).status,
+    401,
+  );
+  expectStatus(
+    "required password endpoint short new password",
+    (await passwordRequest(requiredCookies.content, password, "too-short")).status,
+    400,
+  );
+  expectStatus(
+    "required password endpoint unchanged password",
+    (await passwordRequest(requiredCookies.content, password, password)).status,
+    400,
+  );
+  await expectPasswordChangeGate(
+    "failed password change preserved required gate",
+    await apiRequest({ path: "/api/admin/content/posts", method: "GET", cookie: requiredCookies.content }),
+  );
+
+  const newContentPassword = "Required-Content-New-2026!";
+  expectStatus(
+    "required password endpoint success",
+    (await passwordRequest(requiredCookies.content, password, newContentPassword)).status,
+    200,
+  );
+  expectAllowedStatus(
+    "current session restored after password change",
+    (await apiRequest({ path: "/api/admin/content/posts", method: "GET", cookie: requiredCookies.content })).status,
+  );
+  expectStatus(
+    "other session invalidated after password change",
+    (await apiRequest({ path: "/api/admin/content/posts", method: "GET", cookie: contentOtherSession })).status,
+    401,
+  );
+  const unlockedPage = await fetch(`${baseUrl}/admin/content/news`, {
+    headers: { cookie: requiredCookies.content },
+  });
+  expectStatus("password-changed CONTENT_EDITOR page restored", unlockedPage.status, 200);
+  const unlockedHtml = await unlockedPage.text();
+  if (!unlockedHtml.includes("新闻公告") || unlockedHtml.includes("完成首次密码修改")) {
+    throw new Error("Password-changed CONTENT_EDITOR did not regain the normal admin shell.");
+  }
+  const oldPasswordLogin = await fetch(`${baseUrl}/api/referees/admin/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: mutationOrigin },
+    body: JSON.stringify({ username: requiredUsernames.content, password }),
+  });
+  expectStatus("old password rejected after required change", oldPasswordLogin.status, 401);
+  await loginCredentials(
+    requiredUsernames.content,
+    newContentPassword,
+    "password-changed content",
+    undefined,
+    "/admin/content/news",
+  );
+
+  expectStatus(
+    "failed COMPETITION_ADMIN password change",
+    (await passwordRequest(requiredCookies.competition, "Wrong-Password-2026!", "Required-Competition-New-2026!")).status,
+    401,
+  );
+  await expectPasswordChangeGate(
+    "failed COMPETITION_ADMIN change preserved legacy gate",
+    await apiRequest({ path: "/api/referees/admin/competitions", method: "POST", cookie: requiredCookies.competition }),
+  );
+
+  if (!legacyPassword) throw new Error("R1_2_LEGACY_PASSWORD is required for the synthetic legacy compatibility gate.");
+  const legacyCookie = await loginCredentials("", legacyPassword, "synthetic legacy administrator", undefined, "/admin");
+  expectAllowedStatus(
+    "synthetic legacy administrator remains authorized",
+    (await apiRequest({ path: "/api/admin/content/posts", method: "GET", cookie: legacyCookie })).status,
+  );
+  const legacyPage = await fetch(`${baseUrl}/admin`, { headers: { cookie: legacyCookie } });
+  expectStatus("synthetic legacy administrator page", legacyPage.status, 200);
+  const legacyPageHtml = await legacyPage.text();
+  if (
+    !legacyPageHtml.includes("Legacy 管理员") ||
+    legacyPageHtml.includes("完成首次密码修改") ||
+    !legacyPageHtml.includes('href="/admin/system/admins"')
+  ) {
+    throw new Error("Synthetic legacy administrator lost its compatibility identity.");
+  }
+
+  expectStatus(
+    "required account logout remains available",
+    (await apiRequest({ path: "/api/referees/admin/logout", method: "POST", cookie: requiredCookies.super })).status,
+    200,
+  );
+  const loggedOutRequiredPage = await fetch(`${baseUrl}/admin`, {
+    headers: { cookie: requiredCookies.super },
+    redirect: "manual",
+  });
+  if (![303, 307, 308].includes(loggedOutRequiredPage.status) || !loggedOutRequiredPage.headers.get("location")?.includes("/admin/login")) {
+    throw new Error("Required account logout did not invalidate the current session.");
+  }
+  console.log("PASS required-password exception, recovery, session invalidation, logout, and legacy compatibility");
 }
 
 async function verifyDatabaseNews() {
@@ -220,11 +490,19 @@ async function verifyMedia(cookies: Record<RoleName, string>) {
 async function main() {
   const health = await fetch(`${baseUrl}/api/health`, { cache: "no-store" });
   expectStatus("isolated app health", health.status, 200);
+  if (requiredPasswordOnly) {
+    await verifyRequiredPasswordChange();
+    return;
+  }
   const cookies = Object.fromEntries(await Promise.all(
     (Object.keys(usernames) as RoleName[]).map(async (role) => [role, await login(role)] as const),
   )) as Record<RoleName, string>;
   await verifyLegacyApiMatrix(cookies);
   await verifyAdminPageMatrix(cookies);
+  await verifyLegacyRedirectMatrix();
+  await verifyNavigation(cookies);
+  await verifyLoginLandings();
+  await verifyRequiredPasswordChange();
   await verifyDatabaseNews();
   await verifyMedia(cookies);
 }

@@ -32,11 +32,24 @@ async function main() {
       prisma.adminAccount.create({ data: { username: "smoke-content", displayName: "冒烟内容编辑", passwordHash, role: "REFEREE_MANAGER" } }),
       prisma.adminAccount.create({ data: { username: "smoke-competition", displayName: "冒烟赛事管理员", passwordHash, role: "REFEREE_MANAGER" } }),
       prisma.adminAccount.create({ data: { username: "smoke-referee", displayName: "冒烟裁判管理员", passwordHash, role: "REFEREE_MANAGER" } }),
+      prisma.adminAccount.create({ data: { username: "smoke-multi", displayName: "冒烟竞赛部部长", passwordHash, role: "REFEREE_MANAGER" } }),
+    ]);
+    const requiredAccounts = await Promise.all([
+      prisma.adminAccount.create({ data: { username: "required-super", displayName: "强制改密超级管理员", passwordHash, role: "SUPER_ADMIN", mustChangePassword: true } }),
+      prisma.adminAccount.create({ data: { username: "required-content", displayName: "强制改密内容编辑", passwordHash, role: "REFEREE_MANAGER", mustChangePassword: true } }),
+      prisma.adminAccount.create({ data: { username: "required-competition", displayName: "强制改密赛事管理员", passwordHash, role: "REFEREE_MANAGER", mustChangePassword: true } }),
+      prisma.adminAccount.create({ data: { username: "required-referee", displayName: "强制改密裁判管理员", passwordHash, role: "REFEREE_MANAGER", mustChangePassword: true } }),
     ]);
     await prisma.adminRoleAssignment.createMany({ data: [
       { adminAccountId: accounts[1].id, role: "CONTENT_EDITOR" },
       { adminAccountId: accounts[2].id, role: "COMPETITION_ADMIN" },
       { adminAccountId: accounts[3].id, role: "REFEREE_ADMIN" },
+      { adminAccountId: accounts[4].id, role: "COMPETITION_ADMIN" },
+      { adminAccountId: accounts[4].id, role: "REFEREE_ADMIN" },
+      { adminAccountId: requiredAccounts[0].id, role: "SUPER_ADMIN" },
+      { adminAccountId: requiredAccounts[1].id, role: "CONTENT_EDITOR" },
+      { adminAccountId: requiredAccounts[2].id, role: "COMPETITION_ADMIN" },
+      { adminAccountId: requiredAccounts[3].id, role: "REFEREE_ADMIN" },
     ] });
     const mediaDirectory = path.join(uploadRoot, "2026", "08");
     await mkdir(mediaDirectory, { recursive: true });
@@ -119,7 +132,7 @@ async function main() {
       qq: "123456789",
       note: "隔离 Browser / HTTP smoke",
     } });
-    console.log(JSON.stringify({ databasePath, uploadRoot, password, competitionId: competition.id, openMatchSlug: openMatch.slug, admissionId: admission.id, refereeId: smokeReferee.id, accounts: accounts.map(({ username }) => username), coverMediaId: cover.id, pdfMediaId: pdf.id, disciplineId: discipline.id, draftId: draft.id }));
+    console.log(JSON.stringify({ databasePath, uploadRoot, password, competitionId: competition.id, openMatchSlug: openMatch.slug, admissionId: admission.id, refereeId: smokeReferee.id, accounts: accounts.map(({ username }) => username), requiredAccounts: requiredAccounts.map(({ username }) => username), coverMediaId: cover.id, pdfMediaId: pdf.id, disciplineId: discipline.id, draftId: draft.id }));
   } finally {
     await prisma.$disconnect();
   }

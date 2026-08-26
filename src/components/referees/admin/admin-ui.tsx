@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 
 export const adminRoleLabels: Record<string, string> = {
-  SUPER_ADMIN: "裁判中心最高管理员",
-  REFEREE_MANAGER: "裁判事务管理员",
+  SUPER_ADMIN: "超级管理员",
+  REFEREE_MANAGER: "裁判管理员",
 };
 
 export const matchStatusLabels: Record<string, string> = {

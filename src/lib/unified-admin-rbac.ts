@@ -164,7 +164,10 @@ export async function getUnifiedAdminActor(
 }
 
 export async function requireUnifiedAdminActor(permission?: UnifiedAdminPermission) {
-  const actor = await getUnifiedAdminActor();
+  const session = await getAdminSession();
+  if (!session) throw new UnifiedAdminAccessError("请先登录管理员后台。", 401);
+  assertUnifiedAdminPasswordChangeCompleted(session);
+  const actor = await getUnifiedAdminActor(session);
   if (!actor) throw new UnifiedAdminAccessError("请先登录管理员后台。", 401);
   if (permission) assertUnifiedAdminPermission(actor, permission);
   return actor;

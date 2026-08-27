@@ -10,7 +10,7 @@ import { isSessionFresh } from "@/lib/referee-security";
 import { SITE_ORIGIN } from "@/lib/site-metadata";
 import { getSafeUnifiedAdminNext } from "@/lib/unified-admin-legacy-routes";
 
-const sessionCookieName = "nuaa_referee_admin";
+export const adminSessionCookieName = "nuaa_referee_admin";
 const sessionDurationMs = 12 * 60 * 60 * 1000;
 
 function getSessionSecret() {
@@ -57,7 +57,7 @@ export async function createAdminSession(username: string, password: string) {
     }
   });
 
-  (await cookies()).set(sessionCookieName, token, {
+  (await cookies()).set(adminSessionCookieName, token, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -72,9 +72,8 @@ export async function createAdminSession(username: string, password: string) {
   };
 }
 
-export async function getAdminSession() {
+export async function getAdminSessionByToken(token: string | null | undefined) {
   const secret = getSessionSecret();
-  const token = (await cookies()).get(sessionCookieName)?.value;
   if (!secret || !token) return null;
   const session = await prisma.adminSession.findUnique({
     where: { tokenHash: hashToken(token, secret) },
@@ -102,6 +101,10 @@ export async function getAdminSession() {
   return session;
 }
 
+export async function getAdminSession() {
+  return getAdminSessionByToken((await cookies()).get(adminSessionCookieName)?.value);
+}
+
 export function getAdminActor(session: Awaited<ReturnType<typeof getAdminSession>>) {
   if (!session) return null;
   const role = session.adminAccount?.role ?? "SUPER_ADMIN";
@@ -116,13 +119,13 @@ export function getAdminActor(session: Awaited<ReturnType<typeof getAdminSession
 export async function destroyAdminSession() {
   const secret = getSessionSecret();
   const cookieStore = await cookies();
-  const token = cookieStore.get(sessionCookieName)?.value;
+  const token = cookieStore.get(adminSessionCookieName)?.value;
   if (secret && token) {
     await prisma.adminSession.deleteMany({
       where: { tokenHash: hashToken(token, secret) },
     });
   }
-  cookieStore.delete(sessionCookieName);
+  cookieStore.delete(adminSessionCookieName);
 }
 
 function isLocalDevelopmentUrl(value: URL) {

@@ -5,7 +5,12 @@ import path from "node:path";
 import type { MediaVisibility, Prisma } from "@/generated/prisma-v29/client";
 import { UnifiedAdminInputError } from "@/lib/unified-admin-api";
 import { prisma } from "@/lib/prisma";
-import { assertUnifiedAdminPermission, UnifiedAdminAccessError, type UnifiedAdminActor } from "@/lib/unified-admin-rbac";
+import {
+  assertUnifiedAdminPermission,
+  UnifiedAdminAccessError,
+  unifiedAdminPasswordChangeRequiredCode,
+  type UnifiedAdminActor,
+} from "@/lib/unified-admin-rbac";
 
 type AllowedUpload = {
   extensions: readonly string[];
@@ -236,10 +241,21 @@ export async function getAdminMediaPage(input: { actor: UnifiedAdminActor; page?
   return { items, total, page, pageSize, totalPages: Math.max(1, Math.ceil(total / pageSize)) };
 }
 
-export async function resolveMediaAssetFile(id: string, actor: UnifiedAdminActor | null) {
+export async function resolveMediaAssetFile(
+  id: string,
+  actor: UnifiedAdminActor | null,
+  options: { passwordChangeRequired?: boolean } = {},
+) {
   const asset = await prisma.mediaAsset.findUnique({ where: { id }, select: { id: true, originalFilename: true, storageKey: true, mimeType: true, size: true, visibility: true } });
   if (!asset) throw new UnifiedAdminInputError("媒体不存在。", 404);
   if (asset.visibility === "PRIVATE") {
+    if (options.passwordChangeRequired) {
+      throw new UnifiedAdminAccessError(
+        "请先修改管理员初始密码。",
+        403,
+        unifiedAdminPasswordChangeRequiredCode,
+      );
+    }
     if (!actor) throw new UnifiedAdminAccessError("请先登录管理员后台。", 401);
     assertUnifiedAdminPermission(actor, "media:read");
   }

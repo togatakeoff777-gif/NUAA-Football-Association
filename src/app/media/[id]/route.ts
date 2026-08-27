@@ -2,8 +2,12 @@ import { createReadStream } from "node:fs";
 import { Readable } from "node:stream";
 
 import { getMediaUploadRoot, resolveMediaAssetFile } from "@/lib/admin-media-service";
+import { getAdminSession } from "@/lib/referee-auth";
 import { unifiedAdminErrorResponse } from "@/lib/unified-admin-api";
-import { getUnifiedAdminActor } from "@/lib/unified-admin-rbac";
+import {
+  getUnifiedAdminActor,
+  isUnifiedAdminPasswordChangeRequired,
+} from "@/lib/unified-admin-rbac";
 
 export const dynamic = "force-dynamic";
 
@@ -23,8 +27,12 @@ export async function GET(_request: Request, context: RouteContext<"/media/[id]"
     // Resolve the configured root up front so a missing environment variable fails closed.
     getMediaUploadRoot();
     const { id } = await context.params;
-    const actor = await getUnifiedAdminActor();
-    const asset = await resolveMediaAssetFile(id, actor);
+    const session = await getAdminSession();
+    const passwordChangeRequired = isUnifiedAdminPasswordChangeRequired(session);
+    const actor = passwordChangeRequired ? null : await getUnifiedAdminActor(session);
+    const asset = await resolveMediaAssetFile(id, actor, {
+      passwordChangeRequired,
+    });
     const body = Readable.toWeb(createReadStream(asset.filePath)) as ReadableStream<Uint8Array>;
     return new Response(body, {
       headers: {

@@ -1,19 +1,13 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 import { ContentPostForm } from "@/components/admin/content-post-form";
 import { AdminPageHeader } from "@/components/referees/admin/admin-ui";
 import { getAdminContentPost } from "@/lib/admin-content-service";
 import { prisma } from "@/lib/prisma";
-import { requireUnifiedAdminActor, UnifiedAdminAccessError } from "@/lib/unified-admin-rbac";
+import { guardUnifiedAdminPage } from "@/lib/unified-admin-page";
 
 export default async function EditContentPostPage({ params }: { params: Promise<{ id: string }> }) {
-  let actor;
-  try {
-    actor = await requireUnifiedAdminActor("content:write");
-  } catch (error) {
-    if (error instanceof UnifiedAdminAccessError) redirect("/admin?denied=content");
-    throw error;
-  }
+  const actor = await guardUnifiedAdminPage("content:write", "content");
   const { id } = await params;
   const [post, imageMedia, pdfMedia, competitions] = await Promise.all([
     getAdminContentPost(id, actor),

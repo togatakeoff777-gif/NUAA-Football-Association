@@ -33,6 +33,8 @@ async function main() {
       prisma.adminAccount.create({ data: { username: "smoke-competition", displayName: "冒烟赛事管理员", passwordHash, role: "REFEREE_MANAGER" } }),
       prisma.adminAccount.create({ data: { username: "smoke-referee", displayName: "冒烟裁判管理员", passwordHash, role: "REFEREE_MANAGER" } }),
       prisma.adminAccount.create({ data: { username: "smoke-multi", displayName: "冒烟竞赛部部长", passwordHash, role: "REFEREE_MANAGER" } }),
+      prisma.adminAccount.create({ data: { username: "smoke-content-referee", displayName: "冒烟内容裁判联席", passwordHash, role: "REFEREE_MANAGER" } }),
+      prisma.adminAccount.create({ data: { username: "smoke-content-competition", displayName: "冒烟内容赛事联席", passwordHash, role: "REFEREE_MANAGER" } }),
     ]);
     const requiredAccounts = await Promise.all([
       prisma.adminAccount.create({ data: { username: "required-super", displayName: "强制改密超级管理员", passwordHash, role: "SUPER_ADMIN", mustChangePassword: true } }),
@@ -46,6 +48,10 @@ async function main() {
       { adminAccountId: accounts[3].id, role: "REFEREE_ADMIN" },
       { adminAccountId: accounts[4].id, role: "COMPETITION_ADMIN" },
       { adminAccountId: accounts[4].id, role: "REFEREE_ADMIN" },
+      { adminAccountId: accounts[5].id, role: "CONTENT_EDITOR" },
+      { adminAccountId: accounts[5].id, role: "REFEREE_ADMIN" },
+      { adminAccountId: accounts[6].id, role: "CONTENT_EDITOR" },
+      { adminAccountId: accounts[6].id, role: "COMPETITION_ADMIN" },
       { adminAccountId: requiredAccounts[0].id, role: "SUPER_ADMIN" },
       { adminAccountId: requiredAccounts[1].id, role: "CONTENT_EDITOR" },
       { adminAccountId: requiredAccounts[2].id, role: "COMPETITION_ADMIN" },
@@ -55,12 +61,16 @@ async function main() {
     await mkdir(mediaDirectory, { recursive: true });
     const coverKey = "2026/08/11111111-1111-4111-8111-111111111111.png";
     const pdfKey = "2026/08/22222222-2222-4222-8222-222222222222.pdf";
+    const privateKey = "2026/08/33333333-3333-4333-8333-333333333333.pdf";
     const coverBytes = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64");
     const pdfBytes = new TextEncoder().encode("%PDF-1.7\nNUAAFA R1-2 SMOKE\n%%EOF");
+    const privateBytes = new TextEncoder().encode("%PDF-1.7\nNUAAFA PRIVATE RBAC SMOKE\n%%EOF");
     await writeFile(path.join(uploadRoot, ...coverKey.split("/")), coverBytes);
     await writeFile(path.join(uploadRoot, ...pdfKey.split("/")), pdfBytes);
+    await writeFile(path.join(uploadRoot, ...privateKey.split("/")), privateBytes);
     const cover = await prisma.mediaAsset.create({ data: { storageKey: coverKey, originalFilename: "r1-2-cover.png", storedFilename: path.basename(coverKey), mimeType: "image/png", size: coverBytes.length, visibility: "PUBLIC", altText: "R1-2 新闻封面", uploadedByAdminId: accounts[1].id } });
     const pdf = await prisma.mediaAsset.create({ data: { storageKey: pdfKey, originalFilename: "r1-2-discipline.pdf", storedFilename: path.basename(pdfKey), mimeType: "application/pdf", size: pdfBytes.length, visibility: "PUBLIC", uploadedByAdminId: accounts[1].id } });
+    const privateMedia = await prisma.mediaAsset.create({ data: { storageKey: privateKey, originalFilename: "r1-2-private-proof.pdf", storedFilename: path.basename(privateKey), mimeType: "application/pdf", size: privateBytes.length, visibility: "PRIVATE", altText: "Required-password PRIVATE media proof", uploadedByAdminId: accounts[1].id } });
     const document = (text: string) => ({ schemaVersion: 1, document: { type: "doc", content: [{ type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "R1-2 富文本标题" }] }, { type: "paragraph", content: [{ type: "text", text, marks: [{ type: "bold" }] }] }, { type: "bulletList", content: [{ type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "列表项目" }] }] }] }] } });
     const baseTime = Date.parse("2026-08-01T00:00:00.000Z");
     for (let index = 1; index <= 30; index += 1) {
@@ -132,7 +142,7 @@ async function main() {
       qq: "123456789",
       note: "隔离 Browser / HTTP smoke",
     } });
-    console.log(JSON.stringify({ databasePath, uploadRoot, password, competitionId: competition.id, openMatchSlug: openMatch.slug, admissionId: admission.id, refereeId: smokeReferee.id, accounts: accounts.map(({ username }) => username), requiredAccounts: requiredAccounts.map(({ username }) => username), coverMediaId: cover.id, pdfMediaId: pdf.id, disciplineId: discipline.id, draftId: draft.id }));
+    console.log(JSON.stringify({ databasePath, uploadRoot, password, competitionId: competition.id, matchId: openMatch.id, openMatchSlug: openMatch.slug, admissionId: admission.id, refereeId: smokeReferee.id, accounts: accounts.map(({ username }) => username), requiredAccounts: requiredAccounts.map(({ username }) => username), coverMediaId: cover.id, pdfMediaId: pdf.id, privateMediaId: privateMedia.id, disciplineId: discipline.id, draftId: draft.id }));
   } finally {
     await prisma.$disconnect();
   }

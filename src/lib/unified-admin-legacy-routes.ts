@@ -1,6 +1,6 @@
 const legacyExactRoutes: Record<string, string> = {
-  "/referees/admin": "/admin/referees",
-  "/referees/admin/": "/admin/referees",
+  "/referees/admin": "/admin",
+  "/referees/admin/": "/admin",
   "/referees/admin/referees": "/admin/referees",
   "/referees/admin/referees/new": "/admin/referees/new",
   "/referees/admin/availability": "/admin/referees/availability",
@@ -14,32 +14,6 @@ const legacyExactRoutes: Record<string, string> = {
   "/referees/admin/matches/competitions": "/admin/competitions",
   "/referees/admin/matches/competitions/new": "/admin/competitions/new",
 };
-
-export const legacyUnifiedAdminRedirects = [
-  ...Object.entries(legacyExactRoutes)
-    .filter(([source]) => source !== "/referees/admin/")
-    .map(([source, destination]) => ({ source, destination, permanent: false })),
-  {
-    source: "/referees/admin/matches/competitions/:id/edit",
-    destination: "/admin/competitions/:id/edit",
-    permanent: false,
-  },
-  {
-    source: "/referees/admin/matches/:id/edit",
-    destination: "/admin/matches/:id/edit",
-    permanent: false,
-  },
-  {
-    source: "/referees/admin/matches/:id",
-    destination: "/admin/matches/:id",
-    permanent: false,
-  },
-  {
-    source: "/referees/admin/referees/:id",
-    destination: "/admin/referees/:id",
-    permanent: false,
-  },
-] as const;
 
 function canonicalSegment(value: string) {
   return encodeURIComponent(decodeURIComponent(value));

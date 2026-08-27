@@ -5,20 +5,40 @@ import {
   assertLoginAllowed,
   clearLoginFailures,
   getLoginKey,
+  LoginRateLimitError,
   recordLoginFailure,
 } from "@/lib/referee-security";
 import { resolveUnifiedAdminRoles } from "@/lib/unified-admin-rbac";
 import { getAuthorizedUnifiedAdminReturnTo } from "@/lib/unified-admin-routing";
+
+class AdminLoginInputError extends Error {}
+
+async function readAdminLoginInput(request: Request) {
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    throw new AdminLoginInputError("登录信息格式不正确。");
+  }
+  if (!isRecord(body)) throw new AdminLoginInputError("登录信息格式不正确。");
+  try {
+    return {
+      username: readShortText(body.username, "管理员账号", 64, false),
+      password: readShortText(body.password, "管理员密码", 256),
+      next: typeof body.next === "string" ? body.next : undefined,
+    };
+  } catch (error) {
+    if (error instanceof Error) throw new AdminLoginInputError(error.message);
+    throw error;
+  }
+}
 
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) return NextResponse.json({ error: "请求来源无效。" }, { status: 403 });
   const configurationIssue = getAdminConfigurationIssue();
   if (configurationIssue) return NextResponse.json({ error: "裁判管理后台暂未开放。" }, { status: 503 });
   try {
-    const body: unknown = await request.json();
-    if (!isRecord(body)) throw new Error("登录信息格式不正确。" );
-    const username = readShortText(body.username, "管理员账号", 64, false);
-    const password = readShortText(body.password, "管理员密码", 256);
+    const { username, password, next } = await readAdminLoginInput(request);
     const loginKey = getLoginKey(request, username || "legacy-administrator");
     await assertLoginAllowed("admin", loginKey);
     const identity = await createAdminSession(username, password);
@@ -33,17 +53,18 @@ export async function POST(request: Request) {
       returnTo: identity.mustChangePassword
         ? "/admin"
         : getAuthorizedUnifiedAdminReturnTo(
-            typeof body.next === "string" ? body.next : undefined,
+            next,
             roles,
           ),
     });
   } catch (error) {
-    if (error instanceof Error && error.message.includes("过于频繁")) {
+    if (error instanceof AdminLoginInputError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    if (error instanceof LoginRateLimitError) {
       return NextResponse.json({ error: error.message }, { status: 429 });
     }
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "登录失败。" },
-      { status: 400 },
-    );
+    console.error("[unified-admin-login] unexpected runtime failure", error);
+    return NextResponse.json({ error: "登录失败，请稍后再试。" }, { status: 500 });
   }
 }

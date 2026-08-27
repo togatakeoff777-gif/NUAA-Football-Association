@@ -2,10 +2,12 @@ import Link from "next/link";
 
 import { AdminPageHeader, AdminPanel } from "@/components/referees/admin/admin-ui";
 import { prisma } from "@/lib/prisma";
-import { hasUnifiedAdminPermission, requireUnifiedAdminActor } from "@/lib/unified-admin-rbac";
+import { getUnifiedAdminLandingPageActor } from "@/lib/unified-admin-page";
+import { hasUnifiedAdminPermission } from "@/lib/unified-admin-rbac";
 
 export default async function UnifiedAdminDashboardPage() {
-  const actor = await requireUnifiedAdminActor("dashboard:read");
+  const actor = await getUnifiedAdminLandingPageActor();
+  if (!actor) return null;
   const canReadContent = hasUnifiedAdminPermission(actor.roles, "content:read");
   const canReadCompetitions = hasUnifiedAdminPermission(actor.roles, "competitions:read");
   const canReadReferees = hasUnifiedAdminPermission(actor.roles, "referees:read");

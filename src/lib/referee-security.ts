@@ -8,6 +8,13 @@ const passwordKeyLength = 64;
 const maximumFailures = 5;
 const lockDurationMs = 15 * 60 * 1000;
 
+export class LoginRateLimitError extends Error {
+  constructor() {
+    super("登录尝试过于频繁，请稍后再试。");
+    this.name = "LoginRateLimitError";
+  }
+}
+
 export async function hashPassword(password: string) {
   if (password.length < 12 || password.length > 256) {
     throw new Error("密码须为 12 至 256 个字符。");
@@ -50,7 +57,7 @@ export async function assertLoginAllowed(scope: "admin" | "referee", keyHash: st
     where: { scope_keyHash: { scope, keyHash } },
   });
   if (attempt?.blockedUntil && attempt.blockedUntil > new Date()) {
-    throw new Error("登录尝试过于频繁，请稍后再试。");
+    throw new LoginRateLimitError();
   }
 }
 

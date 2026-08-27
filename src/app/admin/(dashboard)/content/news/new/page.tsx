@@ -1,18 +1,11 @@
-import { redirect } from "next/navigation";
-
 import { createEmptyStructuredContent } from "@/lib/admin-content-input";
 import { ContentPostForm } from "@/components/admin/content-post-form";
 import { AdminPageHeader } from "@/components/referees/admin/admin-ui";
 import { prisma } from "@/lib/prisma";
-import { requireUnifiedAdminActor, UnifiedAdminAccessError } from "@/lib/unified-admin-rbac";
+import { guardUnifiedAdminPage } from "@/lib/unified-admin-page";
 
 export default async function NewContentPostPage() {
-  try {
-    await requireUnifiedAdminActor("content:write");
-  } catch (error) {
-    if (error instanceof UnifiedAdminAccessError) redirect("/admin?denied=content");
-    throw error;
-  }
+  await guardUnifiedAdminPage("content:write", "content");
   const [imageMedia, pdfMedia, competitions] = await Promise.all([
     prisma.mediaAsset.findMany({ where: { visibility: "PUBLIC", mimeType: { startsWith: "image/" } }, select: { id: true, originalFilename: true }, orderBy: { createdAt: "desc" }, take: 100 }),
     prisma.mediaAsset.findMany({ where: { visibility: "PUBLIC", mimeType: "application/pdf" }, select: { id: true, originalFilename: true }, orderBy: { createdAt: "desc" }, take: 100 }),

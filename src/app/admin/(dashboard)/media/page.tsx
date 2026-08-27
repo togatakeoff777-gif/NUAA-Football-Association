@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 import { MediaUploadForm } from "@/components/admin/media-upload-form";
 import { AdminEmptyState, AdminPageHeader, AdminPanel } from "@/components/referees/admin/admin-ui";
 import { getAdminMediaPage } from "@/lib/admin-media-service";
 import { formatRefereeDateTime } from "@/lib/referee-presenters";
-import { hasUnifiedAdminPermission, requireUnifiedAdminActor, UnifiedAdminAccessError } from "@/lib/unified-admin-rbac";
+import { guardUnifiedAdminPage } from "@/lib/unified-admin-page";
+import { hasUnifiedAdminPermission } from "@/lib/unified-admin-rbac";
 
 function formatBytes(size: number) {
   if (size >= 1024 * 1024) return `${(size / 1024 / 1024).toFixed(1)} MB`;
@@ -17,13 +17,7 @@ export default async function AdminMediaPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  let actor;
-  try {
-    actor = await requireUnifiedAdminActor("media:read");
-  } catch (error) {
-    if (error instanceof UnifiedAdminAccessError) redirect("/admin?denied=media");
-    throw error;
-  }
+  const actor = await guardUnifiedAdminPage("media:read", "media");
   const params = await searchParams;
   const page = typeof params.page === "string" ? Number(params.page) : 1;
   const visibility = params.visibility === "PUBLIC" || params.visibility === "PRIVATE" ? params.visibility : undefined;

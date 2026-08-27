@@ -4,13 +4,13 @@ import { notFound } from "next/navigation";
 import { StructuredContentView } from "@/components/structured-content-view";
 import { AdminPageHeader, AdminPanel } from "@/components/referees/admin/admin-ui";
 import { getAdminContentPost } from "@/lib/admin-content-service";
-import { requireUnifiedAdminActor } from "@/lib/unified-admin-rbac";
+import { guardUnifiedAdminPage } from "@/lib/unified-admin-page";
 
 export const metadata: Metadata = { title: "内容安全预览", robots: { index: false, follow: false, nocache: true } };
 export const dynamic = "force-dynamic";
 
 export default async function AdminContentPreviewPage({ params }: { params: Promise<{ id: string }> }) {
-  const actor = await requireUnifiedAdminActor("content:read");
+  const actor = await guardUnifiedAdminPage("content:read", "content-preview");
   const { id } = await params;
   const post = await getAdminContentPost(id, actor);
   if (!post) notFound();

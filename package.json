@@ -25,6 +25,7 @@
     "test:unified-admin-r1-2": "tsx scripts/test-unified-admin-r1-2.ts",
     "test:unified-admin-r1-2:http": "tsx scripts/test-unified-admin-r1-2-http.ts",
     "test:unified-admin-rbac": "tsx scripts/test-unified-admin-rbac.ts",
+    "test:unified-admin-blockers:http": "tsx scripts/test-unified-admin-blockers.ts",
     "test:competition-import": "tsx scripts/test-competition-import.ts",
     "test:competition-import:http": "tsx scripts/test-competition-import-http.ts",
     "test:unified-admin-migration": "tsx scripts/test-unified-admin-migration.ts",

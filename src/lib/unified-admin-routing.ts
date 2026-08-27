@@ -4,7 +4,10 @@ import {
   hasUnifiedAdminPermission,
   type UnifiedAdminPermission,
 } from "@/lib/unified-admin-rbac";
-import { getSafeUnifiedAdminNext } from "@/lib/unified-admin-legacy-routes";
+import {
+  getSafeUnifiedAdminNext,
+  mapLegacyAdminPathToUnified,
+} from "@/lib/unified-admin-legacy-routes";
 
 export { getSafeUnifiedAdminNext } from "@/lib/unified-admin-legacy-routes";
 
@@ -54,10 +57,44 @@ export function getUnifiedAdminDefaultLanding(roles: readonly UnifiedAdminRole[]
   return "/admin/login";
 }
 
+export function resolveAuthorizedLegacyAdminDestination(
+  value: string,
+  roles: readonly UnifiedAdminRole[],
+) {
+  const { pathname, suffix } = splitPathSuffix(value);
+  if (pathname === "/referees/admin" || pathname === "/referees/admin/") {
+    return getUnifiedAdminDefaultLanding(roles);
+  }
+
+  const canReadCompetitions = hasUnifiedAdminPermission(roles, "competitions:read");
+  const canReadReferees = hasUnifiedAdminPermission(roles, "referees:read");
+  if (pathname === "/referees/admin/matches") {
+    if (canReadCompetitions) return `/admin/matches${suffix}`;
+    if (canReadReferees) return `/admin/appointments${suffix}`;
+    return null;
+  }
+
+  const matchDetail = pathname.match(/^\/referees\/admin\/matches\/([^/]+)$/);
+  if (matchDetail) {
+    const id = encodeURIComponent(decodeURIComponent(matchDetail[1]));
+    if (canReadCompetitions) return `/admin/matches/${id}${suffix}`;
+    if (canReadReferees) return `/admin/appointments/${id}${suffix}`;
+    return null;
+  }
+
+  const mapped = mapLegacyAdminPathToUnified(value);
+  return mapped && canAccessUnifiedAdminRoute(roles, mapped) ? mapped : null;
+}
+
 export function getAuthorizedUnifiedAdminReturnTo(
   value: string | string[] | undefined,
   roles: readonly UnifiedAdminRole[],
 ) {
+  const candidate = Array.isArray(value) ? value[0] : value;
+  if (candidate?.startsWith("/referees/admin")) {
+    return resolveAuthorizedLegacyAdminDestination(candidate, roles)
+      ?? getUnifiedAdminDefaultLanding(roles);
+  }
   const safe = getSafeUnifiedAdminNext(value);
   return safe && canAccessUnifiedAdminRoute(roles, safe)
     ? safe

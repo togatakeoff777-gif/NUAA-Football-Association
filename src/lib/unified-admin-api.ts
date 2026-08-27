@@ -26,10 +26,11 @@ export async function authorizeUnifiedAdminRequest(
     throw new UnifiedAdminAccessError("请求来源无效。", 403);
   }
   const session = await getAdminSession();
-  const actor = await getUnifiedAdminActor(session);
-  if (!session || !actor) throw new UnifiedAdminAccessError("请先登录管理员后台。", 401);
-  assertUnifiedAdminPermission(actor, permission);
+  if (!session) throw new UnifiedAdminAccessError("请先登录管理员后台。", 401);
   assertUnifiedAdminPasswordChangeCompleted(session);
+  const actor = await getUnifiedAdminActor(session);
+  if (!actor) throw new UnifiedAdminAccessError("请先登录管理员后台。", 401);
+  assertUnifiedAdminPermission(actor, permission);
   return actor;
 }
 

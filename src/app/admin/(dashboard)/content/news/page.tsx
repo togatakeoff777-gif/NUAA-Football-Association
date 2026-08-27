@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 import { AdminEmptyState, AdminPageHeader, AdminPanel, AdminStatusBadge } from "@/components/referees/admin/admin-ui";
 import {
@@ -9,7 +8,7 @@ import {
   parseContentPage,
 } from "@/lib/admin-content-service";
 import { formatRefereeDateTime } from "@/lib/referee-presenters";
-import { requireUnifiedAdminActor, UnifiedAdminAccessError } from "@/lib/unified-admin-rbac";
+import { guardUnifiedAdminPage } from "@/lib/unified-admin-page";
 
 function pageHref(page: number, query: Record<string, string>) {
   const params = new URLSearchParams({ ...query, page: String(page) });
@@ -22,13 +21,7 @@ export default async function AdminNewsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  let actor;
-  try {
-    actor = await requireUnifiedAdminActor("content:read");
-  } catch (error) {
-    if (error instanceof UnifiedAdminAccessError) redirect("/admin?denied=content");
-    throw error;
-  }
+  const actor = await guardUnifiedAdminPage("content:read", "content");
   const params = await searchParams;
   const query = typeof params.query === "string" ? params.query : "";
   const status = typeof params.status === "string" && ["DRAFT", "PUBLISHED", "ARCHIVED"].includes(params.status)

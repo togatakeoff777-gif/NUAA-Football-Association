@@ -1,2 +1,3 @@
 ops/deploy/nuaafa-deploy text eol=lf
 scripts/test-deployer.sh text eol=lf
+*.prisma text eol=lf

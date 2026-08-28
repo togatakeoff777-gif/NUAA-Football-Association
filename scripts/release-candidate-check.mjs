@@ -82,6 +82,7 @@ async function main() {
   await run(process.execPath, [path.resolve("node_modules/prisma/build/index.js"), "format", "--check"], "Prisma format");
   await run(process.execPath, [path.resolve("node_modules/prisma/build/index.js"), "validate"], "Prisma validate");
   await run(process.execPath, [path.resolve("node_modules/prisma/build/index.js"), "generate"], "Prisma generate");
+  await run(process.execPath, [path.resolve("node_modules/next/dist/bin/next"), "typegen"], "Next.js typegen");
   await run(process.execPath, [path.resolve("node_modules/typescript/bin/tsc"), "--noEmit"], "TypeScript --noEmit");
   await npm(["run", "lint"], "ESLint");
   await npm(["run", "check:unicode"], "Unicode safety");

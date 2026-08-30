@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
+import { refereeApiErrorResponse, RefereeApiInputError } from "@/lib/referee-api";
 import {
   createAdminApplicationException,
-  RefereeServiceError,
 } from "@/lib/referee-service";
 import {
   isRecord,
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   try {
     const body: unknown = await request.json();
     if (!isRecord(body) || !Array.isArray(body.preferredPositions)) {
-      throw new Error("补录内容格式不正确。");
+      throw new RefereeApiInputError("补录内容格式不正确。");
     }
     const application = await createAdminApplicationException({
       matchId: readShortText(body.matchId, "比赛", 64),
@@ -34,10 +34,6 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (error) {
-    const status = error instanceof RefereeServiceError ? error.status : 400;
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "补录失败。" },
-      { status },
-    );
+    return refereeApiErrorResponse(error, "补录失败，请稍后重试。");
   }
 }

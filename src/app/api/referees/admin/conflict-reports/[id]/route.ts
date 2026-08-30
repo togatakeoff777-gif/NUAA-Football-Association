@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
+import { refereeApiErrorResponse, RefereeApiInputError } from "@/lib/referee-api";
 import { resolveAppointmentConflictReport } from "@/lib/referee-r1-service";
-import { RefereeServiceError } from "@/lib/referee-service";
 import { isRecord, readEnum, readShortText } from "@/lib/referee-validation";
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -10,7 +10,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (!authorization.ok) return authorization.response;
   try {
     const body: unknown = await request.json();
-    if (!isRecord(body)) throw new Error("处理内容格式不正确。");
+    if (!isRecord(body)) throw new RefereeApiInputError("处理内容格式不正确。");
     const { id } = await context.params;
     await resolveAppointmentConflictReport(
       id,
@@ -20,9 +20,6 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     );
     return NextResponse.json({ ok: true });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "处理失败。" },
-      { status: error instanceof RefereeServiceError ? error.status : 400 },
-    );
+    return refereeApiErrorResponse(error, "处理失败，请稍后重试。");
   }
 }

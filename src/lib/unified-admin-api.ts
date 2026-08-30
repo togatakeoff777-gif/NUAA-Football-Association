@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getAdminSession, isSameOrigin } from "@/lib/referee-auth";
+import { refereeApiErrorResponse, RefereeApiInputError } from "@/lib/referee-api";
 import { RefereeServiceError } from "@/lib/referee-service-error";
 import {
   assertUnifiedAdminPasswordChangeCompleted,
@@ -38,6 +39,7 @@ export function unifiedAdminErrorResponse(error: unknown, fallback: string) {
   if (
     error instanceof UnifiedAdminAccessError ||
     error instanceof UnifiedAdminInputError ||
+    error instanceof RefereeApiInputError ||
     error instanceof RefereeServiceError
   ) {
     return NextResponse.json(
@@ -48,6 +50,5 @@ export function unifiedAdminErrorResponse(error: unknown, fallback: string) {
       { status: error.status },
     );
   }
-  console.error(error);
-  return NextResponse.json({ error: fallback }, { status: 500 });
+  return refereeApiErrorResponse(error, fallback);
 }

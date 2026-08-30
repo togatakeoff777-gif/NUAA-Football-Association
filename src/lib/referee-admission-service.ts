@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import type { Prisma, RefereeAdmissionApplicationStatus } from "@/generated/prisma-v29/client";
 import { prisma } from "@/lib/prisma";
 import {
@@ -18,8 +20,8 @@ function readAdmissionApplicationInput(input: unknown) {
   }
 
   try {
-    const name = readShortText(input.name, "姓名", 48);
-    const studentId = readShortText(input.studentId, "学号", 32, false);
+    const name = readShortText(input.name, "姓名", 48).normalize("NFKC").replace(/\s+/gu, " ");
+    const studentId = readShortText(input.studentId, "学号", 32, false).normalize("NFKC").toUpperCase();
     const phone = readShortText(input.phone, "手机号", 32, false);
     const qq = readShortText(input.qq, "QQ", 32, false);
     const note = readShortText(input.note, "补充说明", 240, false);
@@ -43,23 +45,109 @@ function readAdmissionApplicationInput(input: unknown) {
   }
 }
 
-export async function submitRefereeAdmissionApplication(input: unknown) {
-  const { name, studentId, phone, qq, note } = readAdmissionApplicationInput(input);
+export const admissionDuplicateCooldownMs = 7 * 24 * 60 * 60 * 1000;
+export const admissionAddressWindowMs = 15 * 60 * 1000;
+export const admissionAddressMaximumSubmissions = 30;
+const admissionRateLimitScope = "referee-admission-address";
+const admissionSubmissionLocks = new Map<string, Promise<unknown>>();
 
-  return prisma.refereeAdmissionApplication.create({
-    data: {
-      name,
-      studentId: studentId || null,
-      phone: phone || null,
-      qq: qq || null,
-      note: note || null,
-      status: "PENDING",
-    },
-    select: {
-      id: true,
-      status: true,
-    },
+function admissionIdentityKeys(input: ReturnType<typeof readAdmissionApplicationInput>) {
+  return [
+    input.studentId ? `student:${input.studentId}` : null,
+    input.phone ? `name-phone:${input.name}:${input.phone}` : null,
+    input.qq ? `name-qq:${input.name}:${input.qq}` : null,
+  ]
+    .filter((item): item is string => item !== null)
+    .map((item) => createHash("sha256").update(item).digest("hex"))
+    .sort();
+}
+
+async function withAdmissionIdentityLocks<T>(keys: string[], work: () => Promise<T>) {
+  const previous = [...new Set(keys.map((key) => admissionSubmissionLocks.get(key)).filter(Boolean))];
+  const current = Promise.all(previous.map((promise) => promise?.catch(() => undefined))).then(work);
+  for (const key of keys) admissionSubmissionLocks.set(key, current);
+  try {
+    return await current;
+  } finally {
+    for (const key of keys) {
+      if (admissionSubmissionLocks.get(key) === current) admissionSubmissionLocks.delete(key);
+    }
+  }
+}
+
+async function consumeAdmissionAddressQuota(
+  tx: Prisma.TransactionClient,
+  rateLimitKey: string,
+  now: Date,
+) {
+  const current = await tx.loginAttempt.findUnique({
+    where: { scope_keyHash: { scope: admissionRateLimitScope, keyHash: rateLimitKey } },
   });
+  if (current?.blockedUntil && current.blockedUntil > now) {
+    if (current.failures >= admissionAddressMaximumSubmissions) {
+      throw new RefereeServiceError("申请提交过于频繁，请稍后再试。", 429);
+    }
+    await tx.loginAttempt.update({
+      where: { id: current.id },
+      data: { failures: current.failures + 1 },
+    });
+    return;
+  }
+  const windowEnd = new Date(now.getTime() + admissionAddressWindowMs);
+  await tx.loginAttempt.upsert({
+    where: { scope_keyHash: { scope: admissionRateLimitScope, keyHash: rateLimitKey } },
+    create: {
+      scope: admissionRateLimitScope,
+      keyHash: rateLimitKey,
+      failures: 1,
+      blockedUntil: windowEnd,
+    },
+    update: { failures: 1, blockedUntil: windowEnd },
+  });
+}
+
+export async function submitRefereeAdmissionApplication(
+  input: unknown,
+  options: { rateLimitKey?: string; now?: Date } = {},
+) {
+  const { name, studentId, phone, qq, note } = readAdmissionApplicationInput(input);
+  const normalized = { name, studentId, phone, qq, note };
+  const now = options.now ?? new Date();
+  return withAdmissionIdentityLocks(admissionIdentityKeys(normalized), () => prisma.$transaction(async (tx) => {
+    const duplicateIdentifiers = [
+      studentId ? { studentId } : null,
+      phone ? { name, phone } : null,
+      qq ? { name, qq } : null,
+    ].filter((item): item is NonNullable<typeof item> => item !== null);
+    const duplicate = await tx.refereeAdmissionApplication.findFirst({
+      where: {
+        status: "PENDING",
+        createdAt: { gte: new Date(now.getTime() - admissionDuplicateCooldownMs) },
+        OR: duplicateIdentifiers,
+      },
+      select: { id: true },
+    });
+    if (duplicate) {
+      throw new RefereeServiceError("相同申请信息近期已有待审核记录，请勿重复提交。", 409);
+    }
+    if (options.rateLimitKey) {
+      await consumeAdmissionAddressQuota(tx, options.rateLimitKey, now);
+    }
+    return tx.refereeAdmissionApplication.create({
+      data: {
+        name,
+        studentId: studentId || null,
+        phone: phone || null,
+        qq: qq || null,
+        note: note || null,
+        status: "PENDING",
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
+  }));
 }
 
 function assertAdmissionRead(actor: UnifiedAdminActor) {

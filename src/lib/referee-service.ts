@@ -910,6 +910,37 @@ type PositionInput = {
   refereeId: string | null;
 };
 
+export type AppointmentTransitionState = AppointmentStatus | "NONE";
+export type AppointmentTransitionAction =
+  | "saveDraft"
+  | "publish"
+  | "withdraw"
+  | "complete"
+  | "cancel";
+
+export const appointmentTransitionTable = {
+  NONE: { saveDraft: "DRAFT" },
+  DRAFT: { saveDraft: "DRAFT", publish: "PUBLISHED", cancel: "CANCELLED" },
+  PUBLISHED: { withdraw: "WITHDRAWN", complete: "COMPLETED", cancel: "CANCELLED" },
+  WITHDRAWN: { saveDraft: "DRAFT", publish: "PUBLISHED", cancel: "CANCELLED" },
+  COMPLETED: {},
+  CANCELLED: {},
+} as const satisfies Record<
+  AppointmentTransitionState,
+  Partial<Record<AppointmentTransitionAction, AppointmentStatus>>
+>;
+
+function assertAppointmentTransition(
+  state: AppointmentTransitionState,
+  action: AppointmentTransitionAction,
+) {
+  const target = appointmentTransitionTable[state][action as keyof typeof appointmentTransitionTable[typeof state]];
+  if (!target) {
+    throw new RefereeServiceError("当前选派状态不允许执行该操作。", 409);
+  }
+  return target;
+}
+
 export async function saveAppointmentDraft(input: {
   matchId: string;
   publicationNote: string;
@@ -926,6 +957,10 @@ export async function saveAppointmentDraft(input: {
     if (match.status !== "SCHEDULED") {
       throw new RefereeServiceError("只有已安排且未取消的比赛可以配置选派。", 409);
     }
+    const existingAppointment = await tx.refereeAppointment.findUnique({
+      where: { matchId: match.id },
+    });
+    assertAppointmentTransition(existingAppointment?.status ?? "NONE", "saveDraft");
     const template = getPositionTemplate(match.competition.format);
     const allowed = new Map(template.map((item) => [item.key, item]));
     const requirements = new Map(
@@ -958,12 +993,6 @@ export async function saveAppointmentDraft(input: {
       db: tx,
     });
 
-    const existingAppointment = await tx.refereeAppointment.findUnique({
-      where: { matchId: match.id },
-    });
-    if (existingAppointment?.status === "PUBLISHED") {
-      throw new RefereeServiceError("请先撤回当前公示，再修改选派草稿。", 409);
-    }
     if (existingAppointment?.revision && !input.changeReason?.trim()) {
       throw new RefereeServiceError("修改已发布或已撤回选派时，请填写改派原因。");
     }
@@ -1077,6 +1106,7 @@ export async function publishAppointment(
       include: { positions: true, match: { include: { competition: true } } },
     });
     if (!appointment) throw new RefereeServiceError("请先保存选派草稿。", 409);
+    assertAppointmentTransition(appointment.status, "publish");
     if (appointment.match.status !== "SCHEDULED") {
       throw new RefereeServiceError("比赛已结束或取消，不能发布选派。", 409);
     }
@@ -1111,17 +1141,22 @@ export async function publishAppointment(
       actor?.id,
     );
     const selectedIds = refereeIds;
+    const reconciledAt = new Date();
     await tx.refereeApplication.updateMany({
-      where: { matchId, refereeId: { in: selectedIds } },
-      data: { status: "APPOINTED", reviewedAt: new Date() },
+      where: {
+        matchId,
+        refereeId: { in: selectedIds },
+        status: { in: ["PENDING", "REVIEWING", "APPROVED", "NOT_SELECTED", "APPOINTED"] },
+      },
+      data: { status: "APPOINTED", reviewedAt: reconciledAt },
     });
     await tx.refereeApplication.updateMany({
       where: {
         matchId,
         refereeId: { notIn: selectedIds },
-        status: { in: ["PENDING", "REVIEWING", "APPROVED"] },
+        status: { in: ["PENDING", "REVIEWING", "APPROVED", "NOT_SELECTED", "APPOINTED"] },
       },
-      data: { status: "NOT_SELECTED", reviewedAt: new Date() },
+      data: { status: "NOT_SELECTED", reviewedAt: reconciledAt },
     });
     const updated = await tx.refereeAppointment.update({
       where: { id: appointment.id },
@@ -1156,9 +1191,8 @@ export async function publishAppointment(
 export async function withdrawAppointment(matchId: string, reason = "", actor?: AdminActor) {
   return prisma.$transaction(async (tx) => {
     const appointment = await tx.refereeAppointment.findUnique({ where: { matchId } });
-    if (!appointment || appointment.status !== "PUBLISHED") {
-      throw new RefereeServiceError("当前没有可撤回的已发布选派。", 409);
-    }
+    assertAppointmentTransition(appointment?.status ?? "NONE", "withdraw");
+    if (!appointment) throw new RefereeServiceError("当前没有可撤回的已发布选派。", 409);
     if (!reason.trim()) throw new RefereeServiceError("请填写撤回或改派原因。");
     const version = await saveAppointmentVersion(tx, appointment.id, "WITHDRAWN", reason, "", actor?.id);
     const updated = await tx.refereeAppointment.update({
@@ -1184,9 +1218,8 @@ export async function withdrawAppointment(matchId: string, reason = "", actor?: 
 export async function completeAppointment(matchId: string, reason = "", actor?: AdminActor) {
   return prisma.$transaction(async (tx) => {
     const appointment = await tx.refereeAppointment.findUnique({ where: { matchId } });
-    if (!appointment || appointment.status !== "PUBLISHED") {
-      throw new RefereeServiceError("只有已发布选派可以标记完成。", 409);
-    }
+    assertAppointmentTransition(appointment?.status ?? "NONE", "complete");
+    if (!appointment) throw new RefereeServiceError("只有已发布选派可以标记完成。", 409);
     const version = await saveAppointmentVersion(tx, appointment.id, "COMPLETED", reason, "", actor?.id);
     const updated = await tx.refereeAppointment.update({
       where: { id: appointment.id },
@@ -1205,12 +1238,11 @@ export async function completeAppointment(matchId: string, reason = "", actor?: 
 }
 
 export async function cancelAppointment(matchId: string, reason: string, actor?: AdminActor) {
-  if (!reason.trim()) throw new RefereeServiceError("请填写取消原因。");
   return prisma.$transaction(async (tx) => {
     const appointment = await tx.refereeAppointment.findUnique({ where: { matchId } });
-    if (!appointment || appointment.status === "COMPLETED" || appointment.status === "CANCELLED") {
-      throw new RefereeServiceError("当前选派不能取消。", 409);
-    }
+    assertAppointmentTransition(appointment?.status ?? "NONE", "cancel");
+    if (!appointment) throw new RefereeServiceError("当前选派不能取消。", 409);
+    if (!reason.trim()) throw new RefereeServiceError("请填写取消原因。");
     const version = await saveAppointmentVersion(tx, appointment.id, "CANCELLED", reason, "", actor?.id);
     const updated = await tx.refereeAppointment.update({
       where: { id: appointment.id },

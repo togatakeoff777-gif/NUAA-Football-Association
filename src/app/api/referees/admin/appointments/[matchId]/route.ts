@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
+import { refereeApiErrorResponse, RefereeApiInputError } from "@/lib/referee-api";
 import {
   cancelAppointment,
   completeAppointment,
   publishAppointment,
-  RefereeServiceError,
   saveAppointmentDraft,
   withdrawAppointment,
 } from "@/lib/referee-service";
@@ -16,7 +16,7 @@ export async function PUT(request: Request, context: { params: Promise<{ matchId
   const actor = authorization.actor;
   try {
     const body: unknown = await request.json();
-    if (!isRecord(body)) throw new Error("选派内容格式不正确。" );
+    if (!isRecord(body)) throw new RefereeApiInputError("选派内容格式不正确。" );
     const { matchId } = await context.params;
     const result = await saveAppointmentDraft({
       matchId,
@@ -27,11 +27,7 @@ export async function PUT(request: Request, context: { params: Promise<{ matchId
     }, actor);
     return NextResponse.json({ ok: true, warnings: result.warnings });
   } catch (error) {
-    const status = error instanceof RefereeServiceError ? error.status : 400;
-    return NextResponse.json({
-      error: error instanceof Error ? error.message : "草稿保存失败。",
-      warnings: error instanceof RefereeServiceError ? error.warnings : [],
-    }, { status });
+    return refereeApiErrorResponse(error, "草稿保存失败，请稍后重试。");
   }
 }
 
@@ -41,7 +37,7 @@ export async function POST(request: Request, context: { params: Promise<{ matchI
   const actor = authorization.actor;
   try {
     const body: unknown = await request.json();
-    if (!isRecord(body)) throw new Error("操作内容格式不正确。" );
+    if (!isRecord(body)) throw new RefereeApiInputError("操作内容格式不正确。" );
     const action = readEnum(
       body.action,
       ["publish", "withdraw", "complete", "cancel"] as const,
@@ -62,10 +58,6 @@ export async function POST(request: Request, context: { params: Promise<{ matchI
       warnings: "warnings" in result ? result.warnings : [],
     });
   } catch (error) {
-    const status = error instanceof RefereeServiceError ? error.status : 400;
-    return NextResponse.json({
-      error: error instanceof Error ? error.message : "选派操作失败。",
-      warnings: error instanceof RefereeServiceError ? error.warnings : [],
-    }, { status });
+    return refereeApiErrorResponse(error, "选派操作失败，请稍后重试。");
   }
 }

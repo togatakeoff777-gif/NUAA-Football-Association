@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
+import { refereeApiErrorResponse, RefereeApiInputError } from "@/lib/referee-api";
 import {
-  RefereeServiceError,
   resetRefereePassword,
   updateRefereeAccount,
 } from "@/lib/referee-service";
@@ -31,7 +31,7 @@ export async function PATCH(
   if (authorization instanceof Response) return authorization;
   try {
     const body: unknown = await request.json();
-    if (!isRecord(body)) throw new Error("账号内容格式不正确。");
+    if (!isRecord(body)) throw new RefereeApiInputError("账号内容格式不正确。");
     const { id } = await context.params;
     await updateRefereeAccount(id, {
       publicCode: readShortText(body.publicCode, "裁判员编号", 32),
@@ -74,11 +74,7 @@ export async function PATCH(
     }, authorization);
     return NextResponse.json({ ok: true });
   } catch (error) {
-    const status = error instanceof RefereeServiceError ? error.status : 400;
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "账号更新失败。" },
-      { status },
-    );
+    return refereeApiErrorResponse(error, "账号更新失败，请稍后重试。");
   }
 }
 
@@ -90,7 +86,7 @@ export async function POST(
   if (authorization instanceof Response) return authorization;
   try {
     const body: unknown = await request.json();
-    if (!isRecord(body)) throw new Error("密码内容格式不正确。");
+    if (!isRecord(body)) throw new RefereeApiInputError("密码内容格式不正确。");
     const { id } = await context.params;
     await resetRefereePassword(
       id,
@@ -99,10 +95,6 @@ export async function POST(
     );
     return NextResponse.json({ ok: true });
   } catch (error) {
-    const status = error instanceof RefereeServiceError ? error.status : 400;
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "密码重置失败。" },
-      { status },
-    );
+    return refereeApiErrorResponse(error, "密码重置失败，请稍后重试。");
   }
 }

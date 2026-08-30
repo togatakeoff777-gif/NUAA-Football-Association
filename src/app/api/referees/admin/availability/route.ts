@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
+import { refereeApiErrorResponse, RefereeApiInputError } from "@/lib/referee-api";
 import { deleteRefereeAvailability, saveRefereeAvailability } from "@/lib/referee-r1-service";
-import { RefereeServiceError } from "@/lib/referee-service";
 import { isRecord, readDate, readEnum, readShortText } from "@/lib/referee-validation";
 
 export async function POST(request: Request) {
@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   if (!authorization.ok) return authorization.response;
   try {
     const body: unknown = await request.json();
-    if (!isRecord(body)) throw new Error("可执裁时间格式不正确。");
+    if (!isRecord(body)) throw new RefereeApiInputError("可执裁时间格式不正确。");
     const actor = authorization.actor;
     const result = await saveRefereeAvailability({
       id: readShortText(body.id, "记录 ID", 64, false) || undefined,
@@ -23,10 +23,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ ok: true, id: result.id });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "保存失败。" },
-      { status: error instanceof RefereeServiceError ? error.status : 400 },
-    );
+    return refereeApiErrorResponse(error, "保存失败，请稍后重试。");
   }
 }
 
@@ -35,7 +32,7 @@ export async function DELETE(request: Request) {
   if (!authorization.ok) return authorization.response;
   try {
     const body: unknown = await request.json();
-    if (!isRecord(body)) throw new Error("删除内容格式不正确。");
+    if (!isRecord(body)) throw new RefereeApiInputError("删除内容格式不正确。");
     const actor = authorization.actor;
     await deleteRefereeAvailability(
       readShortText(body.id, "记录 ID", 64),
@@ -44,9 +41,6 @@ export async function DELETE(request: Request) {
     );
     return NextResponse.json({ ok: true });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "删除失败。" },
-      { status: error instanceof RefereeServiceError ? error.status : 400 },
-    );
+    return refereeApiErrorResponse(error, "删除失败，请稍后重试。");
   }
 }

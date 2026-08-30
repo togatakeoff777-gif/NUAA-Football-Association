@@ -1,16 +1,18 @@
 import { createHash, randomBytes, scrypt as scryptCallback, timingSafeEqual } from "node:crypto";
+import { isIP } from "node:net";
 import { promisify } from "node:util";
 
 import { prisma } from "@/lib/prisma";
+import { RefereeServiceError } from "@/lib/referee-service-error";
 
 const scrypt = promisify(scryptCallback);
 const passwordKeyLength = 64;
 const maximumFailures = 5;
 const lockDurationMs = 15 * 60 * 1000;
 
-export class LoginRateLimitError extends Error {
+export class LoginRateLimitError extends RefereeServiceError {
   constructor() {
-    super("登录尝试过于频繁，请稍后再试。");
+    super("登录尝试过于频繁，请稍后再试。", 429);
     this.name = "LoginRateLimitError";
   }
 }
@@ -45,10 +47,20 @@ export function isSessionFresh(expiresAt: Date, now = new Date()) {
 }
 
 export function getLoginKey(request: Request, identifier = "anonymous") {
-  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const address = forwarded || request.headers.get("x-real-ip") || "local";
+  const address = getTrustedClientAddress(request);
   return createHash("sha256")
     .update(`${address}:${identifier.trim().toLowerCase()}`)
+    .digest("hex");
+}
+
+export function getTrustedClientAddress(request: Request) {
+  const realAddress = request.headers.get("x-real-ip")?.trim();
+  return realAddress && isIP(realAddress) ? realAddress.toLowerCase() : "local";
+}
+
+export function getAdmissionRateLimitKey(request: Request) {
+  return createHash("sha256")
+    .update(`referee-admission:${getTrustedClientAddress(request)}`)
     .digest("hex");
 }
 

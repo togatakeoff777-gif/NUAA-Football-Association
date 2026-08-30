@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
+import { refereeApiErrorResponse, RefereeApiInputError } from "@/lib/referee-api";
 import { createJointTeam, createTeamsBulk, createTeamsFromUnits } from "@/lib/referee-r1-service";
-import { RefereeServiceError } from "@/lib/referee-service";
 import { isRecord, readEnum, readShortText, readShortTextArray } from "@/lib/referee-validation";
 
 export async function POST(request: Request) {
@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   const actor = authorization.actor;
   try {
     const body: unknown = await request.json();
-    if (!isRecord(body)) throw new Error("球队内容格式不正确。");
+    if (!isRecord(body)) throw new RefereeApiInputError("球队内容格式不正确。");
     const action = readEnum(body.action, ["bulk", "from-units", "joint"] as const, "操作");
     const competitionId = readShortText(body.competitionId, "赛事", 64);
     const result = action === "bulk"
@@ -26,9 +26,6 @@ export async function POST(request: Request) {
           });
     return NextResponse.json({ ok: true, result }, { status: 201 });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "球队创建失败。" },
-      { status: error instanceof RefereeServiceError ? error.status : 400 },
-    );
+    return refereeApiErrorResponse(error, "球队创建失败，请稍后重试。");
   }
 }

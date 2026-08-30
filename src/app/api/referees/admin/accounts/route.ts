@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
+import { refereeApiErrorResponse, RefereeApiInputError } from "@/lib/referee-api";
 import {
   createRefereeAccount,
-  RefereeServiceError,
 } from "@/lib/referee-service";
 import {
   isRecord,
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   const actor = authorization.actor;
   try {
     const body: unknown = await request.json();
-    if (!isRecord(body)) throw new Error("账号内容格式不正确。");
+    if (!isRecord(body)) throw new RefereeApiInputError("账号内容格式不正确。");
     const referee = await createRefereeAccount({
       publicCode: readShortText(body.publicCode, "裁判员编号", 32),
       name: readShortText(body.name, "姓名", 48),
@@ -65,10 +65,6 @@ export async function POST(request: Request) {
     }, actor);
     return NextResponse.json({ ok: true, refereeId: referee.id }, { status: 201 });
   } catch (error) {
-    const status = error instanceof RefereeServiceError ? error.status : 400;
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "账号创建失败。" },
-      { status },
-    );
+    return refereeApiErrorResponse(error, "账号创建失败，请稍后重试。");
   }
 }

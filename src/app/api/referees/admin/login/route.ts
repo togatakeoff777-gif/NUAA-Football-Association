@@ -1,36 +1,24 @@
 import { NextResponse } from "next/server";
 import { createAdminSession, getAdminConfigurationIssue, isSameOrigin } from "@/lib/referee-auth";
+import { refereeApiErrorResponse, readRefereeApiJson, RefereeApiInputError } from "@/lib/referee-api";
 import { isRecord, readShortText } from "@/lib/referee-validation";
 import {
   assertLoginAllowed,
   clearLoginFailures,
   getLoginKey,
-  LoginRateLimitError,
   recordLoginFailure,
 } from "@/lib/referee-security";
 import { resolveUnifiedAdminRoles } from "@/lib/unified-admin-rbac";
 import { getAuthorizedUnifiedAdminReturnTo } from "@/lib/unified-admin-routing";
 
-class AdminLoginInputError extends Error {}
-
 async function readAdminLoginInput(request: Request) {
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    throw new AdminLoginInputError("登录信息格式不正确。");
-  }
-  if (!isRecord(body)) throw new AdminLoginInputError("登录信息格式不正确。");
-  try {
-    return {
-      username: readShortText(body.username, "管理员账号", 64, false),
-      password: readShortText(body.password, "管理员密码", 256),
-      next: typeof body.next === "string" ? body.next : undefined,
-    };
-  } catch (error) {
-    if (error instanceof Error) throw new AdminLoginInputError(error.message);
-    throw error;
-  }
+  const body = await readRefereeApiJson(request, "登录信息格式不正确。");
+  if (!isRecord(body)) throw new RefereeApiInputError("登录信息格式不正确。");
+  return {
+    username: readShortText(body.username, "管理员账号", 64, false),
+    password: readShortText(body.password, "管理员密码", 256),
+    next: typeof body.next === "string" ? body.next : undefined,
+  };
 }
 
 export async function POST(request: Request) {
@@ -58,13 +46,6 @@ export async function POST(request: Request) {
           ),
     });
   } catch (error) {
-    if (error instanceof AdminLoginInputError) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-    if (error instanceof LoginRateLimitError) {
-      return NextResponse.json({ error: error.message }, { status: 429 });
-    }
-    console.error("[unified-admin-login] unexpected runtime failure", error);
-    return NextResponse.json({ error: "登录失败，请稍后再试。" }, { status: 500 });
+    return refereeApiErrorResponse(error, "登录失败，请稍后再试。");
   }
 }

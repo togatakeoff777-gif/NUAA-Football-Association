@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
-import { RefereeServiceError, reviewApplication } from "@/lib/referee-service";
+import { refereeApiErrorResponse, RefereeApiInputError } from "@/lib/referee-api";
+import { reviewApplication } from "@/lib/referee-service";
 import { isRecord, readEnum, readShortText } from "@/lib/referee-validation";
 
 export async function PATCH(
@@ -11,7 +12,7 @@ export async function PATCH(
   if (!authorization.ok) return authorization.response;
   try {
     const body: unknown = await request.json();
-    if (!isRecord(body)) throw new Error("审核内容格式不正确。" );
+    if (!isRecord(body)) throw new RefereeApiInputError("审核内容格式不正确。" );
     const { id } = await context.params;
     await reviewApplication(
       id,
@@ -24,7 +25,6 @@ export async function PATCH(
     );
     return NextResponse.json({ ok: true });
   } catch (error) {
-    const status = error instanceof RefereeServiceError ? error.status : 400;
-    return NextResponse.json({ error: error instanceof Error ? error.message : "审核失败。" }, { status });
+    return refereeApiErrorResponse(error, "审核失败，请稍后重试。");
   }
 }

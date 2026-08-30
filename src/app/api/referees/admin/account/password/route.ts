@@ -1,36 +1,25 @@
 import { NextResponse } from "next/server";
 
 import { getAdminSession } from "@/lib/referee-auth";
+import { refereeApiErrorResponse, readRefereeApiJson, RefereeApiInputError } from "@/lib/referee-api";
 import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
 import { changeAdminPassword } from "@/lib/referee-r1-service";
-import { RefereeServiceError } from "@/lib/referee-service";
 import { isRecord, readShortText } from "@/lib/referee-validation";
 
-class AdminPasswordInputError extends Error {}
-
 async function readAdminPasswordInput(request: Request) {
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    throw new AdminPasswordInputError("密码内容格式不正确。");
-  }
-  if (!isRecord(body)) throw new AdminPasswordInputError("密码内容格式不正确。");
-  try {
-    return {
-      currentPassword: readShortText(body.currentPassword, "当前密码", 256),
-      newPassword: readShortText(body.newPassword, "新密码", 256),
-    };
-  } catch (error) {
-    if (error instanceof Error) throw new AdminPasswordInputError(error.message);
-    throw error;
-  }
+  const body = await readRefereeApiJson(request, "密码内容格式不正确。");
+  if (!isRecord(body)) throw new RefereeApiInputError("密码内容格式不正确。");
+  return {
+    currentPassword: readShortText(body.currentPassword, "当前密码", 256),
+    newPassword: readShortText(body.newPassword, "新密码", 256),
+  };
 }
 
 export async function POST(request: Request) {
   try {
     const authorization = await authorizeLegacyAdminRequest(request, "dashboard:read", {
       allowPasswordChangeRequired: true,
+      failureMessage: "密码修改失败，请稍后再试。",
     });
     if (!authorization.ok) return authorization.response;
     const session = await getAdminSession();
@@ -50,13 +39,6 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ ok: true });
   } catch (error) {
-    if (error instanceof AdminPasswordInputError) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-    if (error instanceof RefereeServiceError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
-    console.error("[unified-admin-password] unexpected runtime failure", error);
-    return NextResponse.json({ error: "密码修改失败，请稍后再试。" }, { status: 500 });
+    return refereeApiErrorResponse(error, "密码修改失败，请稍后再试。");
   }
 }

@@ -511,7 +511,8 @@ async function main() {
     await sourceContains("src/app/api/referees/admin/logout/route.ts", ["destroyAdminSession"]);
     await sourceContains("src/app/api/referees/logout/route.ts", ["destroyRefereeMemberSession"]);
     await sourceContains("src/app/api/referees/admin/accounts/route.ts", ["authorizeLegacyAdminRequest", '"referees:write"']);
-    await sourceContains("src/app/api/referees/applications/route.ts", ["getRefereeMemberSession"]);
+    await sourceContains("src/app/api/referees/applications/route.ts", ["authorizeRefereeMemberBusinessRequest"]);
+    await sourceContains("src/lib/referee-member-api.ts", ["getRefereeMemberSession", "mustChangePassword"]);
     await sourceContains("src/app/api/referees/admin/login/route.ts", ["登录信息不正确或后台当前不可用"]);
     await sourceContains("src/app/api/referees/login/route.ts", ["登录信息不正确或账号当前不可用"]);
     await sourceContains("src/lib/referee-auth.ts", ["REFEREE_ADMIN_SESSION_SECRET"]);

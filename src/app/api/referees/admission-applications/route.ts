@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { isSameOrigin } from "@/lib/referee-auth";
 import { submitRefereeAdmissionApplication } from "@/lib/referee-admission-service";
-import { RefereeServiceError } from "@/lib/referee-service-error";
+import { refereeApiErrorResponse } from "@/lib/referee-api";
+import { getAdmissionRateLimitKey } from "@/lib/referee-security";
 
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) {
@@ -16,16 +17,18 @@ export async function POST(request: Request) {
   }
 
   try {
-    const application = await submitRefereeAdmissionApplication(body);
+    const application = await submitRefereeAdmissionApplication(body, {
+      rateLimitKey: getAdmissionRateLimitKey(request),
+    });
     return NextResponse.json(
       { ok: true, applicationId: application.id, status: application.status },
       { status: 201 },
     );
   } catch (error) {
-    if (error instanceof RefereeServiceError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
-    console.error(error);
-    return NextResponse.json({ error: "申请提交失败，请稍后重试。" }, { status: 500 });
+    return refereeApiErrorResponse(
+      error,
+      "申请提交失败，请稍后重试。",
+      { includeInternalCode: false },
+    );
   }
 }

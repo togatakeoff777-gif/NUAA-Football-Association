@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
 import { prisma } from "@/lib/prisma";
+import { refereeApiErrorResponse, RefereeApiInputError } from "@/lib/referee-api";
 import {
   createMatch,
   deleteMatchSafely,
@@ -23,7 +24,7 @@ async function authorize(request: Request) {
 }
 
 function counts(value: unknown) {
-  if (!isRecord(value)) throw new Error("岗位人数格式不正确。");
+  if (!isRecord(value)) throw new RefereeApiInputError("岗位人数格式不正确。");
   return Object.fromEntries(
     positionKeys.map((key) => [
       key,
@@ -71,16 +72,12 @@ export async function PATCH(
   if (authorization instanceof Response) return authorization;
   try {
     const body: unknown = await request.json();
-    if (!isRecord(body)) throw new Error("场次内容格式不正确。");
+    if (!isRecord(body)) throw new RefereeApiInputError("场次内容格式不正确。");
     const { id } = await context.params;
     await updateMatch(id, inputFromBody(body), authorization);
     return NextResponse.json({ ok: true });
   } catch (error) {
-    const status = error instanceof RefereeServiceError ? error.status : 400;
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "场次更新失败。" },
-      { status },
-    );
+    return refereeApiErrorResponse(error, "场次更新失败，请稍后重试。");
   }
 }
 
@@ -92,7 +89,7 @@ export async function POST(
   if (authorization instanceof Response) return authorization;
   try {
     const body: unknown = await request.json();
-    if (!isRecord(body) || body.action !== "copy") throw new Error("操作格式不正确。");
+    if (!isRecord(body) || body.action !== "copy") throw new RefereeApiInputError("操作格式不正确。");
     const { id } = await context.params;
     const source = await prisma.match.findUnique({
       where: { id },
@@ -120,11 +117,7 @@ export async function POST(
     }, authorization);
     return NextResponse.json({ ok: true, matchId: copied.id }, { status: 201 });
   } catch (error) {
-    const status = error instanceof RefereeServiceError ? error.status : 400;
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "场次复制失败。" },
-      { status },
-    );
+    return refereeApiErrorResponse(error, "场次复制失败，请稍后重试。");
   }
 }
 
@@ -136,7 +129,7 @@ export async function DELETE(
   if (authorization instanceof Response) return authorization;
   try {
     const body: unknown = await request.json();
-    if (!isRecord(body)) throw new Error("删除内容格式不正确。");
+    if (!isRecord(body)) throw new RefereeApiInputError("删除内容格式不正确。");
     const { id } = await context.params;
     await deleteMatchSafely(
       id,
@@ -145,10 +138,6 @@ export async function DELETE(
     );
     return NextResponse.json({ ok: true });
   } catch (error) {
-    const status = error instanceof RefereeServiceError ? error.status : 400;
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "比赛删除失败。" },
-      { status },
-    );
+    return refereeApiErrorResponse(error, "比赛删除失败，请稍后重试。");
   }
 }

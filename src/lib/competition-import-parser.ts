@@ -3,6 +3,8 @@ import { createHash } from "node:crypto";
 import readXlsxFile from "read-excel-file/node";
 
 import {
+  COMPETITION_IMPORT_MAX_CELL_CHARACTERS,
+  COMPETITION_IMPORT_MAX_COLUMNS,
   COMPETITION_IMPORT_MAX_FILE_BYTES,
   COMPETITION_IMPORT_MAX_ROWS,
   type CompetitionImportCell,
@@ -11,6 +13,10 @@ import {
   type CompetitionImportParsedRow,
   type CompetitionImportType,
 } from "@/lib/competition-import-types";
+import {
+  CompetitionImportXlsxPreflightError,
+  inspectCompetitionImportXlsx,
+} from "@/lib/competition-import-xlsx-security";
 
 const multipartAllowanceBytes = 256 * 1024;
 
@@ -40,7 +46,7 @@ const requiredHeaders: Record<CompetitionImportType, readonly string[]> = {
 export class CompetitionImportParseError extends Error {
   constructor(
     message: string,
-    readonly status: 400 | 413 | 415 = 400,
+    readonly status: 400 | 411 | 413 | 415 = 400,
   ) {
     super(message);
     this.name = "CompetitionImportParseError";
@@ -63,22 +69,48 @@ function rowIsEmpty(row: readonly CompetitionImportCell[]) {
   return row.every((cell) => cell === null || String(cell).trim() === "");
 }
 
-function parseDelimitedRows(text: string, delimiter: "," | "\t") {
-  const rows: string[][] = [];
+function assertRowResourceBudget(row: readonly CompetitionImportCell[]) {
+  if (row.length > COMPETITION_IMPORT_MAX_COLUMNS) {
+    throw new CompetitionImportParseError(`导入列数不能超过 ${COMPETITION_IMPORT_MAX_COLUMNS} 列。`, 413);
+  }
+  if (row.some((cell) => String(cell ?? "").length > COMPETITION_IMPORT_MAX_CELL_CHARACTERS)) {
+    throw new CompetitionImportParseError(`单个导入单元格不能超过 ${COMPETITION_IMPORT_MAX_CELL_CHARACTERS} 个字符。`, 413);
+  }
+}
+
+function forEachDelimitedRow(
+  text: string,
+  delimiter: "," | "\t",
+  onRow: (row: string[], recordIndex: number) => void,
+) {
   let row: string[] = [];
-  let field = "";
+  let fieldParts: string[] = [];
+  let fieldStart = 0;
   let quoted = false;
   let afterQuote = false;
-  const source = text.replace(/^\uFEFF/, "");
+  let recordIndex = 0;
+  const source = text.startsWith("\uFEFF") ? text.slice(1) : text;
 
-  const finishField = () => {
+  const appendSegment = (end: number) => {
+    if (end > fieldStart) fieldParts.push(source.slice(fieldStart, end));
+  };
+  const finishField = (end: number, includeOpenSegment: boolean) => {
+    if (includeOpenSegment) appendSegment(end);
+    const field = fieldParts.length === 0 ? "" : fieldParts.length === 1 ? fieldParts[0] : fieldParts.join("");
+    if (field.length > COMPETITION_IMPORT_MAX_CELL_CHARACTERS) {
+      throw new CompetitionImportParseError(`单个导入单元格不能超过 ${COMPETITION_IMPORT_MAX_CELL_CHARACTERS} 个字符。`, 413);
+    }
     row.push(field);
-    field = "";
+    if (row.length > COMPETITION_IMPORT_MAX_COLUMNS) {
+      throw new CompetitionImportParseError(`导入列数不能超过 ${COMPETITION_IMPORT_MAX_COLUMNS} 列。`, 413);
+    }
+    fieldParts = [];
     afterQuote = false;
   };
-  const finishRow = () => {
-    finishField();
-    rows.push(row);
+  const finishRow = (end: number, includeOpenSegment: boolean) => {
+    finishField(end, includeOpenSegment);
+    onRow(row, recordIndex);
+    recordIndex += 1;
     row = [];
   };
 
@@ -86,28 +118,36 @@ function parseDelimitedRows(text: string, delimiter: "," | "\t") {
     const character = source[index];
     if (quoted) {
       if (character === '"' && source[index + 1] === '"') {
-        field += '"';
+        appendSegment(index);
+        fieldParts.push('"');
         index += 1;
+        fieldStart = index + 1;
       } else if (character === '"') {
+        appendSegment(index);
         quoted = false;
         afterQuote = true;
+        fieldStart = index + 1;
       } else if (character === "\r" && source[index + 1] === "\n") {
-        field += "\n";
+        appendSegment(index);
+        fieldParts.push("\n");
         index += 1;
-      } else {
-        field += character;
+        fieldStart = index + 1;
       }
       continue;
     }
 
     if (afterQuote) {
       if (character === delimiter) {
-        finishField();
+        finishField(index, false);
+        fieldStart = index + 1;
       } else if (character === "\n") {
-        finishRow();
+        finishRow(index, false);
+        fieldStart = index + 1;
       } else if (character === "\r") {
+        const end = index;
         if (source[index + 1] === "\n") index += 1;
-        finishRow();
+        finishRow(end, false);
+        fieldStart = index + 1;
       } else if (!/\s/.test(character)) {
         throw new CompetitionImportParseError("分隔文件的引号后存在无效字符。");
       }
@@ -115,33 +155,35 @@ function parseDelimitedRows(text: string, delimiter: "," | "\t") {
     }
 
     if (character === '"') {
-      if (field.length) throw new CompetitionImportParseError("分隔文件的字段引号格式不正确。");
+      if (fieldParts.length || index > fieldStart) throw new CompetitionImportParseError("分隔文件的字段引号格式不正确。");
       quoted = true;
+      fieldStart = index + 1;
     } else if (character === delimiter) {
-      finishField();
+      finishField(index, true);
+      fieldStart = index + 1;
     } else if (character === "\n") {
-      finishRow();
+      finishRow(index, true);
+      fieldStart = index + 1;
     } else if (character === "\r") {
+      const end = index;
       if (source[index + 1] === "\n") index += 1;
-      finishRow();
-    } else {
-      field += character;
+      finishRow(end, true);
+      fieldStart = index + 1;
     }
   }
 
   if (quoted) throw new CompetitionImportParseError("分隔文件存在未闭合的引号。");
-  if (field.length || row.length || afterQuote) finishRow();
-  return rows;
+  if (fieldParts.length || fieldStart < source.length || row.length || afterQuote) {
+    finishRow(source.length, !afterQuote);
+  }
 }
 
-function mapTabularRows(
-  data: CompetitionImportCell[][],
+function prepareHeader(
+  headerRow: readonly CompetitionImportCell[],
   importType: CompetitionImportType,
-  initialWarnings: string[] = [],
+  initialWarnings: string[],
 ) {
-  const firstNonEmptyIndex = data.findIndex((row) => !rowIsEmpty(row));
-  if (firstNonEmptyIndex < 0) throw new CompetitionImportParseError("导入内容为空。");
-  const headerRow = data[firstNonEmptyIndex];
+  assertRowResourceBudget(headerRow);
   const canonicalByIndex = headerRow.map((value) => canonicalHeader(importType, value));
   const canonicalHeaders = canonicalByIndex.filter((value): value is string => Boolean(value));
   const duplicates = canonicalHeaders.filter((value, index) => canonicalHeaders.indexOf(value) !== index);
@@ -157,17 +199,36 @@ function mapTabularRows(
     .map((item) => item.value);
   const inputWarnings = [...initialWarnings];
   if (unknownHeaders.length) inputWarnings.push(`已忽略未知表头：${unknownHeaders.join("、")}。`);
+  return { canonicalByIndex, inputWarnings };
+}
 
+function mappedRow(
+  row: readonly CompetitionImportCell[],
+  rowNumber: number,
+  canonicalByIndex: readonly (string | null)[],
+) {
+  assertRowResourceBudget(row);
+  const values: Record<string, CompetitionImportCell> = {};
+  for (let column = 0; column < canonicalByIndex.length; column += 1) {
+    const canonical = canonicalByIndex[column];
+    if (canonical) values[canonical] = row[column] ?? null;
+  }
+  return { rowNumber, values };
+}
+
+function mapTabularRows(
+  data: CompetitionImportCell[][],
+  importType: CompetitionImportType,
+  initialWarnings: string[] = [],
+) {
+  const firstNonEmptyIndex = data.findIndex((row) => !rowIsEmpty(row));
+  if (firstNonEmptyIndex < 0) throw new CompetitionImportParseError("导入内容为空。");
+  const { canonicalByIndex, inputWarnings } = prepareHeader(data[firstNonEmptyIndex], importType, initialWarnings);
   const rows: CompetitionImportParsedRow[] = [];
   for (let index = firstNonEmptyIndex + 1; index < data.length; index += 1) {
     const row = data[index];
     if (rowIsEmpty(row)) continue;
-    const values: Record<string, CompetitionImportCell> = {};
-    for (let column = 0; column < canonicalByIndex.length; column += 1) {
-      const canonical = canonicalByIndex[column];
-      if (canonical) values[canonical] = row[column] ?? null;
-    }
-    rows.push({ rowNumber: index + 1, values });
+    rows.push(mappedRow(row, index + 1, canonicalByIndex));
     if (rows.length > COMPETITION_IMPORT_MAX_ROWS) {
       throw new CompetitionImportParseError(`导入行数不能超过 ${COMPETITION_IMPORT_MAX_ROWS} 行。`, 413);
     }
@@ -176,25 +237,56 @@ function mapTabularRows(
   return { rows, inputWarnings };
 }
 
+function mapDelimitedText(
+  text: string,
+  delimiter: "," | "\t",
+  importType: CompetitionImportType,
+  syntheticHeader?: CompetitionImportCell[],
+) {
+  let header = syntheticHeader ? prepareHeader(syntheticHeader, importType, []) : null;
+  const rows: CompetitionImportParsedRow[] = [];
+  forEachDelimitedRow(text, delimiter, (row, recordIndex) => {
+    if (rowIsEmpty(row)) return;
+    if (!header) {
+      header = prepareHeader(row, importType, []);
+      return;
+    }
+    rows.push(mappedRow(row, recordIndex + (syntheticHeader ? 2 : 1), header.canonicalByIndex));
+    if (rows.length > COMPETITION_IMPORT_MAX_ROWS) {
+      throw new CompetitionImportParseError(`导入行数不能超过 ${COMPETITION_IMPORT_MAX_ROWS} 行。`, 413);
+    }
+  });
+  if (!header) throw new CompetitionImportParseError("导入内容为空。");
+  if (!rows.length) throw new CompetitionImportParseError("没有可导入的数据行。");
+  return { rows, inputWarnings: header.inputWarnings };
+}
+
 export function parseCompetitionImportCsv(text: string, importType: CompetitionImportType) {
-  return mapTabularRows(parseDelimitedRows(text, ","), importType);
+  return mapDelimitedText(text, ",", importType);
 }
 
 export function parseCompetitionImportPaste(text: string, importType: CompetitionImportType) {
   const source = text.replace(/^\uFEFF/, "");
-  const firstNonEmptyLine = source.split(/\r?\n/).find((line) => line.trim()) ?? "";
+  const firstNonEmptyLine = source.match(/(?:^|\r?\n)([^\r\n]*\S[^\r\n]*)/u)?.[1] ?? "";
   if (!firstNonEmptyLine.includes("\t") && !/[,"]/.test(firstNonEmptyLine)) {
     if (importType === "TEAM" && canonicalHeader("TEAM", firstNonEmptyLine) !== "name") {
-      const names = source.split(/\r?\n/).filter((line) => line.trim());
-      return mapTabularRows([["name"], ...names.map((name) => [name])], importType);
+      return mapDelimitedText(source, "\t", importType, ["name"]);
     }
-    return mapTabularRows(source.split(/\r?\n/).map((line) => [line]), importType);
+    return mapDelimitedText(source, "\t", importType);
   }
   const delimiter = firstNonEmptyLine.includes("\t") ? "\t" : ",";
-  return mapTabularRows(parseDelimitedRows(source, delimiter), importType);
+  return mapDelimitedText(source, delimiter, importType);
 }
 
 export async function parseCompetitionImportXlsx(buffer: Buffer, importType: CompetitionImportType) {
+  try {
+    inspectCompetitionImportXlsx(buffer);
+  } catch (error) {
+    if (error instanceof CompetitionImportXlsxPreflightError) {
+      throw new CompetitionImportParseError(error.message, error.status);
+    }
+    throw error;
+  }
   let sheets: Awaited<ReturnType<typeof readXlsxFile>>;
   try {
     sheets = await readXlsxFile(buffer);
@@ -239,8 +331,18 @@ function fingerprint(input: {
 }
 
 export async function readCompetitionImportRequest(request: Request): Promise<CompetitionImportInput> {
-  const contentLength = Number(request.headers.get("content-length") ?? 0);
-  if (Number.isFinite(contentLength) && contentLength > COMPETITION_IMPORT_MAX_FILE_BYTES + multipartAllowanceBytes) {
+  const rawContentLength = request.headers.get("content-length");
+  if (rawContentLength === null) {
+    throw new CompetitionImportParseError("导入请求必须提供有效的 Content-Length。", 411);
+  }
+  if (!/^\d+$/u.test(rawContentLength.trim())) {
+    throw new CompetitionImportParseError("导入请求的 Content-Length 无效。", 400);
+  }
+  const contentLength = Number(rawContentLength);
+  if (!Number.isSafeInteger(contentLength) || contentLength <= 0) {
+    throw new CompetitionImportParseError("导入请求的 Content-Length 无效。", 400);
+  }
+  if (contentLength > COMPETITION_IMPORT_MAX_FILE_BYTES + multipartAllowanceBytes) {
     throw new CompetitionImportParseError("导入文件不能超过 5 MB。", 413);
   }
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("multipart/form-data")) {

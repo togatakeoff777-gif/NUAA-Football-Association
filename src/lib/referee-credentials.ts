@@ -1,14 +1,41 @@
 import { prisma } from "@/lib/prisma";
-import { verifyPassword } from "@/lib/referee-security";
+import {
+  DUMMY_PASSWORD_HASH,
+  isUsablePasswordHash,
+  verifyPassword,
+} from "@/lib/referee-security";
 
-export async function verifyAdminCredentials(password: string) {
-  const passwordHash = process.env.REFEREE_ADMIN_PASSWORD_HASH;
-  return Boolean(passwordHash && await verifyPassword(password, passwordHash));
+export type PasswordVerifier = (password: string, storedHash: string) => Promise<boolean>;
+
+async function verifyCredentialPassword(
+  password: string,
+  storedHash: string | null | undefined,
+  eligible: boolean,
+  verifier: PasswordVerifier,
+) {
+  const useRealHash = eligible && isUsablePasswordHash(storedHash);
+  const verified = await verifier(password, useRealHash ? storedHash! : DUMMY_PASSWORD_HASH);
+  return Boolean(useRealHash && verified);
 }
 
-export async function authenticateAdminCredentials(username: string, password: string) {
+export async function verifyAdminCredentials(
+  password: string,
+  verifier: PasswordVerifier = verifyPassword,
+) {
+  const passwordHash = process.env.REFEREE_ADMIN_PASSWORD_HASH;
+  return verifyCredentialPassword(password, passwordHash, true, verifier);
+}
+
+export async function authenticateAdminCredentials(
+  username: string,
+  password: string,
+  verifier: PasswordVerifier = verifyPassword,
+) {
   const normalizedUsername = username.trim().toLowerCase();
-  if (!normalizedUsername) return null;
+  if (!normalizedUsername) {
+    await verifyCredentialPassword(password, null, false, verifier);
+    return null;
+  }
   const account = await prisma.adminAccount.findUnique({
     where: { username: normalizedUsername },
     select: {
@@ -22,13 +49,20 @@ export async function authenticateAdminCredentials(username: string, password: s
       unifiedRoles: { select: { role: true }, orderBy: { role: "asc" } },
     },
   });
-  if (!account?.isActive || !(await verifyPassword(password, account.passwordHash))) return null;
+  const passwordMatches = await verifyCredentialPassword(
+    password,
+    account?.passwordHash,
+    Boolean(account?.isActive),
+    verifier,
+  );
+  if (!account?.isActive || !passwordMatches) return null;
   return account;
 }
 
 export async function authenticateRefereeCredentials(
   publicCode: string,
   password: string,
+  verifier: PasswordVerifier = verifyPassword,
 ) {
   const referee = await prisma.referee.findUnique({
     where: { publicCode },
@@ -41,11 +75,16 @@ export async function authenticateRefereeCredentials(
       mustChangePassword: true,
     },
   });
+  const passwordMatches = await verifyCredentialPassword(
+    password,
+    referee?.passwordHash,
+    referee?.status === "ACTIVE",
+    verifier,
+  );
   if (
     !referee ||
     referee.status !== "ACTIVE" ||
-    !referee.passwordHash ||
-    !(await verifyPassword(password, referee.passwordHash))
+    !passwordMatches
   ) return null;
   return referee;
 }

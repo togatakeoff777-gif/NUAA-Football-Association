@@ -34,8 +34,9 @@ export function getSafeAdminReturnTo(value: string | string[] | undefined) {
 export async function createAdminSession(username: string, password: string) {
   const secret = getSessionSecret();
   if (!secret) return null;
-  const account = await authenticateAdminCredentials(username, password);
-  const legacyAuthenticated = !username.trim() && await verifyAdminCredentials(password);
+  const hasUsername = Boolean(username.trim());
+  const account = hasUsername ? await authenticateAdminCredentials(username, password) : null;
+  const legacyAuthenticated = !hasUsername && await verifyAdminCredentials(password);
   if (!account && !legacyAuthenticated) return null;
 
   const token = randomBytes(32).toString("base64url");

@@ -10,6 +10,8 @@ const passwordKeyLength = 64;
 const maximumFailures = 5;
 const lockDurationMs = 15 * 60 * 1000;
 
+export const DUMMY_PASSWORD_HASH = "scrypt$9KelznfjpvG36WDVkfxMhw$FvGxTPUJhb3Ov3FpDLb5Ir--FncIexTi3uMcy0SYTpc_bBuMWsQwj1V1APsRxRNtam79arK9FbcwUcG6zIAQ-g";
+
 export class LoginRateLimitError extends RefereeServiceError {
   constructor() {
     super("登录尝试过于频繁，请稍后再试。", 429);
@@ -24,6 +26,21 @@ export async function hashPassword(password: string) {
   const salt = randomBytes(16);
   const derived = (await scrypt(password, salt, passwordKeyLength)) as Buffer;
   return `scrypt$${salt.toString("base64url")}$${derived.toString("base64url")}`;
+}
+
+export function isUsablePasswordHash(storedHash: string | null | undefined) {
+  if (!storedHash) return false;
+  const [algorithm, saltText, hashText, extra] = storedHash.split("$");
+  if (
+    algorithm !== "scrypt"
+    || !saltText
+    || !hashText
+    || extra !== undefined
+    || !/^[A-Za-z0-9_-]+$/u.test(saltText)
+    || !/^[A-Za-z0-9_-]+$/u.test(hashText)
+  ) return false;
+  return Buffer.from(saltText, "base64url").byteLength === 16
+    && Buffer.from(hashText, "base64url").byteLength === passwordKeyLength;
 }
 
 export async function verifyPassword(password: string, storedHash: string) {

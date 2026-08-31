@@ -22,7 +22,7 @@ async function main() {
   const smokeRoot = process.argv[2];
   const baseUrl = process.argv[3] ?? "http://127.0.0.1:3104";
   if (!smokeRoot || !path.isAbsolute(smokeRoot)) throw new Error("An absolute isolated smoke root is required.");
-  const mutationOrigin = baseUrl;
+  const mutationOrigin = "https://nuaafa.cn";
   const password = "Smoke-Password-2026!";
   process.env.DATABASE_URL = `file:${path.join(smokeRoot, "smoke.db").replaceAll("\\", "/")}`;
   const { prisma } = await import("../src/lib/prisma");

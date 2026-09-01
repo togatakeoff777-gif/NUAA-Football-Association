@@ -310,6 +310,12 @@ async function verifyLegacyRoleMatrix(cookies: Record<RoleName, string>) {
       cookies[role],
     );
     await verifyLegacyRedirect(
+      `${role} legacy competitions root`,
+      "/referees/admin/matches/competitions?view=legacy",
+      caps.competition ? "/admin/competitions?view=legacy" : denied,
+      cookies[role],
+    );
+    await verifyLegacyRedirect(
       `${role} legacy match detail`,
       `/referees/admin/matches/${matchId}?tab=appointments`,
       caps.competition

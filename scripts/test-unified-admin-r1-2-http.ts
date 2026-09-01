@@ -168,9 +168,9 @@ async function verifyAdminPageMatrix(cookies: Record<RoleName, string>) {
   }
 }
 
-async function verifyLegacyRedirectMatrix() {
+async function verifyLegacyRedirectMatrix(cookie: string) {
   const routes = [
-    ["/referees/admin", "/admin/referees"],
+    ["/referees/admin", "/admin"],
     ["/referees/admin/referees", "/admin/referees"],
     ["/referees/admin/referees/new", "/admin/referees/new"],
     ["/referees/admin/referees/ref-1", "/admin/referees/ref-1"],
@@ -189,11 +189,19 @@ async function verifyLegacyRedirectMatrix() {
     ["/referees/admin/matches/competitions/competition-1/edit", "/admin/competitions/competition-1/edit"],
   ] as const;
   for (const [source, destination] of routes) {
-    const response = await fetch(`${baseUrl}${source}?legacy=1`, { redirect: "manual" });
+    const preserveQuery = source !== "/referees/admin";
+    const response = await fetch(`${baseUrl}${source}${preserveQuery ? "?legacy=1" : ""}`, {
+      headers: { cookie },
+      redirect: "manual",
+    });
     const location = response.headers.get("location");
     if (![307, 308].includes(response.status) || !location) throw new Error(`${source} did not redirect (${response.status}).`);
     const parsed = new URL(location, baseUrl);
-    if (parsed.pathname !== destination || parsed.searchParams.get("legacy") !== "1") {
+    if (
+      parsed.pathname !== destination ||
+      (preserveQuery && parsed.searchParams.get("legacy") !== "1") ||
+      (!preserveQuery && parsed.search)
+    ) {
       throw new Error(`${source}: expected ${destination} with query, received ${location}`);
     }
     console.log(`PASS legacy redirect ${source} -> ${destination}`);
@@ -499,7 +507,7 @@ async function main() {
   )) as Record<RoleName, string>;
   await verifyLegacyApiMatrix(cookies);
   await verifyAdminPageMatrix(cookies);
-  await verifyLegacyRedirectMatrix();
+  await verifyLegacyRedirectMatrix(cookies.super);
   await verifyNavigation(cookies);
   await verifyLoginLandings();
   await verifyRequiredPasswordChange();

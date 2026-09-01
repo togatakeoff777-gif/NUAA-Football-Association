@@ -100,6 +100,7 @@ async function main() {
     assert(routing.resolveAuthorizedLegacyAdminDestination("/referees/admin", ["COMPETITION_ADMIN", "REFEREE_ADMIN"]) === "/admin", "Legacy multi-role root did not use the safe unified landing.");
     assert(routing.resolveAuthorizedLegacyAdminDestination("/referees/admin/matches", ["COMPETITION_ADMIN"]) === "/admin/matches", "Legacy matches did not preserve COMPETITION_ADMIN semantics.");
     assert(routing.resolveAuthorizedLegacyAdminDestination("/referees/admin/matches", ["REFEREE_ADMIN"]) === "/admin/appointments", "Legacy matches did not preserve REFEREE_ADMIN semantics.");
+    assert(routing.resolveAuthorizedLegacyAdminDestination("/referees/admin/matches/competitions?view=legacy", ["COMPETITION_ADMIN"]) === "/admin/competitions?view=legacy", "Legacy competitions root was shadowed by the match-detail route.");
     assert(routing.resolveAuthorizedLegacyAdminDestination("/referees/admin/matches/match-1?tab=appointments", ["REFEREE_ADMIN"]) === "/admin/appointments/match-1?tab=appointments", "Legacy match detail did not preserve the referee appointment deep link.");
     assert(routing.resolveAuthorizedLegacyAdminDestination("/referees/admin/matches/match-1/edit", ["REFEREE_ADMIN"]) === null, "Legacy competition write deep link did not fail closed for REFEREE_ADMIN.");
     assert(routing.resolveAuthorizedLegacyAdminDestination("/referees/admin/referees/ref-1", ["CONTENT_EDITOR", "REFEREE_ADMIN"]) === "/admin/referees/ref-1", "Legacy referee deep link rejected an authorized multi-role actor.");

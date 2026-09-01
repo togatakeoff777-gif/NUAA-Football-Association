@@ -74,7 +74,7 @@ export function resolveAuthorizedLegacyAdminDestination(
     return null;
   }
 
-  const matchDetail = pathname.match(/^\/referees\/admin\/matches\/([^/]+)$/);
+  const matchDetail = pathname.match(/^\/referees\/admin\/matches\/(?!competitions$)([^/]+)$/);
   if (matchDetail) {
     const id = encodeURIComponent(decodeURIComponent(matchDetail[1]));
     if (canReadCompetitions) return `/admin/matches/${id}${suffix}`;

@@ -376,19 +376,19 @@ export async function resetRefereePassword(
   const referee = await prisma.referee.findUnique({ where: { id } });
   if (!referee) throw new RefereeServiceError("裁判员账号不存在。", 404);
   const passwordHash = await hashPassword(initialPassword);
-  await prisma.$transaction([
-    prisma.referee.update({
+  await prisma.$transaction(async (tx) => {
+    await tx.referee.update({
       where: { id },
       data: { passwordHash, mustChangePassword: true, passwordChangedAt: new Date() },
-    }),
-    prisma.refereeSession.deleteMany({ where: { refereeId: id } }),
-  ]);
-  await writeAudit({
-    action: "REFEREE_PASSWORD_RESET",
-    entityType: "Referee",
-    entityId: id,
-    summary: `重置裁判员账号 ${referee.publicCode} 的密码`,
-    actorId: actor?.id ?? undefined,
+    });
+    await tx.refereeSession.deleteMany({ where: { refereeId: id } });
+    await writeAudit({
+      action: "REFEREE_PASSWORD_RESET",
+      entityType: "Referee",
+      entityId: id,
+      summary: `重置裁判员账号 ${referee.publicCode} 的密码`,
+      actorId: actor.id ?? undefined,
+    }, tx);
   });
 }
 
@@ -409,24 +409,24 @@ export async function changeRefereePassword(
     throw new RefereeServiceError("当前密码不正确。", 401);
   }
   const passwordHash = await hashPassword(newPassword);
-  await prisma.$transaction([
-    prisma.referee.update({
+  await prisma.$transaction(async (tx) => {
+    await tx.referee.update({
       where: { id: refereeId },
       data: {
         passwordHash,
         mustChangePassword: false,
         passwordChangedAt: new Date(),
       },
-    }),
-    prisma.refereeSession.deleteMany({ where: { refereeId } }),
-  ]);
-  await writeAudit({
-    actorType: "REFEREE",
-    actorId: refereeId,
-    action: "PASSWORD_CHANGED",
-    entityType: "Referee",
-    entityId: refereeId,
-    summary: "裁判员修改个人密码",
+    });
+    await tx.refereeSession.deleteMany({ where: { refereeId } });
+    await writeAudit({
+      actorType: "REFEREE",
+      actorId: refereeId,
+      action: "PASSWORD_CHANGED",
+      entityType: "Referee",
+      entityId: refereeId,
+      summary: "裁判员修改个人密码",
+    }, tx);
   });
 }
 

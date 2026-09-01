@@ -144,6 +144,7 @@ async function main() {
     await rejects(() => media.storeMediaAssetUpload({ fileName: "db-fail.png", mimeType: "image/png", bytes: png, visibility: "PRIVATE", actor: { ...actor, id: "missing-admin" } }), "DB failure was not surfaced.");
     assert(await verifier.mediaAsset.count() === dbFailureRows, "DB failure created a MediaAsset row.");
     const orphanPath = path.join(uploadRoot, "2026", "08", "deadbeef.pdf");
+    await mkdir(path.dirname(orphanPath), { recursive: true });
     await writeFile(orphanPath, "%PDF-orphan");
     assert((await media.scanOrphanedMediaFiles()).includes("2026/08/deadbeef.pdf"), "Orphan scan failed.");
     await rm(orphanPath, { force: true });

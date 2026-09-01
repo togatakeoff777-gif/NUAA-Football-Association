@@ -23,11 +23,13 @@ async function main() {
   if (!databasePath) throw new Error("REFEREE_MATCH_DELETION_TEST_DATABASE_PATH is required.");
   const url = `file:${databasePath.replaceAll("\\", "/")}`;
   process.env.DATABASE_URL = url;
+  process.env.NUAAFA_ISOLATED_SECURITY_TEST = "1";
   await applyMigrations(url);
 
   const verifier = new PrismaClient({ adapter: new PrismaLibSql({ url }) });
   const { deleteMatchSafely, RefereeServiceError } = await import("../src/lib/referee-service");
   const { prisma } = await import("../src/lib/prisma");
+  const capabilities = await import("./security-r4a-test-capabilities");
 
   try {
     const admin = await verifier.adminAccount.create({
@@ -38,7 +40,10 @@ async function main() {
         role: "SUPER_ADMIN",
       },
     });
-    const actor = { id: admin.id, role: "SUPER_ADMIN" as const };
+    const competitionAuthorization = capabilities.issueTestAdminServiceAuthorization(
+      "competitions:write",
+      capabilities.testUnifiedAdminActor({ id: admin.id }),
+    );
     const competition = await verifier.competition.create({
       data: {
         slug: "match-deletion-competition",
@@ -93,7 +98,7 @@ async function main() {
       },
     });
 
-    await deleteMatchSafely(deletableMatch.id, "测试数据：验收清理", actor);
+    await deleteMatchSafely(deletableMatch.id, "测试数据：验收清理", competitionAuthorization);
     assert(await verifier.match.findUnique({ where: { id: deletableMatch.id } }) === null, "可删除比赛仍存在于比赛列表数据源。");
     assert(await verifier.competition.count({ where: { id: competition.id } }) === 1, "删除比赛误删了 Competition。");
     assert(await verifier.team.count({ where: { id: { in: [homeTeam.id, awayTeam.id] } } }) === 2, "删除比赛误删了 Team。");
@@ -123,7 +128,7 @@ async function main() {
     });
     let publishedRejected = false;
     try {
-      await deleteMatchSafely(publishedMatch.id, "信息录入错误", actor);
+      await deleteMatchSafely(publishedMatch.id, "信息录入错误", competitionAuthorization);
     } catch (error) {
       publishedRejected = error instanceof RefereeServiceError && error.status === 409 && error.message.includes("取消比赛");
     }
@@ -134,7 +139,7 @@ async function main() {
     const completedMatch = await createMatch("completed-protected-match", "COMPLETED");
     let completedRejected = false;
     try {
-      await deleteMatchSafely(completedMatch.id, "测试数据", actor);
+      await deleteMatchSafely(completedMatch.id, "测试数据", competitionAuthorization);
     } catch (error) {
       completedRejected = error instanceof RefereeServiceError && error.status === 409;
     }
@@ -146,7 +151,7 @@ async function main() {
     });
     let completedAppointmentRejected = false;
     try {
-      await deleteMatchSafely(completedAppointmentMatch.id, "测试数据", actor);
+      await deleteMatchSafely(completedAppointmentMatch.id, "测试数据", competitionAuthorization);
     } catch (error) {
       completedAppointmentRejected = error instanceof RefereeServiceError && error.status === 409;
     }
@@ -155,7 +160,7 @@ async function main() {
     const cancelledMatch = await createMatch("cancelled-match-kept", "CANCELLED");
     let cancelledRejected = false;
     try {
-      await deleteMatchSafely(cancelledMatch.id, "重复创建", actor);
+      await deleteMatchSafely(cancelledMatch.id, "重复创建", competitionAuthorization);
     } catch (error) {
       cancelledRejected = error instanceof RefereeServiceError && error.status === 409;
     }

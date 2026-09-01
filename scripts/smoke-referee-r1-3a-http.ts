@@ -12,14 +12,21 @@ async function main() {
     throw new Error("An absolute isolated smoke root is required.");
   }
   process.env.DATABASE_URL = `file:${path.join(smokeRoot, "smoke.db").replaceAll("\\", "/")}`;
+  process.env.NUAAFA_ISOLATED_SECURITY_TEST = "1";
   const { prisma } = await import("../src/lib/prisma");
   const service = await import("../src/lib/referee-service");
+  const capabilities = await import("./security-r4a-test-capabilities");
   const oldPassword = "Smoke-Password-2026!";
   const newPassword = "Smoke-New-Password-2026!";
   try {
     const referee = await prisma.referee.findUniqueOrThrow({ where: { publicCode: "SMOKE-R1-001" } });
     if (referee.mustChangePassword) {
-      await service.changeRefereePassword(referee.id, oldPassword, newPassword);
+      await service.changeRefereePassword(
+        referee.id,
+        oldPassword,
+        newPassword,
+        capabilities.issueTestRefereeSelfServiceAuthorization(referee.id),
+      );
     }
     const changed = await prisma.referee.findUniqueOrThrow({ where: { id: referee.id } });
     assert(!changed.mustChangePassword, "Password change did not clear mustChangePassword.");

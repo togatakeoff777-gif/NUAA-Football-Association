@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       currentSessionId: session.id,
       currentPassword: input.currentPassword,
       newPassword: input.newPassword,
-    });
+    }, authorization.authorization);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return refereeApiErrorResponse(error, "密码修改失败，请稍后再试。");

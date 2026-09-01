@@ -20,7 +20,6 @@ import { refereeGrades } from "@/lib/referee-profile-options";
 export async function POST(request: Request) {
   const authorization = await authorizeLegacyAdminRequest(request, "referees:write");
   if (!authorization.ok) return authorization.response;
-  const actor = authorization.actor;
   try {
     const body: unknown = await request.json();
     if (!isRecord(body)) throw new RefereeApiInputError("账号内容格式不正确。");
@@ -62,7 +61,7 @@ export async function POST(request: Request) {
       currentAffiliationUnitId: body.currentAffiliationUnitId === undefined
         ? undefined
         : readShortText(body.currentAffiliationUnitId, "当前组织归属", 64, false),
-    }, actor);
+    }, authorization.authorization);
     return NextResponse.json({ ok: true, refereeId: referee.id }, { status: 201 });
   } catch (error) {
     return refereeApiErrorResponse(error, "账号创建失败，请稍后重试。");

@@ -26,6 +26,7 @@ async function main() {
   process.env.DATABASE_URL = url;
   process.env.REFEREE_ADMIN_SESSION_SECRET = randomBytes(32).toString("base64url");
   process.env.REFEREE_MEMBER_SESSION_SECRET = randomBytes(32).toString("base64url");
+  process.env.NUAAFA_ISOLATED_SECURITY_TEST = "1";
   await applyMigrations(url);
 
   const verifier = new PrismaClient({ adapter: new PrismaLibSql({ url }) });
@@ -36,8 +37,13 @@ async function main() {
   const qualifications = await import("../src/lib/referee-qualifications");
   const teamImport = await import("../src/lib/referee-team-import");
   const dto = await import("../src/lib/referee-dto");
+  const capabilities = await import("./security-r4a-test-capabilities");
   const { prisma } = await import("../src/lib/prisma");
   const actor = { id: null, role: "SUPER_ADMIN" as const };
+  const refereeAuthorization = capabilities.issueTestAdminServiceAuthorization(
+    "referees:write",
+    capabilities.testUnifiedAdminActor({ isLegacy: true }),
+  );
 
   try {
     const futsalTemplate = roles.getPositionTemplate("FUTSAL");
@@ -70,7 +76,7 @@ async function main() {
       publicCode: "FIX2-CAP", name: "培养状态裁判", initialPassword: "Fix2-Test-Password-2026", status: "ACTIVE",
       elevenASide: true, futsal: false, trainingStatus: "IN_TRAINING", assignmentEligibility: "ELIGIBLE", publicDirectoryEnabled: false,
       refereeLevel: "国家三级", certificateNote: "CERT-001", qualificationNote: "测试资质备注", capabilities,
-    }, actor);
+    }, refereeAuthorization);
     const savedCapabilities = await verifier.refereePositionCapability.findMany({ where: { refereeId: capabilityReferee.id } });
     assert(new Set(savedCapabilities.map((item) => item.status)).size === 3, "岗位能力三状态未被持久化。" );
 
@@ -81,7 +87,7 @@ async function main() {
         elevenASide: true, futsal: false, trainingStatus: "QUALIFIED", assignmentEligibility: "ELIGIBLE", publicDirectoryEnabled: true,
         refereeLevel: "暂无正式裁判资质", collegeId,
         capabilities: [{ format: "ELEVEN_A_SIDE", positionKey: "REFEREE", status: "READY" }],
-      }, actor);
+      }, refereeAuthorization);
     }
     async function createMatch(label: string, start: Date, end: Date | null, homeTeamId = freeHome.id, awayTeamId = freeAway.id) {
       sequence += 1;

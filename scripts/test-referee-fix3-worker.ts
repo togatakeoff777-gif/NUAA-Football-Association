@@ -27,6 +27,7 @@ async function main() {
   process.env.DATABASE_URL = url;
   process.env.REFEREE_ADMIN_SESSION_SECRET = randomBytes(32).toString("base64url");
   process.env.REFEREE_MEMBER_SESSION_SECRET = randomBytes(32).toString("base64url");
+  process.env.NUAAFA_ISOLATED_SECURITY_TEST = "1";
   await applyMigrations(url);
 
   const verifier = new PrismaClient({ adapter: new PrismaLibSql({ url }) });
@@ -36,8 +37,13 @@ async function main() {
   const roles = await import("../src/lib/referee-roles");
   const dto = await import("../src/lib/referee-dto");
   const profile = await import("../src/lib/referee-profile-options");
+  const capabilities = await import("./security-r4a-test-capabilities");
   const { prisma } = await import("../src/lib/prisma");
   const actor = { id: null, role: "SUPER_ADMIN" as const };
+  const refereeAuthorization = capabilities.issueTestAdminServiceAuthorization(
+    "referees:write",
+    capabilities.testUnifiedAdminActor({ isLegacy: true }),
+  );
 
   try {
     const expectedColleges = [
@@ -89,7 +95,7 @@ async function main() {
       publicBio: "公开简介", internalNote: "内部备注", phone: "13800000000", studentId: "2400000000",
       collegeId: aiCollege.id, grade: "大一", currentAffiliationUnitId: zhiyuan.id,
       capabilities: [{ format: "ELEVEN_A_SIDE", positionKey: "REFEREE", status: "READY" }],
-    }, actor);
+    }, refereeAuthorization);
     const baseUpdate = {
       publicCode: directReferee.publicCode, name: directReferee.name, status: "ACTIVE" as const,
       elevenASide: true, futsal: false, trainingStatus: "IN_TRAINING" as const, assignmentEligibility: "ELIGIBLE" as const,
@@ -99,7 +105,7 @@ async function main() {
       capabilities: [{ format: "ELEVEN_A_SIDE" as const, positionKey: "REFEREE" as const, status: "READY" as const }],
     };
     for (const grade of profile.refereeGrades) {
-      await service.updateRefereeAccount(directReferee.id, { ...baseUpdate, grade }, actor);
+      await service.updateRefereeAccount(directReferee.id, { ...baseUpdate, grade }, refereeAuthorization);
       const saved = await verifier.referee.findUniqueOrThrow({ where: { id: directReferee.id } });
       assert(saved.grade === grade, `${grade}不能保存。`);
       assert(saved.currentAffiliationUnitId === zhiyuan.id, `${grade}保存时错误覆盖了人工确认的当前组织归属。`);
@@ -107,7 +113,7 @@ async function main() {
     }
     await service.updateRefereeAccount(directReferee.id, {
       ...baseUpdate, grade: "大四", currentAffiliationUnitId: aiCollege.id,
-    }, actor);
+    }, refereeAuthorization);
     const affiliationHistory = await verifier.refereeAffiliation.findMany({ where: { refereeId: directReferee.id } });
     assert(
       (await verifier.referee.findUniqueOrThrow({ where: { id: directReferee.id } })).collegeId === aiCollege.id &&
@@ -125,7 +131,7 @@ async function main() {
         publicCode: code, name: code, initialPassword: "Fix3-Test-Password-2026", status: "ACTIVE",
         elevenASide: true, futsal: false, trainingStatus: "QUALIFIED", assignmentEligibility: "ELIGIBLE", publicDirectoryEnabled: false,
         collegeId, capabilities: [{ format: "ELEVEN_A_SIDE", positionKey: "REFEREE", status: "READY" }],
-      }, actor);
+      }, refereeAuthorization);
       const team = await verifier.team.create({ data: { competitionId: competition.id, name: unitName, teamType: "ORGANIZATION" } });
       await r1.setTeamUnitAffiliations(team.id, [unitId], "ORGANIZATION", actor);
       const match = await verifier.match.create({ data: {
@@ -155,7 +161,7 @@ async function main() {
         const [format, positionKey] = identity.split(":");
         return { format: format as "ELEVEN_A_SIDE" | "FUTSAL", positionKey: positionKey as never, status };
       }),
-    }, actor);
+    }, refereeAuthorization);
     assert((await verifier.refereePositionCapability.count({ where: { refereeId: capabilityReferee.id, status: "READY" } })) === 10, "表单批量选择在保存前错误写入数据库。");
     await service.updateRefereeAccount(capabilityReferee.id, {
       publicCode: capabilityReferee.publicCode, name: capabilityReferee.name, status: "ACTIVE",
@@ -164,7 +170,7 @@ async function main() {
         const [format, positionKey] = identity.split(":");
         return { format: format as "ELEVEN_A_SIDE" | "FUTSAL", positionKey: positionKey as never, status };
       }),
-    }, actor);
+    }, refereeAuthorization);
     const refreshedCapabilities = await verifier.refereePositionCapability.findMany({ where: { refereeId: capabilityReferee.id } });
     assert(refreshedCapabilities.find((item) => item.format === "ELEVEN_A_SIDE" && item.positionKey === "REFEREE")?.status === "READY" && refreshedCapabilities.filter((item) => item.status === "TRAINING").length === 9, "岗位培养状态保存刷新后不正确。");
 

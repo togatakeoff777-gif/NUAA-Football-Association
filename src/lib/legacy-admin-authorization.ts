@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 
 import type { AdminActor } from "@/lib/referee-service";
+import {
+  issueAdminServiceAuthorization,
+  type AdminServiceAuthorization,
+} from "@/lib/privileged-service-authorization";
 import { refereeApiErrorResponse } from "@/lib/referee-api";
 import { getAdminSession, isSameOrigin } from "@/lib/referee-auth";
 import {
@@ -11,19 +15,19 @@ import {
   type UnifiedAdminPermission,
 } from "@/lib/unified-admin-rbac";
 
-type LegacyAdminAuthorization =
-  | { ok: true; actor: AdminActor }
+type LegacyAdminAuthorization<P extends UnifiedAdminPermission> =
+  | { ok: true; actor: AdminActor; authorization: AdminServiceAuthorization<P> }
   | { ok: false; response: NextResponse };
 
-export async function authorizeLegacyAdminRequest(
+export async function authorizeLegacyAdminRequest<P extends UnifiedAdminPermission>(
   request: Request,
-  permission: UnifiedAdminPermission,
+  permission: P,
   options: {
     mutation?: boolean;
     allowPasswordChangeRequired?: boolean;
     failureMessage?: string;
   } = { mutation: true },
-): Promise<LegacyAdminAuthorization> {
+): Promise<LegacyAdminAuthorization<P>> {
   try {
     if (options.mutation !== false && !isSameOrigin(request)) {
       return { ok: false, response: NextResponse.json({ error: "请求来源无效。" }, { status: 403 }) };
@@ -57,6 +61,7 @@ export async function authorizeLegacyAdminRequest(
         id: actor.id,
         role: hasUnifiedAdminPermission(actor.roles, "system:write") ? "SUPER_ADMIN" : "REFEREE_MANAGER",
       },
+      authorization: issueAdminServiceAuthorization(actor, permission),
     };
   } catch (error) {
     return {

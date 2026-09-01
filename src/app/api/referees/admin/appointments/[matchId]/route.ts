@@ -13,7 +13,6 @@ import { isRecord, readEnum, readPositionAssignments, readShortText } from "@/li
 export async function PUT(request: Request, context: { params: Promise<{ matchId: string }> }) {
   const authorization = await authorizeLegacyAdminRequest(request, "referees:write");
   if (!authorization.ok) return authorization.response;
-  const actor = authorization.actor;
   try {
     const body: unknown = await request.json();
     if (!isRecord(body)) throw new RefereeApiInputError("选派内容格式不正确。" );
@@ -24,7 +23,7 @@ export async function PUT(request: Request, context: { params: Promise<{ matchId
       publicationNote: readShortText(body.publicationNote, "公示备注", 240, false),
       changeReason: readShortText(body.changeReason, "改派原因", 240, false),
       overrideReason: readShortText(body.overrideReason, "冲突覆盖原因", 500, false),
-    }, actor);
+    }, authorization.authorization);
     return NextResponse.json({ ok: true, warnings: result.warnings });
   } catch (error) {
     return refereeApiErrorResponse(error, "草稿保存失败，请稍后重试。");
@@ -34,7 +33,6 @@ export async function PUT(request: Request, context: { params: Promise<{ matchId
 export async function POST(request: Request, context: { params: Promise<{ matchId: string }> }) {
   const authorization = await authorizeLegacyAdminRequest(request, "referees:write");
   if (!authorization.ok) return authorization.response;
-  const actor = authorization.actor;
   try {
     const body: unknown = await request.json();
     if (!isRecord(body)) throw new RefereeApiInputError("操作内容格式不正确。" );
@@ -47,12 +45,12 @@ export async function POST(request: Request, context: { params: Promise<{ matchI
     const reason = readShortText(body.reason, "操作原因", 240, false);
     const overrideReason = readShortText(body.overrideReason, "冲突覆盖原因", 500, false);
     const result = action === "publish"
-      ? await publishAppointment(matchId, reason, overrideReason, actor)
+      ? await publishAppointment(matchId, reason, overrideReason, authorization.authorization)
       : action === "withdraw"
-        ? await withdrawAppointment(matchId, reason, actor)
+        ? await withdrawAppointment(matchId, reason, authorization.authorization)
         : action === "complete"
-          ? await completeAppointment(matchId, reason, actor)
-          : await cancelAppointment(matchId, reason, actor);
+          ? await completeAppointment(matchId, reason, authorization.authorization)
+          : await cancelAppointment(matchId, reason, authorization.authorization);
     return NextResponse.json({
       ok: true,
       warnings: "warnings" in result ? result.warnings : [],

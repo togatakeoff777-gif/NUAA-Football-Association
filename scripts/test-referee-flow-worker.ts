@@ -37,6 +37,7 @@ async function main() {
   process.env.DATABASE_URL = url;
   process.env.REFEREE_ADMIN_SESSION_SECRET = randomBytes(32).toString("base64url");
   process.env.REFEREE_MEMBER_SESSION_SECRET = randomBytes(32).toString("base64url");
+  process.env.NUAAFA_ISOLATED_SECURITY_TEST = "1";
   await applyMigrations(url);
 
   const verifier = new PrismaClient({ adapter: new PrismaLibSql({ url }) });
@@ -44,6 +45,11 @@ async function main() {
   const security = await import("../src/lib/referee-security");
   const credentials = await import("../src/lib/referee-credentials");
   const publicQueries = await import("../src/lib/referee-public");
+  const capabilities = await import("./security-r4a-test-capabilities");
+  const refereeAuthorization = capabilities.issueTestAdminServiceAuthorization(
+    "referees:write",
+    capabilities.testUnifiedAdminActor({ isLegacy: true }),
+  );
   const auth = await import("../src/lib/referee-auth");
   const { prisma } = await import("../src/lib/prisma");
 
@@ -169,7 +175,7 @@ async function main() {
         publicBio: index === 1 ? "自动化公开字段验证" : "",
         internalNote: "只允许管理员读取的自动化测试备注",
         certificateNote: "未公开的自动化登记说明",
-      });
+      }, refereeAuthorization);
       referees.push(account);
     }
     assert(referees[0].mustChangePassword, "新账号未要求首次登录修改密码。");
@@ -184,6 +190,7 @@ async function main() {
       referees[0].id,
       initialPassword,
       replacementPassword,
+      capabilities.issueTestRefereeSelfServiceAuthorization(referees[0].id),
     );
     const changedAccount = await verifier.referee.findUniqueOrThrow({
       where: { id: referees[0].id },
@@ -222,7 +229,7 @@ async function main() {
         futsal: false,
         trainingStatus: "PENDING_ASSESSMENT",
         publicDirectoryEnabled: false,
-      });
+      }, refereeAuthorization);
     } catch (error) {
       duplicateAccountBlocked =
         error instanceof service.RefereeServiceError && error.status === 409;
@@ -352,7 +359,7 @@ async function main() {
       matchId: match.id,
       publicationNote: "自动化选派",
       positions,
-    });
+    }, refereeAuthorization);
     const draft = await verifier.refereeAppointment.findUniqueOrThrow({
       where: { matchId: match.id },
       include: { positions: true },
@@ -373,13 +380,13 @@ async function main() {
           { key: "REFEREE", slot: 1, refereeId: referees[0].id },
           { key: "REFEREE", slot: 2, refereeId: referees[1].id },
         ],
-      });
+      }, refereeAuthorization);
     } catch (error) {
       overageBlocked = error instanceof service.RefereeServiceError;
     }
     assert(overageBlocked, "同一岗位超额选派未被阻止。");
 
-    await service.publishAppointment(match.id, "首次发布");
+    await service.publishAppointment(match.id, "首次发布", "", refereeAuthorization);
     assert(
       await verifier.refereeAppointment.count({
         where: { matchId: match.id, status: "PUBLISHED" },
@@ -390,7 +397,7 @@ async function main() {
       (await verifier.refereeApplication.findUniqueOrThrow({ where: { id: application.id } })).status === "APPOINTED",
       "入选报名未更新为已选派。",
     );
-    await service.withdrawAppointment(match.id, "自动化撤回验证");
+    await service.withdrawAppointment(match.id, "自动化撤回验证", refereeAuthorization);
     assert(
       await verifier.refereeAppointment.count({
         where: { matchId: match.id, status: "PUBLISHED" },
@@ -402,8 +409,8 @@ async function main() {
       publicationNote: "自动化重新发布",
       changeReason: "自动化改派验证",
       positions,
-    });
-    await service.publishAppointment(match.id, "自动化重新发布验证");
+    }, refereeAuthorization);
+    await service.publishAppointment(match.id, "自动化重新发布验证", "", refereeAuthorization);
     const republished = await verifier.refereeAppointment.findUniqueOrThrow({
       where: { matchId: match.id },
       include: { versions: true },
@@ -429,7 +436,7 @@ async function main() {
       matchId: conflictMatch.id,
       publicationNote: "",
       positions: [{ key: "REFEREE", slot: 1, refereeId: referees[0].id }],
-    });
+    }, refereeAuthorization);
     assert(
       !adjacentResult.warnings.some((warning) => warning.code === "ADJACENT_MATCH"),
       "缺少计划结束时间时错误推测了比赛间隔。",
@@ -470,7 +477,7 @@ async function main() {
       publicDirectoryEnabled: false,
       publicBio: "",
       internalNote: "",
-    });
+    }, refereeAuthorization);
     assert(
       await verifier.refereeSession.count({ where: { refereeId: referees[0].id } }) === 0,
       "账号停用后仍保留有效 Session。",

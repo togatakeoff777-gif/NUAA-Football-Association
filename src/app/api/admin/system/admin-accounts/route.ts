@@ -6,7 +6,7 @@ import {
   updateUnifiedAdminAccount,
 } from "@/lib/unified-admin-account-service";
 import {
-  authorizeUnifiedAdminRequest,
+  authorizeUnifiedAdminServiceRequest,
   UnifiedAdminInputError,
   unifiedAdminErrorResponse,
 } from "@/lib/unified-admin-api";
@@ -46,7 +46,7 @@ function readInput<T>(reader: () => T) {
 
 export async function POST(request: Request) {
   try {
-    const actor = await authorizeUnifiedAdminRequest(request, "system:write", { mutation: true });
+    const { authorization } = await authorizeUnifiedAdminServiceRequest(request, "system:write", { mutation: true });
     const body = await readBody(request);
     const input = readInput(() => ({
       username: readShortText(body.username, "账号", 64),
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
       password: readShortText(body.password, "初始密码", 256),
       roles: readRoles(body.roles),
     }));
-    const account = await createUnifiedAdminAccount(input, actor);
+    const account = await createUnifiedAdminAccount(input, authorization);
     return NextResponse.json({ ok: true, account }, { status: 201 });
   } catch (error) {
     return unifiedAdminErrorResponse(error, "管理员账号创建失败。");
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const actor = await authorizeUnifiedAdminRequest(request, "system:write", { mutation: true });
+    const { authorization } = await authorizeUnifiedAdminServiceRequest(request, "system:write", { mutation: true });
     const body = await readBody(request);
     const hasRoles = Object.hasOwn(body, "roles");
     const hasStatus = Object.hasOwn(body, "isActive");
@@ -73,7 +73,7 @@ export async function PATCH(request: Request) {
       ...(hasRoles ? { roles: readRoles(body.roles) } : {}),
       ...(hasStatus ? { isActive: readBoolean(body.isActive, "启用状态") } : {}),
     }));
-    const account = await updateUnifiedAdminAccount(input, actor);
+    const account = await updateUnifiedAdminAccount(input, authorization);
     return NextResponse.json({ ok: true, account });
   } catch (error) {
     return unifiedAdminErrorResponse(error, "管理员账号更新失败。");

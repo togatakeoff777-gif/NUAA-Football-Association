@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getAdminSession, isSameOrigin } from "@/lib/referee-auth";
 import { refereeApiErrorResponse, RefereeApiInputError } from "@/lib/referee-api";
 import { RefereeServiceError } from "@/lib/referee-service-error";
+import { issueAdminServiceAuthorization } from "@/lib/privileged-service-authorization";
 import {
   assertUnifiedAdminPasswordChangeCompleted,
   assertUnifiedAdminPermission,
@@ -33,6 +34,18 @@ export async function authorizeUnifiedAdminRequest(
   if (!actor) throw new UnifiedAdminAccessError("请先登录管理员后台。", 401);
   assertUnifiedAdminPermission(actor, permission);
   return actor;
+}
+
+export async function authorizeUnifiedAdminServiceRequest<P extends UnifiedAdminPermission>(
+  request: Request,
+  permission: P,
+  options: { mutation?: boolean } = {},
+) {
+  const actor = await authorizeUnifiedAdminRequest(request, permission, options);
+  return {
+    actor,
+    authorization: issueAdminServiceAuthorization(actor, permission),
+  };
 }
 
 export function unifiedAdminErrorResponse(error: unknown, fallback: string) {

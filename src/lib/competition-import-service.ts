@@ -11,7 +11,10 @@ import {
   type CompetitionImportPreviewRow,
 } from "@/lib/competition-import-types";
 import { prisma } from "@/lib/prisma";
-import type { UnifiedAdminActor } from "@/lib/unified-admin-rbac";
+import {
+  requireAdminServiceAuthorization,
+  type AdminServiceAuthorization,
+} from "@/lib/privileged-service-authorization";
 
 type ImportDb = Prisma.TransactionClient | typeof prisma;
 
@@ -597,8 +600,9 @@ export async function buildCompetitionImportPreview(input: CompetitionImportInpu
 
 export async function commitCompetitionImport(
   input: CompetitionImportInput,
-  actor: UnifiedAdminActor,
+  authorization: AdminServiceAuthorization<"competitions:write">,
 ): Promise<CompetitionImportCommitResult> {
+  const actor = requireAdminServiceAuthorization(authorization, "competitions:write");
   try {
     return await prisma.$transaction(async (tx) => {
       const analysis = await analyzeCompetitionImport(tx, input);

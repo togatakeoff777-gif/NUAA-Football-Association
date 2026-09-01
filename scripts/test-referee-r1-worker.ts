@@ -19,6 +19,7 @@ async function main() {
   if (!databasePath) throw new Error("REFEREE_R1_TEST_DATABASE_PATH is required.");
   const url = `file:${databasePath.replaceAll("\\", "/")}`;
   process.env.DATABASE_URL = url;
+  process.env.NUAAFA_ISOLATED_SECURITY_TEST = "1";
 
   const raw = createClient({ url });
   await applyMigration(raw, "20260722013757_init_referee_center");
@@ -69,6 +70,7 @@ async function main() {
 
   const verifier = new PrismaClient({ adapter: new PrismaLibSql({ url }) });
   const service = await import("../src/lib/referee-service");
+  const capabilities = await import("./security-r4a-test-capabilities");
   const r1 = await import("../src/lib/referee-r1-service");
   const publicQueries = await import("../src/lib/referee-public");
   const credentials = await import("../src/lib/referee-credentials");
@@ -131,12 +133,20 @@ async function main() {
       "持久化管理员账号认证失败。",
     );
     const superActor = { id: superAccount.id, role: "SUPER_ADMIN" as const };
+    const systemAuthorization = capabilities.issueTestAdminServiceAuthorization(
+      "system:write",
+      capabilities.testUnifiedAdminActor({ id: superAccount.id }),
+    );
+    const refereeAuthorization = capabilities.issueTestAdminServiceAuthorization(
+      "referees:write",
+      capabilities.testUnifiedAdminActor({ id: superAccount.id }),
+    );
     const managerAccount = await r1.createAdminAccount({
       username: "r1-manager",
       displayName: "R1 裁判管理员",
       password: "R1-Test-Manager-Password-2026",
       role: "REFEREE_MANAGER",
-    }, superActor);
+    }, systemAuthorization);
     const managerCurrentSession = await verifier.adminSession.create({
       data: {
         adminAccountId: managerAccount.id,
@@ -158,18 +168,25 @@ async function main() {
         displayName: "不应创建",
         password: "R1-Test-Forbidden-Password-2026",
         role: "REFEREE_MANAGER",
-      }, { id: managerAccount.id, role: "REFEREE_MANAGER" });
+      }, capabilities.issueTestAdminServiceAuthorization(
+        "system:write",
+        capabilities.testUnifiedAdminActor({ id: managerAccount.id, roles: ["REFEREE_ADMIN"] }),
+      ));
     } catch (error) {
       managerPermissionBlocked =
         error instanceof service.RefereeServiceError && error.status === 403;
     }
     assert(managerPermissionBlocked, "REFEREE_MANAGER 越权创建了管理员账号。");
+    const managerPasswordAuthorization = capabilities.issueTestAdminServiceAuthorization(
+      "dashboard:read",
+      capabilities.testUnifiedAdminActor({ id: managerAccount.id, roles: ["REFEREE_ADMIN"] }),
+    );
     await r1.changeAdminPassword({
       adminAccountId: managerAccount.id,
       currentSessionId: managerCurrentSession.id,
       currentPassword: "R1-Test-Manager-Password-2026",
       newPassword: "R1-Test-Manager-New-Password-2026",
-    });
+    }, managerPasswordAuthorization);
     assert(
       (await credentials.authenticateAdminCredentials(
         "r1-manager",
@@ -247,7 +264,7 @@ async function main() {
       legacyReferee.id,
     );
     assert(firstAcknowledgement.versionId === "legacy-version", "首次确认未绑定既有发布版本。");
-    await service.withdrawAppointment(legacyMatch.id, "R1 自动化改派", superActor);
+    await service.withdrawAppointment(legacyMatch.id, "R1 自动化改派", refereeAuthorization);
 
     let hardConflictBlocked = false;
     let hardWarnings: Array<{ code: string; severity: string }> = [];
@@ -258,7 +275,7 @@ async function main() {
         changeReason: "R1 自动化改派",
         overrideReason: "硬冲突不应被此原因覆盖",
         positions: [{ key: "REFEREE", slot: 1, refereeId: legacyReferee.id }],
-      }, superActor);
+      }, refereeAuthorization);
     } catch (error) {
       if (error instanceof service.RefereeServiceError && error.status === 409) {
         hardConflictBlocked = true;
@@ -292,7 +309,7 @@ async function main() {
         publicationNote: "R1 警告验证",
         changeReason: "R1 自动化改派",
         positions: [{ key: "REFEREE", slot: 1, refereeId: legacyReferee.id }],
-      }, superActor);
+      }, refereeAuthorization);
     } catch (error) {
       overrideReasonRequired =
         error instanceof service.RefereeServiceError &&
@@ -309,7 +326,7 @@ async function main() {
       changeReason: "R1 自动化改派",
       overrideReason: "经核实由管理员批准覆盖",
       positions: [{ key: "REFEREE", slot: 1, refereeId: legacyReferee.id }],
-    }, superActor);
+    }, refereeAuthorization);
     assert(
       draftResult.warnings.some(
         (warning) => warning.code === "COLLEGE_CONFLICT" && warning.severity === "OVERRIDABLE",
@@ -319,7 +336,7 @@ async function main() {
 
     let publishOverrideRequired = false;
     try {
-      await service.publishAppointment(legacyMatch.id, "R1 重新发布", "", superActor);
+      await service.publishAppointment(legacyMatch.id, "R1 重新发布", "", refereeAuthorization);
     } catch (error) {
       publishOverrideRequired =
         error instanceof service.RefereeServiceError && error.status === 409;
@@ -329,7 +346,7 @@ async function main() {
       legacyMatch.id,
       "R1 重新发布",
       "经核实由管理员批准覆盖",
-      superActor,
+      refereeAuthorization,
     );
     assert(republished.version.revision === 3, "重新发布未生成新的发布版本。");
     assert(
@@ -364,7 +381,7 @@ async function main() {
       "管理员未能处理冲突报告或处理人未记录。",
     );
 
-    await service.completeAppointment(legacyMatch.id, "比赛已完成", superActor);
+    await service.completeAppointment(legacyMatch.id, "比赛已完成", refereeAuthorization);
     const history = await publicQueries.getPublicHistoricalAppointments(new Date("2026-08-19T00:00:00.000Z"));
     const historicalAppointment = history.find((item) => item.id === legacyAppointment.id);
     assert(historicalAppointment, "COMPLETED 选派从公开历史查询中消失。");

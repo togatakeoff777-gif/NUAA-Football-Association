@@ -20,7 +20,7 @@ import {
 
 async function authorize(request: Request) {
   const authorization = await authorizeLegacyAdminRequest(request, "competitions:write");
-  return authorization.ok ? authorization.actor : authorization.response;
+  return authorization.ok ? authorization : authorization.response;
 }
 
 function counts(value: unknown) {
@@ -74,7 +74,7 @@ export async function PATCH(
     const body: unknown = await request.json();
     if (!isRecord(body)) throw new RefereeApiInputError("场次内容格式不正确。");
     const { id } = await context.params;
-    await updateMatch(id, inputFromBody(body), authorization);
+    await updateMatch(id, inputFromBody(body), authorization.actor);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return refereeApiErrorResponse(error, "场次更新失败，请稍后重试。");
@@ -114,7 +114,7 @@ export async function POST(
       positionCounts: Object.fromEntries(
         source.positionRequirements.map((item) => [item.key, item.count]),
       ),
-    }, authorization);
+    }, authorization.actor);
     return NextResponse.json({ ok: true, matchId: copied.id }, { status: 201 });
   } catch (error) {
     return refereeApiErrorResponse(error, "场次复制失败，请稍后重试。");
@@ -134,7 +134,7 @@ export async function DELETE(
     await deleteMatchSafely(
       id,
       readShortText(body.reason, "删除原因", 240),
-      authorization,
+      authorization.authorization,
     );
     return NextResponse.json({ ok: true });
   } catch (error) {

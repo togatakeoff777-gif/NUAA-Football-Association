@@ -8,6 +8,10 @@ import type {
   TeamType,
 } from "@/generated/prisma-v29/client";
 import { prisma } from "@/lib/prisma";
+import {
+  requireAdminServiceAuthorization,
+  type AdminServiceAuthorization,
+} from "@/lib/privileged-service-authorization";
 import type { AdminActor } from "@/lib/referee-service";
 import { RefereeServiceError } from "@/lib/referee-service";
 import { hashPassword, verifyPassword } from "@/lib/referee-security";
@@ -454,8 +458,9 @@ export async function createAdminAccount(input: {
   displayName: string;
   password: string;
   role: AdminRole;
-}, actor: AdminActor) {
-  if (actor.role !== "SUPER_ADMIN") throw new RefereeServiceError("只有最高权限管理员可以创建管理员账号。", 403);
+}, authorization: AdminServiceAuthorization<"system:write">) {
+  const authorizedActor = requireAdminServiceAuthorization(authorization, "system:write");
+  const actor: AdminActor = { id: authorizedActor.id, role: "SUPER_ADMIN" };
   const username = input.username.trim().toLowerCase();
   if (!/^[a-z0-9._-]{3,64}$/.test(username)) {
     throw new RefereeServiceError("管理员账号须为 3 至 64 位字母、数字、点、下划线或连字符。");
@@ -490,8 +495,13 @@ export async function createAdminAccount(input: {
   return account;
 }
 
-export async function setAdminAccountStatus(id: string, isActive: boolean, actor: AdminActor) {
-  if (actor.role !== "SUPER_ADMIN") throw new RefereeServiceError("只有最高权限管理员可以管理管理员账号。", 403);
+export async function setAdminAccountStatus(
+  id: string,
+  isActive: boolean,
+  authorization: AdminServiceAuthorization<"system:write">,
+) {
+  const authorizedActor = requireAdminServiceAuthorization(authorization, "system:write");
+  const actor: AdminActor = { id: authorizedActor.id, role: "SUPER_ADMIN" };
   if (actor.id === id && !isActive) throw new RefereeServiceError("不能停用当前登录账号。");
   const account = await prisma.adminAccount.update({
     where: { id },
@@ -514,7 +524,11 @@ export async function changeAdminPassword(input: {
   currentSessionId: string;
   currentPassword: string;
   newPassword: string;
-}) {
+}, authorization: AdminServiceAuthorization<"dashboard:read">) {
+  const actor = requireAdminServiceAuthorization(authorization, "dashboard:read");
+  if (!actor.id || actor.id !== input.adminAccountId) {
+    throw new RefereeServiceError("可信服务授权上下文与管理员账号不匹配。", 403);
+  }
   if (input.newPassword.length < 12) {
     throw new RefereeServiceError("管理员新密码不能少于 12 个字符。");
   }

@@ -24,13 +24,18 @@ async function main() {
   if (!databasePath) throw new Error("SECURITY_APPOINTMENTS_DATABASE_PATH is required.");
   const url = `file:${databasePath.replaceAll("\\", "/")}`;
   process.env.DATABASE_URL = url;
+  process.env.NUAAFA_ISOLATED_SECURITY_TEST = "1";
   await applyMigrations(url);
 
   const service = await import("../src/lib/referee-service");
   const { prisma } = await import("../src/lib/prisma");
+  const capabilities = await import("./security-r4a-test-capabilities");
   const states = ["NONE", "DRAFT", "PUBLISHED", "WITHDRAWN", "COMPLETED", "CANCELLED"] as const;
   const actions = ["saveDraft", "publish", "withdraw", "complete", "cancel"] as const;
-  const actor = { id: null, role: "SUPER_ADMIN" as const };
+  const refereeAuthorization = capabilities.issueTestAdminServiceAuthorization(
+    "referees:write",
+    capabilities.testUnifiedAdminActor({ isLegacy: true }),
+  );
 
   try {
     const competition = await prisma.competition.create({
@@ -119,12 +124,12 @@ async function main() {
           publicationNote: "matrix",
           changeReason: state === "WITHDRAWN" ? "matrix resave" : "",
           positions: [{ key: "REFEREE", slot: 1, refereeId: referees[0].id }],
-        }, actor);
+        }, refereeAuthorization);
       }
-      if (action === "publish") return service.publishAppointment(matchId, state === "WITHDRAWN" ? "matrix republish" : "", "", actor);
-      if (action === "withdraw") return service.withdrawAppointment(matchId, "matrix withdraw", actor);
-      if (action === "complete") return service.completeAppointment(matchId, "matrix complete", actor);
-      return service.cancelAppointment(matchId, "matrix cancel", actor);
+      if (action === "publish") return service.publishAppointment(matchId, state === "WITHDRAWN" ? "matrix republish" : "", "", refereeAuthorization);
+      if (action === "withdraw") return service.withdrawAppointment(matchId, "matrix withdraw", refereeAuthorization);
+      if (action === "complete") return service.completeAppointment(matchId, "matrix complete", refereeAuthorization);
+      return service.cancelAppointment(matchId, "matrix cancel", refereeAuthorization);
     }
 
     let allowedCount = 0;
@@ -163,11 +168,11 @@ async function main() {
     const replacement = await createFixture("NONE", "replace-a-with-b");
     const appA = await createApplication(referees[0].id, replacement.match.id);
     const appB = await createApplication(referees[1].id, replacement.match.id);
-    await service.saveAppointmentDraft({ matchId: replacement.match.id, publicationNote: "A", positions: [{ key: "REFEREE", refereeId: referees[0].id }] }, actor);
-    await service.publishAppointment(replacement.match.id, "", "", actor);
-    await service.withdrawAppointment(replacement.match.id, "replace A", actor);
-    await service.saveAppointmentDraft({ matchId: replacement.match.id, publicationNote: "B", changeReason: "replace A with B", positions: [{ key: "REFEREE", refereeId: referees[1].id }] }, actor);
-    await service.publishAppointment(replacement.match.id, "replace A with B", "", actor);
+    await service.saveAppointmentDraft({ matchId: replacement.match.id, publicationNote: "A", positions: [{ key: "REFEREE", refereeId: referees[0].id }] }, refereeAuthorization);
+    await service.publishAppointment(replacement.match.id, "", "", refereeAuthorization);
+    await service.withdrawAppointment(replacement.match.id, "replace A", refereeAuthorization);
+    await service.saveAppointmentDraft({ matchId: replacement.match.id, publicationNote: "B", changeReason: "replace A with B", positions: [{ key: "REFEREE", refereeId: referees[1].id }] }, refereeAuthorization);
+    await service.publishAppointment(replacement.match.id, "replace A with B", "", refereeAuthorization);
     assert((await prisma.refereeApplication.findUniqueOrThrow({ where: { id: appA.id } })).status === "NOT_SELECTED", "Removed A remained APPOINTED.");
     assert((await prisma.refereeApplication.findUniqueOrThrow({ where: { id: appB.id } })).status === "APPOINTED", "Selected B was not APPOINTED.");
 
@@ -180,14 +185,14 @@ async function main() {
     await service.saveAppointmentDraft({ matchId: multi.match.id, publicationNote: "A+B", positions: [
       { key: "REFEREE", slot: 1, refereeId: referees[0].id },
       { key: "REFEREE", slot: 2, refereeId: referees[1].id },
-    ] }, actor);
-    await service.publishAppointment(multi.match.id, "", "", actor);
-    await service.withdrawAppointment(multi.match.id, "remove A add C", actor);
+    ] }, refereeAuthorization);
+    await service.publishAppointment(multi.match.id, "", "", refereeAuthorization);
+    await service.withdrawAppointment(multi.match.id, "remove A add C", refereeAuthorization);
     await service.saveAppointmentDraft({ matchId: multi.match.id, publicationNote: "B+C", changeReason: "remove A add C", positions: [
       { key: "REFEREE", slot: 1, refereeId: referees[1].id },
       { key: "REFEREE", slot: 2, refereeId: referees[2].id },
-    ] }, actor);
-    await service.publishAppointment(multi.match.id, "remove A add C", "", actor);
+    ] }, refereeAuthorization);
+    await service.publishAppointment(multi.match.id, "remove A add C", "", refereeAuthorization);
     const finalApplications = await prisma.refereeApplication.findMany({ where: { matchId: multi.match.id } });
     const statusById = new Map(finalApplications.map((item) => [item.id, item.status]));
     assert(statusById.get(multiA.id) === "NOT_SELECTED", "Removed A remained APPOINTED in multi-selection reconciliation.");

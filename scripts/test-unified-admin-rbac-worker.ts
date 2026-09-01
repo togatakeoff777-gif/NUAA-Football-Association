@@ -37,6 +37,7 @@ async function main() {
   const url = `file:${databasePath.replaceAll("\\", "/")}`;
   process.env.DATABASE_URL = url;
   process.env.REFEREE_ADMIN_SESSION_SECRET = "unified-admin-rbac-test-secret-2026";
+  process.env.NUAAFA_ISOLATED_SECURITY_TEST = "1";
   await applyMigrations(url);
 
   const verifier = new PrismaClient({ adapter: new PrismaLibSql({ url }) });
@@ -46,6 +47,7 @@ async function main() {
   const legacyRoutes = await import("../src/lib/unified-admin-legacy-routes");
   const accounts = await import("../src/lib/unified-admin-account-service");
   const refereeR1Service = await import("../src/lib/referee-r1-service");
+  const capabilities = await import("./security-r4a-test-capabilities");
   const { prisma } = await import("../src/lib/prisma");
 
   try {
@@ -59,6 +61,10 @@ async function main() {
       isLegacy: false,
       roles: ["SUPER_ADMIN"],
     };
+    const systemAuthorization = capabilities.issueTestAdminServiceAuthorization(
+      "system:write",
+      superActor,
+    );
 
     assert(rbac.resolveUnifiedAdminRoles({ explicitRoles: [], legacyRole: "SUPER_ADMIN" }).join() === "SUPER_ADMIN", "Legacy SUPER_ADMIN fallback failed.");
     assert(rbac.resolveUnifiedAdminRoles({ explicitRoles: ["SUPER_ADMIN", "CONTENT_EDITOR"] }).join() === "SUPER_ADMIN", "SUPER_ADMIN was not normalized.");
@@ -103,14 +109,18 @@ async function main() {
       displayName: "宣传负责人",
       password: "Content-Password-2026!",
       roles: ["CONTENT_EDITOR"],
-    }, superActor);
+    }, systemAuthorization);
     assert(content.mustChangePassword && content.roles.join() === "CONTENT_EDITOR", "Single-role account creation failed.");
     const requiredPasswordAccount = await accounts.createUnifiedAdminAccount({
       username: "required-password-owner",
       displayName: "首次改密管理员",
       password: "Required-Password-2026!",
       roles: ["CONTENT_EDITOR"],
-    }, superActor);
+    }, systemAuthorization);
+    const requiredPasswordAuthorization = capabilities.issueTestAdminServiceAuthorization(
+      "dashboard:read",
+      { ...superActor, id: requiredPasswordAccount.id, roles: ["CONTENT_EDITOR"] },
+    );
     const currentRequiredSession = await verifier.adminSession.create({
       data: {
         tokenHash: "required-password-current-session",
@@ -130,7 +140,7 @@ async function main() {
       currentSessionId: currentRequiredSession.id,
       currentPassword: "Wrong-Password-2026!",
       newPassword: "Required-Password-New-2026!",
-    }), "当前管理员密码不正确");
+    }, requiredPasswordAuthorization), "当前管理员密码不正确");
     const afterFailedPasswordChange = await verifier.adminAccount.findUniqueOrThrow({
       where: { id: requiredPasswordAccount.id },
     });
@@ -144,13 +154,13 @@ async function main() {
       currentSessionId: currentRequiredSession.id,
       currentPassword: "Required-Password-2026!",
       newPassword: "Required-Password-2026!",
-    }), "新密码不能与当前密码相同");
+    }, requiredPasswordAuthorization), "新密码不能与当前密码相同");
     await refereeR1Service.changeAdminPassword({
       adminAccountId: requiredPasswordAccount.id,
       currentSessionId: currentRequiredSession.id,
       currentPassword: "Required-Password-2026!",
       newPassword: "Required-Password-New-2026!",
-    });
+    }, requiredPasswordAuthorization);
     const afterSuccessfulPasswordChange = await verifier.adminAccount.findUniqueOrThrow({
       where: { id: requiredPasswordAccount.id },
     });
@@ -179,25 +189,28 @@ async function main() {
       displayName: "竞赛部部长",
       password: "Competition-Director-2026!",
       roles: ["COMPETITION_ADMIN", "REFEREE_ADMIN", "COMPETITION_ADMIN"],
-    }, superActor);
+    }, systemAuthorization);
     assert(multi.roles.join() === "COMPETITION_ADMIN,REFEREE_ADMIN", "Multi-role account creation/deduplication failed.");
     const explicitSuper = await accounts.createUnifiedAdminAccount({
       username: "explicit-super",
       displayName: "第二超级管理员",
       password: "Explicit-Super-Password-2026!",
       roles: ["SUPER_ADMIN", "CONTENT_EDITOR", "REFEREE_ADMIN"],
-    }, superActor);
+    }, systemAuthorization);
     assert(explicitSuper.roles.join() === "SUPER_ADMIN" && explicitSuper.unifiedRoles.length === 1, "SUPER_ADMIN persistence normalization failed.");
     await rejects(() => accounts.updateUnifiedAdminAccount(
       { id: explicitSuper.id, isActive: false },
-      { ...superActor, id: explicitSuper.id },
+      capabilities.issueTestAdminServiceAuthorization(
+        "system:write",
+        { ...superActor, id: explicitSuper.id },
+      ),
     ), "不能停用当前登录账号");
     assert((await verifier.adminAccount.findUniqueOrThrow({ where: { id: explicitSuper.id } })).isActive, "Self-disable rejection changed account state.");
 
     const updated = await accounts.updateUnifiedAdminAccount({
       id: content.id,
       roles: ["COMPETITION_ADMIN", "REFEREE_ADMIN"],
-    }, superActor);
+    }, systemAuthorization);
     assert(updated.roles.join() === "COMPETITION_ADMIN,REFEREE_ADMIN", "Existing role assignment update failed.");
     await verifier.adminSession.create({
       data: {
@@ -206,21 +219,21 @@ async function main() {
         adminAccountId: multi.id,
       },
     });
-    await accounts.updateUnifiedAdminAccount({ id: multi.id, isActive: false }, superActor);
+    await accounts.updateUnifiedAdminAccount({ id: multi.id, isActive: false }, systemAuthorization);
     assert(!(await verifier.adminAccount.findUniqueOrThrow({ where: { id: multi.id } })).isActive, "Ordinary admin disable failed.");
     assert(await verifier.adminSession.count({ where: { adminAccountId: multi.id } }) === 0, "Account disable did not invalidate sessions atomically.");
-    await accounts.updateUnifiedAdminAccount({ id: multi.id, isActive: true }, superActor);
+    await accounts.updateUnifiedAdminAccount({ id: multi.id, isActive: true }, systemAuthorization);
     assert((await verifier.adminAccount.findUniqueOrThrow({ where: { id: multi.id } })).isActive, "Ordinary admin re-enable failed.");
 
-    await accounts.updateUnifiedAdminAccount({ id: legacySuper.id, roles: ["CONTENT_EDITOR"] }, superActor);
+    await accounts.updateUnifiedAdminAccount({ id: legacySuper.id, roles: ["CONTENT_EDITOR"] }, systemAuthorization);
     const lastSuperBefore = await verifier.adminAccount.findUniqueOrThrow({
       where: { id: explicitSuper.id },
       include: { unifiedRoles: true },
     });
     const lastSuperAuditCount = await verifier.auditLog.count({ where: { entityId: explicitSuper.id } });
-    await rejects(() => accounts.updateUnifiedAdminAccount({ id: explicitSuper.id, isActive: false }, superActor), "至少一个已启用的超级管理员");
-    await rejects(() => accounts.updateUnifiedAdminAccount({ id: explicitSuper.id, roles: ["REFEREE_ADMIN"] }, superActor), "至少一个已启用的超级管理员");
-    await rejects(() => accounts.updateUnifiedAdminAccount({ id: explicitSuper.id, roles: ["REFEREE_ADMIN"], isActive: false }, superActor), "至少一个已启用的超级管理员");
+    await rejects(() => accounts.updateUnifiedAdminAccount({ id: explicitSuper.id, isActive: false }, systemAuthorization), "至少一个已启用的超级管理员");
+    await rejects(() => accounts.updateUnifiedAdminAccount({ id: explicitSuper.id, roles: ["REFEREE_ADMIN"] }, systemAuthorization), "至少一个已启用的超级管理员");
+    await rejects(() => accounts.updateUnifiedAdminAccount({ id: explicitSuper.id, roles: ["REFEREE_ADMIN"], isActive: false }, systemAuthorization), "至少一个已启用的超级管理员");
     const lastSuperAfter = await verifier.adminAccount.findUniqueOrThrow({
       where: { id: explicitSuper.id },
       include: { unifiedRoles: true },
@@ -232,7 +245,10 @@ async function main() {
       await verifier.auditLog.count({ where: { entityId: explicitSuper.id } }) === lastSuperAuditCount,
       "Rejected last-SUPER_ADMIN mutations produced partial writes or audit rows.",
     );
-    await rejects(() => accounts.createUnifiedAdminAccount({ username: "wrong-role", displayName: "越权账号", password: "Wrong-Role-Password-2026!", roles: ["CONTENT_EDITOR"] }, { ...superActor, roles: ["CONTENT_EDITOR"] }), "没有执行此操作的权限");
+    await rejects(() => accounts.createUnifiedAdminAccount(
+      { username: "wrong-role", displayName: "越权账号", password: "Wrong-Role-Password-2026!", roles: ["CONTENT_EDITOR"] },
+      capabilities.issueTestAdminServiceAuthorization("system:write", { ...superActor, roles: ["CONTENT_EDITOR"] }),
+    ), "没有执行此操作的权限");
 
     const stored = await verifier.adminAccount.findUniqueOrThrow({ where: { id: content.id }, include: { unifiedRoles: true } });
     assert(stored.passwordHash !== "Content-Password-2026!" && stored.unifiedRoles.length === 2, "Password hashing or role persistence failed.");

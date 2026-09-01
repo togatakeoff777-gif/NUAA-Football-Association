@@ -35,6 +35,7 @@ async function main() {
   process.env.DATABASE_URL = url;
   process.env.REFEREE_ADMIN_SESSION_SECRET = randomBytes(32).toString("base64url");
   process.env.REFEREE_MEMBER_SESSION_SECRET = randomBytes(32).toString("base64url");
+  process.env.NUAAFA_ISOLATED_SECURITY_TEST = "1";
   await applyMigrations(url);
 
   const verifier = new PrismaClient({ adapter: new PrismaLibSql({ url }) });
@@ -43,6 +44,7 @@ async function main() {
   const r1 = await import("../src/lib/referee-r1-service");
   const security = await import("../src/lib/referee-security");
   const service = await import("../src/lib/referee-service");
+  const capabilities = await import("./security-r4a-test-capabilities");
   const { prisma } = await import("../src/lib/prisma");
 
   type Actor = {
@@ -90,6 +92,14 @@ async function main() {
     const refereeActor = await createActor("r13a-referee", "R1-3A 裁判管理员", ["REFEREE_ADMIN"]);
     const contentActor = await createActor("r13a-content", "R1-3A 内容管理员", ["CONTENT_EDITOR"]);
     const competitionActor = await createActor("r13a-competition", "R1-3A 赛事管理员", ["COMPETITION_ADMIN"]);
+    const superRefereeAuthorization = capabilities.issueTestAdminServiceAuthorization(
+      "referees:write",
+      superActor,
+    );
+    const refereeAuthorization = capabilities.issueTestAdminServiceAuthorization(
+      "referees:write",
+      refereeActor,
+    );
 
     const lookalike = await service.createRefereeAccount({
       publicCode: "R13A-LOOKALIKE",
@@ -102,7 +112,7 @@ async function main() {
       futsal: false,
       phone: "13800000010",
       publicDirectoryEnabled: false,
-    }, { id: superActor.id, role: "SUPER_ADMIN" });
+    }, superRefereeAuthorization);
 
     const admissionCountBefore = await verifier.refereeAdmissionApplication.count();
     const refereeCountBefore = await verifier.referee.count();
@@ -222,7 +232,7 @@ async function main() {
       elevenASide: true,
       futsal: false,
       publicDirectoryEnabled: false,
-    }, { id: superActor.id, role: "SUPER_ADMIN" });
+    }, superRefereeAuthorization);
     const linkAdmission = await admission.submitRefereeAdmissionApplication({
       name: "明确关联申请人",
       phone: "13800000012",
@@ -246,7 +256,12 @@ async function main() {
     );
 
     const changedPassword = "R1-3A-New-Referee-Changed-2026";
-    await service.changeRefereePassword(approvedReferee.id, initialPassword, changedPassword);
+    await service.changeRefereePassword(
+      approvedReferee.id,
+      initialPassword,
+      changedPassword,
+      capabilities.issueTestRefereeSelfServiceAuthorization(approvedReferee.id),
+    );
     const changedReferee = await verifier.referee.findUniqueOrThrow({ where: { id: approvedReferee.id } });
     assert(
       !changedReferee.mustChangePassword &&
@@ -294,7 +309,7 @@ async function main() {
           positionKey,
           status,
         })),
-      }, { id: refereeActor.id, role: "REFEREE_MANAGER" });
+      }, refereeAuthorization);
     };
 
     await updateAccount({
@@ -477,7 +492,7 @@ async function main() {
       publicationNote: "R1-3A 自动化测试",
       overrideReason,
       positions: [{ key: "REFEREE", slot: 1, refereeId: approvedReferee.id }],
-    }, { id: refereeActor.id, role: "REFEREE_MANAGER" });
+    }, refereeAuthorization);
     const assertDraftBlocked = async (prepare: () => Promise<unknown>) => {
       await normalizedEligible();
       await prepare();
@@ -527,7 +542,7 @@ async function main() {
     const overlapKickoff = new Date("2027-06-01T10:00:00.000Z");
     const publishedSource = await createMatch({ open: false, kickoff: overlapKickoff });
     await saveDraft(publishedSource.id);
-    await service.publishAppointment(publishedSource.id, "", "", { id: refereeActor.id, role: "REFEREE_MANAGER" });
+    await service.publishAppointment(publishedSource.id, "", "", refereeAuthorization);
     const overlappingTarget = await createMatch({
       open: false,
       kickoff: new Date(overlapKickoff.getTime() + 30 * 60_000),
@@ -548,7 +563,7 @@ async function main() {
     await saveDraft(staleEligibilityMatch.id);
     await setRefereeState({ assignmentEligibility: "SUSPENDED" });
     await expectServiceError(
-      () => service.publishAppointment(staleEligibilityMatch.id, "", "", { id: refereeActor.id, role: "REFEREE_MANAGER" }),
+      () => service.publishAppointment(staleEligibilityMatch.id, "", "", refereeAuthorization),
       "Draft 后 SUSPENDED 未在 publish 时重新拒绝。",
       409,
     );
@@ -558,7 +573,7 @@ async function main() {
     await saveDraft(staleCapabilityMatch.id);
     await setCapabilities([{ format: "ELEVEN_A_SIDE", positionKey: "REFEREE", status: "TRAINING" }]);
     await expectServiceError(
-      () => service.publishAppointment(staleCapabilityMatch.id, "", "", { id: refereeActor.id, role: "REFEREE_MANAGER" }),
+      () => service.publishAppointment(staleCapabilityMatch.id, "", "", refereeAuthorization),
       "Draft 后 READY→TRAINING 未在 publish 时重新拒绝。",
       409,
     );
@@ -568,7 +583,7 @@ async function main() {
     await saveDraft(staleAccountMatch.id);
     await setRefereeState({ status: "INACTIVE" });
     await expectServiceError(
-      () => service.publishAppointment(staleAccountMatch.id, "", "", { id: refereeActor.id, role: "REFEREE_MANAGER" }),
+      () => service.publishAppointment(staleAccountMatch.id, "", "", refereeAuthorization),
       "Draft 后 ACTIVE→INACTIVE 未在 publish 时重新拒绝。",
       409,
     );

@@ -14,6 +14,12 @@ import type {
 } from "@/generated/prisma-v29/client";
 import { prisma } from "@/lib/prisma";
 import {
+  requireAdminServiceAuthorization,
+  requireRefereeSelfServiceAuthorization,
+  type AdminServiceAuthorization,
+  type RefereeSelfServiceAuthorization,
+} from "@/lib/privileged-service-authorization";
+import {
   detectAppointmentWarnings,
   hardAppointmentConflicts,
   warningsRequiringOverride,
@@ -28,12 +34,24 @@ import { isRefereeGrade } from "@/lib/referee-profile-options";
 import { hashPassword, verifyPassword } from "@/lib/referee-security";
 import { RefereeServiceError } from "@/lib/referee-service-error";
 import { resolveCompetitionTeamSelection } from "@/lib/referee-team-service";
+import type { UnifiedAdminPermission } from "@/lib/unified-admin-rbac";
 export { RefereeServiceError } from "@/lib/referee-service-error";
 
 export type AdminActor = {
   id: string | null;
   role: AdminRole;
 };
+
+function authorizedAdminActor<P extends UnifiedAdminPermission>(
+  authorization: AdminServiceAuthorization<P>,
+  permission: P,
+): AdminActor {
+  const actor = requireAdminServiceAuthorization(authorization, permission);
+  return {
+    id: actor.id,
+    role: actor.roles.includes("SUPER_ADMIN") ? "SUPER_ADMIN" : "REFEREE_MANAGER",
+  };
+}
 
 type ServiceDb = Prisma.TransactionClient | typeof prisma;
 
@@ -142,7 +160,11 @@ export async function createRefereeAccountInTransaction(
   return referee;
 }
 
-export async function createRefereeAccount(input: RefereeAccountInput, actor?: AdminActor) {
+export async function createRefereeAccount(
+  input: RefereeAccountInput,
+  authorization: AdminServiceAuthorization<"referees:write">,
+) {
+  const actor = authorizedAdminActor(authorization, "referees:write");
   try {
     return await prisma.$transaction((tx) =>
       createRefereeAccountInTransaction(input, actor, tx),
@@ -182,8 +204,9 @@ export async function updateRefereeAccount(
     currentAffiliationUnitId?: string;
     capabilities?: Array<{ format: CompetitionFormat; positionKey: AppointmentPositionKey; status?: PositionCapabilityStatus }>;
   },
-  actor?: AdminActor,
+  authorization: AdminServiceAuthorization<"referees:write">,
 ) {
+  const actor = authorizedAdminActor(authorization, "referees:write");
   const existing = await prisma.referee.findUnique({ where: { id } });
   if (!existing) throw new RefereeServiceError("裁判员账号不存在。", 404);
   const capabilities = normalizeCapabilities(input);
@@ -347,8 +370,9 @@ async function resolveCurrentAffiliationUnitId(
 export async function resetRefereePassword(
   id: string,
   initialPassword: string,
-  actor?: AdminActor,
+  authorization: AdminServiceAuthorization<"referees:write">,
 ) {
+  const actor = authorizedAdminActor(authorization, "referees:write");
   const referee = await prisma.referee.findUnique({ where: { id } });
   if (!referee) throw new RefereeServiceError("裁判员账号不存在。", 404);
   const passwordHash = await hashPassword(initialPassword);
@@ -372,7 +396,9 @@ export async function changeRefereePassword(
   refereeId: string,
   currentPassword: string,
   newPassword: string,
+  authorization: RefereeSelfServiceAuthorization,
 ) {
+  requireRefereeSelfServiceAuthorization(authorization, refereeId);
   const referee = await prisma.referee.findUnique({ where: { id: refereeId } });
   if (
     !referee ||
@@ -791,8 +817,9 @@ const matchDeletionProtectedMessage =
 export async function deleteMatchSafely(
   id: string,
   reason: string,
-  actor?: AdminActor,
+  authorization: AdminServiceAuthorization<"competitions:write">,
 ) {
+  const actor = authorizedAdminActor(authorization, "competitions:write");
   const normalizedReason = reason.trim();
   if (!normalizedReason) throw new RefereeServiceError("请填写删除原因。");
 
@@ -947,7 +974,8 @@ export async function saveAppointmentDraft(input: {
   changeReason?: string;
   overrideReason?: string;
   positions: PositionInput[];
-}, actor?: AdminActor) {
+}, authorization: AdminServiceAuthorization<"referees:write">) {
+  const actor = authorizedAdminActor(authorization, "referees:write");
   const result = await prisma.$transaction(async (tx) => {
     const match = await tx.match.findUnique({
       where: { id: input.matchId },
@@ -1096,10 +1124,11 @@ async function saveAppointmentVersion(
 
 export async function publishAppointment(
   matchId: string,
-  reason = "",
-  overrideReason = "",
-  actor?: AdminActor,
+  reason: string,
+  overrideReason: string,
+  authorization: AdminServiceAuthorization<"referees:write">,
 ) {
+  const actor = authorizedAdminActor(authorization, "referees:write");
   return prisma.$transaction(async (tx) => {
     const appointment = await tx.refereeAppointment.findUnique({
       where: { matchId },
@@ -1188,7 +1217,12 @@ export async function publishAppointment(
   });
 }
 
-export async function withdrawAppointment(matchId: string, reason = "", actor?: AdminActor) {
+export async function withdrawAppointment(
+  matchId: string,
+  reason: string,
+  authorization: AdminServiceAuthorization<"referees:write">,
+) {
+  const actor = authorizedAdminActor(authorization, "referees:write");
   return prisma.$transaction(async (tx) => {
     const appointment = await tx.refereeAppointment.findUnique({ where: { matchId } });
     assertAppointmentTransition(appointment?.status ?? "NONE", "withdraw");
@@ -1215,7 +1249,12 @@ export async function withdrawAppointment(matchId: string, reason = "", actor?: 
   });
 }
 
-export async function completeAppointment(matchId: string, reason = "", actor?: AdminActor) {
+export async function completeAppointment(
+  matchId: string,
+  reason: string,
+  authorization: AdminServiceAuthorization<"referees:write">,
+) {
+  const actor = authorizedAdminActor(authorization, "referees:write");
   return prisma.$transaction(async (tx) => {
     const appointment = await tx.refereeAppointment.findUnique({ where: { matchId } });
     assertAppointmentTransition(appointment?.status ?? "NONE", "complete");
@@ -1237,7 +1276,12 @@ export async function completeAppointment(matchId: string, reason = "", actor?: 
   });
 }
 
-export async function cancelAppointment(matchId: string, reason: string, actor?: AdminActor) {
+export async function cancelAppointment(
+  matchId: string,
+  reason: string,
+  authorization: AdminServiceAuthorization<"referees:write">,
+) {
+  const actor = authorizedAdminActor(authorization, "referees:write");
   return prisma.$transaction(async (tx) => {
     const appointment = await tx.refereeAppointment.findUnique({ where: { matchId } });
     assertAppointmentTransition(appointment?.status ?? "NONE", "cancel");

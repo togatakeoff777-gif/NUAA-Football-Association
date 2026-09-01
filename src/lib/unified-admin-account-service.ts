@@ -4,6 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/referee-security";
 import { RefereeServiceError } from "@/lib/referee-service-error";
 import {
+  requireAdminServiceAuthorization,
+  type AdminServiceAuthorization,
+} from "@/lib/privileged-service-authorization";
+import {
   assertUnifiedAdminPermission,
   normalizeUnifiedAdminRoles,
   resolveUnifiedAdminRoles,
@@ -72,8 +76,8 @@ export async function createUnifiedAdminAccount(input: {
   displayName: string;
   password: string;
   roles: readonly UnifiedAdminRole[];
-}, actor: UnifiedAdminActor) {
-  assertUnifiedAdminPermission(actor, "system:write");
+}, authorization: AdminServiceAuthorization<"system:write">) {
+  const actor = requireAdminServiceAuthorization(authorization, "system:write");
   const username = input.username.trim().toLowerCase();
   const displayName = input.displayName.trim();
   const roles = assertRoles(input.roles);
@@ -122,8 +126,8 @@ export async function updateUnifiedAdminAccount(input: {
   id: string;
   roles?: readonly UnifiedAdminRole[];
   isActive?: boolean;
-}, actor: UnifiedAdminActor) {
-  assertUnifiedAdminPermission(actor, "system:write");
+}, authorization: AdminServiceAuthorization<"system:write">) {
+  const actor = requireAdminServiceAuthorization(authorization, "system:write");
   if (input.roles === undefined && input.isActive === undefined) {
     throw new RefereeServiceError("没有需要更新的管理员账号内容。");
   }

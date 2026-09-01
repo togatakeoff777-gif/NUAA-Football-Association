@@ -20,7 +20,7 @@ import { refereeGrades } from "@/lib/referee-profile-options";
 
 async function authorize(request: Request) {
   const authorization = await authorizeLegacyAdminRequest(request, "referees:write");
-  return authorization.ok ? authorization.actor : authorization.response;
+  return authorization.ok ? authorization : authorization.response;
 }
 
 export async function PATCH(
@@ -71,7 +71,7 @@ export async function PATCH(
       currentAffiliationUnitId: body.currentAffiliationUnitId === undefined
         ? undefined
         : readShortText(body.currentAffiliationUnitId, "当前组织归属", 64, false),
-    }, authorization);
+    }, authorization.authorization);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return refereeApiErrorResponse(error, "账号更新失败，请稍后重试。");
@@ -91,7 +91,7 @@ export async function POST(
     await resetRefereePassword(
       id,
       readShortText(body.initialPassword, "新初始密码", 256),
-      authorization,
+      authorization.authorization,
     );
     return NextResponse.json({ ok: true });
   } catch (error) {

@@ -67,6 +67,7 @@ async function main() {
   if (!databasePath) throw new Error("COMPETITION_IMPORT_TEST_DATABASE_PATH is required.");
   const url = `file:${databasePath.replaceAll("\\", "/")}`;
   process.env.DATABASE_URL = url;
+  process.env.NUAAFA_ISOLATED_SECURITY_TEST = "1";
   process.env.REFEREE_ADMIN_SESSION_SECRET = "r1-3b-import-test-session-secret";
   await applyMigrations(url);
 
@@ -75,6 +76,11 @@ async function main() {
   const types = await import("../src/lib/competition-import-types");
   const verifier = new PrismaClient({ adapter: new PrismaLibSql({ url }) });
   const actor = { id: null, displayName: "R1-3B 隔离管理员", isLegacy: true, roles: ["SUPER_ADMIN" as const] };
+  const capabilities = await import("./security-r4a-test-capabilities");
+  const competitionAuthorization = capabilities.issueTestAdminServiceAuthorization(
+    "competitions:write",
+    actor,
+  );
   const makeInput = (competitionId: string, importType: "TEAM" | "MATCH", text: string, method: "CSV" | "PASTE" = "CSV") => {
     const parsed = method === "CSV"
       ? parser.parseCompetitionImportCsv(text, importType)
@@ -159,10 +165,10 @@ async function main() {
     assert(await verifier.team.count() === beforeTeamDryRun.teams, "Team dry-run wrote Team rows.");
     assert(await verifier.match.count() === beforeTeamDryRun.matches, "Team dry-run wrote Match rows.");
     assert(await verifier.auditLog.count() === beforeTeamDryRun.audits, "Team dry-run wrote AuditLog rows.");
-    const teamCommit = await service.commitCompetitionImport(validTeams, actor);
+    const teamCommit = await service.commitCompetitionImport(validTeams, competitionAuthorization);
     assert(teamCommit.createdTeams === 2 && teamCommit.reusedTeams === 1, "Team commit summary mismatch.");
     assert(await verifier.team.count() === beforeTeamDryRun.teams + 2, "Team commit did not create expected rows.");
-    const teamCommitAgain = await service.commitCompetitionImport(validTeams, actor);
+    const teamCommitAgain = await service.commitCompetitionImport(validTeams, competitionAuthorization);
     assert(teamCommitAgain.createdTeams === 0 && teamCommitAgain.reusedTeams === 3, "Team re-import was not idempotent.");
     assert(await verifier.team.count() === beforeTeamDryRun.teams + 2, "Team re-import created duplicates.");
 
@@ -234,12 +240,12 @@ async function main() {
     assert(validMatchPreview.rows[0]?.slug === repeatPreview.rows[0]?.slug, "Stable match slug was not deterministic.");
     assert(validMatchPreview.summary.plannedTeamCreates === 1, "Unknown team creation summary mismatch.");
     assert(await verifier.team.count() === beforeMatchDryRun.teams && await verifier.match.count() === beforeMatchDryRun.matches && await verifier.auditLog.count() === beforeMatchDryRun.audits, "Match dry-run performed a write.");
-    const matchCommit = await service.commitCompetitionImport(validMatches, actor);
+    const matchCommit = await service.commitCompetitionImport(validMatches, competitionAuthorization);
     assert(matchCommit.createdTeams === 1 && matchCommit.createdMatches === 2, "Match commit summary mismatch.");
     const persistedMatch = await verifier.match.findUniqueOrThrow({ where: { source_externalMatchId: { source: "MANUAL", externalMatchId: "MATCH-001" } } });
     assert(persistedMatch.kickoff.toISOString() === "2026-10-25T10:30:00.000Z", "Persisted kickoff timezone mismatch.");
     assert(persistedMatch.status === "SCHEDULED" && persistedMatch.applicationWindowStatus === "CLOSED" && persistedMatch.applicationDeadline === null, "Imported match safety defaults failed.");
-    const matchCommitAgain = await service.commitCompetitionImport(validMatches, actor);
+    const matchCommitAgain = await service.commitCompetitionImport(validMatches, competitionAuthorization);
     assert(matchCommitAgain.createdTeams === 0 && matchCommitAgain.createdMatches === 0 && matchCommitAgain.skippedMatches === 2, "Match re-import was not idempotent.");
     assert(await verifier.match.count() === beforeMatchDryRun.matches + 2, "Match re-import created duplicates.");
     const audit = await verifier.auditLog.findUniqueOrThrow({ where: { id: matchCommit.auditId } });
@@ -263,7 +269,7 @@ async function main() {
     } });
     const beforeRaceCommit = { teams: await verifier.team.count(), matches: await verifier.match.count() };
     let raceConflict = false;
-    try { await service.commitCompetitionImport(raceInput, actor); } catch (error) { raceConflict = error instanceof service.CompetitionImportCommitConflict; }
+    try { await service.commitCompetitionImport(raceInput, competitionAuthorization); } catch (error) { raceConflict = error instanceof service.CompetitionImportCommitConflict; }
     assert(raceConflict, "Commit did not return a race conflict.");
     assert(await verifier.team.count() === beforeRaceCommit.teams && await verifier.match.count() === beforeRaceCommit.matches, "Race conflict left partial writes.");
 
@@ -274,7 +280,7 @@ async function main() {
     const atomicInput = makeInput(competition.id, "MATCH", "homeTeam,awayTeam,kickoff,endAt,venue,stage,round,externalMatchId\nAtomic甲,Atomic乙,2026-12-01 18:30,,原子场地,小组赛,,ATOMIC-1\nAtomic丙,Atomic丁,2026-12-02 18:30,,原子场地,小组赛,,ATOMIC-2\n");
     const beforeAtomic = { teams: await verifier.team.count(), matches: await verifier.match.count() };
     await verifier.$executeRawUnsafe('DROP TABLE "AuditLog"');
-    await rejects(() => service.commitCompetitionImport(atomicInput, actor), "Forced commit-time failure did not reject.");
+    await rejects(() => service.commitCompetitionImport(atomicInput, competitionAuthorization), "Forced commit-time failure did not reject.");
     assert(await verifier.team.count() === beforeAtomic.teams, "Atomic failure left partial Team rows.");
     assert(await verifier.match.count() === beforeAtomic.matches, "Atomic failure left partial Match rows.");
 

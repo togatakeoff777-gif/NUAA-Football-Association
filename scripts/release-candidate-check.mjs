@@ -48,7 +48,11 @@ async function npm(args, label, options) {
 
 async function securityGate() {
   await access(path.resolve("docs/operations/R1-3C_SECURITY_ADVISORY_DISPOSITION.md"));
-  const audit = await npm(["audit", "--json"], "npm audit JSON", { capture: true, allowNonZero: true });
+  const audit = await npm(
+    ["audit", "--omit=dev", "--audit-level=critical", "--json"],
+    "production dependency critical audit JSON",
+    { capture: true, allowNonZero: true },
+  );
   process.stdout.write(audit.stdout);
   if (audit.stderr) process.stderr.write(audit.stderr);
   let report;
@@ -58,20 +62,80 @@ async function securityGate() {
     throw new Error("npm audit did not return parseable JSON.");
   }
   const names = Object.keys(report.vulnerabilities ?? {}).sort();
-  const expected = ["@prisma/config", "deepmerge-ts", "prisma"];
+  const expected = [
+    "@prisma/config",
+    "@tiptap/core",
+    "@tiptap/extension-blockquote",
+    "@tiptap/extension-bold",
+    "@tiptap/extension-bubble-menu",
+    "@tiptap/extension-bullet-list",
+    "@tiptap/extension-code",
+    "@tiptap/extension-code-block",
+    "@tiptap/extension-document",
+    "@tiptap/extension-dropcursor",
+    "@tiptap/extension-floating-menu",
+    "@tiptap/extension-gapcursor",
+    "@tiptap/extension-hard-break",
+    "@tiptap/extension-heading",
+    "@tiptap/extension-horizontal-rule",
+    "@tiptap/extension-image",
+    "@tiptap/extension-italic",
+    "@tiptap/extension-link",
+    "@tiptap/extension-list",
+    "@tiptap/extension-list-item",
+    "@tiptap/extension-list-keymap",
+    "@tiptap/extension-ordered-list",
+    "@tiptap/extension-paragraph",
+    "@tiptap/extension-strike",
+    "@tiptap/extension-text",
+    "@tiptap/extension-underline",
+    "@tiptap/extensions",
+    "@tiptap/react",
+    "@tiptap/starter-kit",
+    "baseline-browser-mapping",
+    "deepmerge-ts",
+    "fast-uri",
+    "mysql2",
+    "prisma",
+  ];
   const metadata = report.metadata?.vulnerabilities;
-  const advisory = report.vulnerabilities?.["deepmerge-ts"]?.via?.find?.((item) => typeof item === "object");
+  const expectedAdvisories = {
+    "@tiptap/core": [
+      "https://github.com/advisories/GHSA-cp6q-959q-f8rh",
+      "https://github.com/advisories/GHSA-j95f-988m-3j2f",
+    ],
+    "baseline-browser-mapping": ["https://github.com/advisories/GHSA-w5vr-8v7q-w6rv"],
+    "deepmerge-ts": ["https://github.com/advisories/GHSA-ggr8-5vv4-36mx"],
+    "fast-uri": [
+      "https://github.com/advisories/GHSA-5jgf-p345-68v8",
+      "https://github.com/advisories/GHSA-f65p-4m7j-42xc",
+      "https://github.com/advisories/GHSA-fph4-wmhf-6fwf",
+      "https://github.com/advisories/GHSA-jqff-g426-hqxp",
+    ],
+    mysql2: [
+      "https://github.com/advisories/GHSA-3f6p-5ww8-9rcr",
+      "https://github.com/advisories/GHSA-rgwj-5xj2-c3m3",
+    ],
+  };
+  const actualAdvisories = Object.fromEntries(Object.keys(expectedAdvisories).map((name) => [
+    name,
+    (report.vulnerabilities?.[name]?.via ?? [])
+      .filter((item) => typeof item === "object")
+      .map((item) => item.url)
+      .sort(),
+  ]));
   if (
+    audit.code !== 0 ||
     names.join("\n") !== expected.join("\n") ||
     metadata?.critical !== 0 ||
-    metadata?.high !== 3 ||
-    advisory?.url !== "https://github.com/advisories/GHSA-ggr8-5vv4-36mx" ||
-    advisory?.range !== "<8.0.0"
+    metadata?.high !== 6 ||
+    metadata?.moderate !== 28 ||
+    Object.entries(expectedAdvisories).some(([name, urls]) => actualAdvisories[name].join("\n") !== [...urls].sort().join("\n"))
   ) {
-    throw new Error("Security advisory set differs from the documented pre-production exception.");
+    throw new Error("Production dependency critical gate or documented advisory inventory differs from the reviewed restoration disposition.");
   }
-  logGate("Security disposition GHSA-ggr8-5vv4-36mx", "KNOWN-ADVISORY");
-  return "READY_WITH_DOCUMENTED_ADVISORY";
+  logGate("Critical dependencies 0; documented advisory inventory exact", "KNOWN-ADVISORIES");
+  return "READY_WITH_DOCUMENTED_ADVISORIES";
 }
 
 async function main() {
@@ -120,8 +184,8 @@ async function main() {
     classification: securityClassification,
     mandatoryGateCount: gates.length,
     gates,
-    security: "KNOWN-ADVISORY",
-    r1_3dMandatoryRecheck: "RECHECK PRISMA / DEEPMERGE ADVISORY",
+    security: "KNOWN-ADVISORIES",
+    r1_3dMandatoryRecheck: "RECHECK DOCUMENTED ADVISORY INVENTORY",
   }, null, 2));
   console.log(`R1-3C RC RESULT: ${securityClassification}`);
 }

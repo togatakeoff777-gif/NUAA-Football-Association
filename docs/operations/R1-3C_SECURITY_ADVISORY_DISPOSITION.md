@@ -78,3 +78,30 @@ RECHECK PRISMA / DEEPMERGE ADVISORY
 ```
 
 If a stable compatible Prisma release is then available, R1-3D must pause for an isolated upgrade assessment covering Prisma Client, Prisma CLI, `@prisma/adapter-libsql`, generate, validate, migration deploy, the complete regression suite, and the Node 22 production build. If only an override, downgrade, or prerelease is available, production approval requires a renewed explicit risk decision.
+
+## 2026-09-13 emergency public-restoration recheck
+
+Classification: **CRITICAL = 0; CURRENT NON-CRITICAL ADVISORIES DOCUMENTED FOR POST-RESTORATION MAINTENANCE**
+
+This section records a new assessment without rewriting the historical 2026-08-24 decision above. The exact dependency remediation changed `next` and `eslint-config-next` from `16.3.2` to `16.3.4`. A clean install under Node `22.23.2` and npm `10.9.8` then produced these current results:
+
+| Audit | Critical | High | Moderate | Result |
+| --- | ---: | ---: | ---: | --- |
+| `npm audit --omit=dev --audit-level=critical` | 0 | 6 | 28 | exit 0; mandatory launch gate PASS |
+| full `npm audit` | 0 | 8 | 28 | recorded inventory; non-zero below the critical threshold |
+
+The production-dependency counts include transitive effect nodes. The reviewed advisory roots and dispositions are:
+
+| Root | Severity | Production reachability assessment |
+| --- | --- | --- |
+| `@tiptap/core 3.30.2` / GHSA-j95f-988m-3j2f | High | The vulnerable path parses attacker-controlled Markdown. NUAAFA does not import Tiptap Markdown helpers: its authenticated content editor serializes ProseMirror JSON, while the server enforces an exact node/mark allowlist, byte/node/depth bounds, and renders public content without Tiptap. Not remotely reachable through the unauthenticated public site. |
+| `@tiptap/core 3.30.2` / GHSA-cp6q-959q-f8rh | Moderate | Tiptap is confined to the RBAC-protected admin editor. Unknown document fields and attributes, including `__proto__`, are rejected server-side, and the public renderer does not call `mergeAttributes`. Not an unauthenticated public launch blocker. |
+| `deepmerge-ts 7.1.5` / GHSA-ggr8-5vv4-36mx | High | Same Prisma CLI/local-config chain documented above; no request-data path and no application-runtime import was found. |
+| `fast-uri 3.1.5` / GHSA-5jgf-p345-68v8, GHSA-f65p-4m7j-42xc, GHSA-fph4-wmhf-6fwf, GHSA-jqff-g426-hqxp | High | Present under Prisma CLI development tooling through `@prisma/dev -> ajv`. NUAAFA application code does not import it or normalize request-supplied outbound URLs with it. |
+| `mysql2 3.15.3` / GHSA-3f6p-5ww8-9rcr and GHSA-rgwj-5xj2-c3m3 | High / Moderate | Present in Prisma CLI tooling. NUAAFA production uses an explicit local SQLite file through `@prisma/adapter-libsql`; it does not connect to MySQL, so the rogue-MySQL-server and compressed-MySQL-protocol prerequisites are absent. |
+| `baseline-browser-mapping 2.10.43` / GHSA-w5vr-8v7q-w6rv | Moderate | Build/browser-target tooling receives no remote request parameters in the running application. |
+| `browserslist 4.28.6` and `js-yaml 4.2.1` | High, full-audit dev paths only | Absent from the `--omit=dev` production inventory and not imported by NUAAFA request handlers. Retained for a separate post-restoration dependency-maintenance cycle. |
+
+The Tiptap advisory explicitly states that editors which only consume validated ProseMirror JSON and never invoke the Markdown parsing path are not directly affected through document content. Repository inspection confirms that architecture here. No advisory severity is lowered or hidden; this is a reachability decision for the emergency launch gate only.
+
+Rejected actions remain: `npm audit fix --force`, Prisma downgrade/major change, unverified transitive overrides, or expanding this emergency Next.js patch into broad Tiptap/Prisma/tooling modernization. Any change to the exact names, URLs, severity counts, or Critical count makes the RC security gate fail for renewed review.

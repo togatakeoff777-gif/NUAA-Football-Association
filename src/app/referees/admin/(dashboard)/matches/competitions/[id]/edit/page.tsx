@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AdminCompetitionForm, type AdminCompetitionRecord } from "@/components/referees/admin/admin-competition-form";
 import { AdminMatchNavigation } from "@/components/referees/admin/admin-match-navigation";
 import { AdminPageHeader, AdminPanel } from "@/components/referees/admin/admin-ui";
+import { formatBeijingDateTimeInput } from "@/lib/beijing-datetime";
 import { prisma } from "@/lib/prisma";
 import { formatRefereeDateTime } from "@/lib/referee-presenters";
 
@@ -12,10 +13,28 @@ export default async function EditAdminCompetitionPage({ params }: { params: Pro
   if (!competition) notFound();
   const record: AdminCompetitionRecord = {
     id: competition.id,
+    slug: competition.slug,
     name: competition.name,
+    shortName: competition.shortName ?? "",
     year: competition.year,
+    campus: competition.campus,
     format: competition.format,
     status: competition.status,
+    semesterLabel: competition.semesterLabel ?? "",
+    teamFormation: competition.teamFormation ?? "",
+    publicPublished: competition.publicPublished,
+    homepageFeatured: competition.homepageFeatured,
+    publicOrder: competition.publicOrder,
+    registrationStartAt: formatBeijingDateTimeInput(competition.registrationStartAt),
+    registrationEndAt: formatBeijingDateTimeInput(competition.registrationEndAt),
+    matchStartAt: formatBeijingDateTimeInput(competition.matchStartAt),
+    matchEndAt: formatBeijingDateTimeInput(competition.matchEndAt),
+    venue: competition.venue ?? "",
+    host: competition.host ?? "",
+    organizer: competition.organizer ?? "",
+    summary: competition.summary ?? "",
+    notice: competition.notice ?? "",
+    registrationUrl: competition.registrationUrl ?? "",
     source: competition.source,
     externalCompetitionId: competition.externalCompetitionId ?? "",
     lastSyncedAt: competition.lastSyncedAt ? formatRefereeDateTime(competition.lastSyncedAt) : "",

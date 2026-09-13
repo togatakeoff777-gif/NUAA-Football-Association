@@ -151,10 +151,26 @@ model Competition {
   id                    String             @id @default(cuid())
   slug                  String             @unique
   name                  String
+  shortName             String?
   year                  Int?
   campus                String
   format                CompetitionFormat
   status                CompetitionStatus
+  semesterLabel         String?
+  teamFormation         String?
+  publicPublished       Boolean            @default(false)
+  homepageFeatured      Boolean            @default(false)
+  publicOrder           Int                @default(0)
+  registrationStartAt   DateTime?
+  registrationEndAt     DateTime?
+  matchStartAt          DateTime?
+  matchEndAt            DateTime?
+  venue                 String?
+  host                  String?
+  organizer             String?
+  summary               String?
+  notice                String?
+  registrationUrl       String?
   isTestData            Boolean            @default(false)
   source                DataSource         @default(MANUAL)
   externalCompetitionId String?
@@ -166,6 +182,7 @@ model Competition {
   disciplineDetails     DisciplineDetail[]
 
   @@unique([source, externalCompetitionId])
+  @@index([publicPublished, homepageFeatured, publicOrder])
 }
 
 model Team {

@@ -5,10 +5,10 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SectionContactCard } from "@/components/ui/section-contact-card";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { coreCompetitionDirectory } from "@/data/competition-directory";
 import { publicSectionContacts } from "@/data/contacts";
 import { competitionNavigation } from "@/data/navigation";
-import type { CoreCompetitionDirectoryEntry } from "@/types/competition-center";
+import { getCurrentPublicCompetitions } from "@/lib/public-competition-service";
+import type { PublicCompetitionView } from "@/types/competition-center";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/competitions" },
@@ -16,11 +16,9 @@ export const metadata: Metadata = {
   description: "查看南京航空航天大学天目湖足球协会当前赛事、赛程、数据、文件与赛事服务。",
 };
 
-const currentCompetitions = coreCompetitionDirectory.filter(
-  (competition) => competition.semester === "first",
-);
+export const dynamic = "force-dynamic";
 
-function getNextArrangement(competition: CoreCompetitionDirectoryEntry) {
+function getNextArrangement(competition: PublicCompetitionView) {
   const forecast = competition.nextMatch;
   if (forecast.state === "scheduled") {
     return `${forecast.homeTeam} vs ${forecast.awayTeam} · ${forecast.dateLabel} ${forecast.timeLabel}`;
@@ -28,7 +26,8 @@ function getNextArrangement(competition: CoreCompetitionDirectoryEntry) {
   return forecast.summary;
 }
 
-export default function CompetitionsPage() {
+export default async function CompetitionsPage() {
+  const currentCompetitions = await getCurrentPublicCompetitions();
   return (
     <>
       <SiteHeader />

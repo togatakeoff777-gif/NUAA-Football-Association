@@ -3,10 +3,10 @@ import Link from "next/link";
 import { CompetitionArchiveLayout } from "@/components/competitions/archive/competition-archive-layout";
 import { ShareActions } from "@/components/share/share-actions";
 import { freshmanCupReports } from "@/data/freshman-cup-2026";
-import type { CoreCompetitionDirectoryEntry } from "@/types/competition-center";
+import type { PublicCompetitionView } from "@/types/competition-center";
 
 type CoreCompetitionPreviewPageProps = {
-  competition: CoreCompetitionDirectoryEntry;
+  competition: PublicCompetitionView;
 };
 
 const pendingMessage = "当前暂无已公布信息，请关注赛事公告。";
@@ -14,7 +14,7 @@ const pendingMessage = "当前暂无已公布信息，请关注赛事公告。";
 export function CoreCompetitionPreviewPage({
   competition,
 }: CoreCompetitionPreviewPageProps) {
-  const reports = competition.id === "freshman-cup" ? freshmanCupReports : [];
+  const reports = competition.slug === "freshman-cup" ? freshmanCupReports : [];
   return (
     <CompetitionArchiveLayout
       className="core-competition-preview-page"
@@ -70,6 +70,22 @@ export function CoreCompetitionPreviewPage({
             ))}
           </div>
           <p className="core-competition-summary">{competition.summary}</p>
+          {competition.dataOrigin === "database" ? (
+            <p className="core-competition-summary"><strong>赛事公告：</strong>{competition.notice}</p>
+          ) : null}
+          {competition.dataOrigin === "database"
+          && competition.status === "registration"
+          && competition.registrationUrl ? (
+            <Link
+              className="text-link"
+              href={competition.registrationUrl}
+              {...(competition.registrationUrl.startsWith("https://")
+                ? { rel: "noopener noreferrer", target: "_blank" }
+                : {})}
+            >
+              立即报名 →
+            </Link>
+          ) : null}
         </div>
       </section>
 

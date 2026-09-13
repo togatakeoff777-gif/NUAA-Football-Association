@@ -4,8 +4,8 @@ import { AdminPageHeader, AdminPanel } from "@/components/referees/admin/admin-u
 
 export default function NewAdminCompetitionPage() {
   return <>
-    <AdminPageHeader eyebrow="NEW COMPETITION" title="新建赛事" description="创建赛事后，可在该赛事下按需建立球队与具体比赛。" />
+    <AdminPageHeader eyebrow="NEW COMPETITION" title="新建赛事" description="创建稳定赛事身份与公开资料后，可继续建立球队和具体比赛。" />
     <AdminMatchNavigation active="competitions" />
-    <AdminPanel title="赛事资料" description="只填写当前人工维护所需的基础信息。"><AdminCompetitionForm /></AdminPanel>
+    <AdminPanel title="赛事资料" description="公开发布默认关闭；完整复核资料后再由管理员明确开启。"><AdminCompetitionForm /></AdminPanel>
   </>;
 }

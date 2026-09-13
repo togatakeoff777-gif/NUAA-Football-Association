@@ -108,6 +108,21 @@ export type CoreCompetitionDirectoryEntry = {
   links: CoreCompetitionLinkSet;
 };
 
+export type PublicCompetitionView = Omit<
+  CoreCompetitionDirectoryEntry,
+  "year" | "semesterLabel" | "campus" | "teamFormation"
+> & {
+  year: number | null;
+  semesterLabel: string;
+  campus: string;
+  teamFormation: string;
+  registrationUrl: string | null;
+  publicPublished: boolean;
+  homepageFeatured: boolean;
+  publicOrder: number;
+  dataOrigin: "static-fallback" | "database";
+};
+
 export type PublicMatchRecord = {
   id: string;
   competitionId: string;

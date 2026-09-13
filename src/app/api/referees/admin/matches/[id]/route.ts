@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
 import { prisma } from "@/lib/prisma";
+import { revalidatePublicCompetitionPaths } from "@/lib/public-competition-revalidation";
 import { refereeApiErrorResponse, RefereeApiInputError } from "@/lib/referee-api";
 import {
   createMatch,
@@ -74,7 +75,12 @@ export async function PATCH(
     const body: unknown = await request.json();
     if (!isRecord(body)) throw new RefereeApiInputError("场次内容格式不正确。");
     const { id } = await context.params;
-    await updateMatch(id, inputFromBody(body), authorization.actor);
+    const match = await updateMatch(id, inputFromBody(body), authorization.actor);
+    const competition = await prisma.competition.findUnique({
+      where: { id: match.competitionId },
+      select: { slug: true },
+    });
+    revalidatePublicCompetitionPaths(competition?.slug);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return refereeApiErrorResponse(error, "场次更新失败，请稍后重试。");

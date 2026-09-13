@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
+import { revalidatePublicCompetitionPaths } from "@/lib/public-competition-revalidation";
 import { refereeApiErrorResponse } from "@/lib/referee-api";
-import { readCompetitionInput } from "@/lib/referee-competition-input";
+import { readCompetitionUpdateInput } from "@/lib/referee-competition-input";
 import { updateCompetition } from "@/lib/referee-competition-service";
 
 export async function PATCH(
@@ -15,9 +16,10 @@ export async function PATCH(
     const { id } = await context.params;
     const competition = await updateCompetition(
       id,
-      readCompetitionInput(await request.json()),
+      readCompetitionUpdateInput(await request.json()),
       authorization.actor,
     );
+    revalidatePublicCompetitionPaths(competition.slug);
     return NextResponse.json({ ok: true, competitionId: competition.id });
   } catch (error) {
     return refereeApiErrorResponse(error, "赛事更新失败，请稍后重试。");

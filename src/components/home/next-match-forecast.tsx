@@ -1,19 +1,14 @@
 import Link from "next/link";
 
 import { StatusBadge } from "@/components/ui/status-badge";
-import { getCoreCompetition } from "@/data/competition-directory";
-import type { CoreCompetitionDirectoryEntry } from "@/types/competition-center";
-
-const forecastCompetitionIds = [
-  "freshman-cup",
-  "tianmuhu-futsal-league",
-] as const;
+import { getHomepagePublicCompetitions } from "@/lib/public-competition-service";
+import type { PublicCompetitionView } from "@/types/competition-center";
 
 function ForecastCard({
   competition,
   index,
 }: {
-  competition: CoreCompetitionDirectoryEntry;
+  competition: PublicCompetitionView;
   index: number;
 }) {
   const forecast = competition.nextMatch;
@@ -39,7 +34,9 @@ function ForecastCard({
       <header>
         <span>{String(index + 1).padStart(2, "0")} / {competition.formatLabel}</span>
         <StatusBadge tone={forecast.state === "scheduled" ? "success" : "neutral"}>
-          {forecast.label}
+          {competition.dataOrigin === "database"
+            ? `${competition.statusLabel} · ${forecast.label}`
+            : forecast.label}
         </StatusBadge>
       </header>
       <div className="next-match-forecast-copy">
@@ -81,12 +78,10 @@ function ForecastCard({
   );
 }
 
-export function NextMatchForecast() {
-  const competitions = forecastCompetitionIds.map((id) => {
-    const competition = getCoreCompetition(id);
-    if (!competition) throw new Error(`Missing homepage competition: ${id}`);
-    return competition;
-  });
+export async function NextMatchForecast() {
+  const competitions = await getHomepagePublicCompetitions();
+  const isStaticFallback = competitions.length === 2
+    && competitions.every((competition) => competition.dataOrigin === "static-fallback");
 
   return (
     <section
@@ -99,7 +94,9 @@ export function NextMatchForecast() {
         <div className="home-section-bar" data-home-delay="0" data-home-reveal>
           <div>
             <p>NEXT MATCH / 赛事预告</p>
-            <h2 id="home-next-match-title">两项赛事，关注最新安排</h2>
+            <h2 id="home-next-match-title">
+              {isStaticFallback ? "两项赛事，关注最新安排" : "关注当前赛事最新安排"}
+            </h2>
           </div>
           <Link className="text-link" href="/competitions">
             进入赛事中心 →

@@ -2,6 +2,8 @@ import { HomePage } from "@/components/home/home-page";
 import { HomeScrollController } from "@/components/home/home-scroll-controller";
 import { SiteHeader } from "@/components/layout/site-header";
 
+export const dynamic = "force-dynamic";
+
 export default function Home() {
   return (
     <>

@@ -3,8 +3,10 @@ import { notFound } from "next/navigation";
 
 import { CoreCompetitionPreviewPage } from "@/components/competitions/core-competition-preview-page";
 import { JsonLd } from "@/components/seo/json-ld";
-import { getCoreCompetition } from "@/data/competition-directory";
+import { getPublicCompetition } from "@/lib/public-competition-service";
 import { sportsEventJsonLd } from "@/lib/structured-data";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/competitions/freshman-cup" },
@@ -22,8 +24,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function FreshmanCupPage() {
-  const competition = getCoreCompetition("freshman-cup");
+export default async function FreshmanCupPage() {
+  const competition = await getPublicCompetition("freshman-cup");
   if (!competition) notFound();
 
   return (

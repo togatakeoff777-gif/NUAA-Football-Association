@@ -12,8 +12,8 @@ export const associationIdentity = {
   shortName: "南京航空航天大学天目湖足球协会",
   englishName: "NUAA Tianmuhu Football Association",
   wechatBrandName: "湖区FA",
-  establishedYear: 2022,
-  establishedLabel: "EST. 2022",
+  establishedYear: 2021,
+  establishedLabel: "EST. 2021",
   slogan: "因热爱，奔赴绿茵",
 } as const;
 
@@ -33,9 +33,9 @@ export const associationScope = {
 export const associationDevelopmentFacts = [
   {
     id: "established",
-    value: "2022",
+    value: "2021",
     label: "协会成立",
-    note: "EST. 2022",
+    note: "EST. 2021",
   },
   {
     id: "core-competitions",
@@ -61,7 +61,7 @@ export const associationStats = associationDevelopmentFacts;
 
 export const associationTimeline = [
   {
-    period: "2022年",
+    period: "2021年",
     label: "协会成立",
     description: "南京航空航天大学天目湖足球协会正式成立，校园足球组织建设由此起步。",
   },

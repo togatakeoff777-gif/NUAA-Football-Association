@@ -812,7 +812,7 @@ export async function updateMatch(
 }
 
 const matchDeletionProtectedMessage =
-  "该比赛已经存在正式选派或历史记录，不能直接删除。请使用“取消比赛”保留业务历史。";
+  "该比赛已有报名意向、选派或正式历史记录，不能直接删除。请使用“取消比赛”保留业务历史。";
 
 export async function deleteMatchSafely(
   id: string,
@@ -856,33 +856,12 @@ export async function deleteMatchSafely(
     if (!match) throw new RefereeServiceError("比赛不存在。", 404);
 
     const appointment = match.appointment;
-    const hasFormalApplicationHistory = match.applications.some(
-      (application) => application.status === "APPOINTED" || application.status === "NOT_SELECTED",
-    );
-    const hasFormalAppointmentHistory = Boolean(
-      appointment && (
-        appointment.status !== "DRAFT" ||
-        appointment.revision > 0 ||
-        appointment.publishedAt ||
-        appointment.withdrawnAt ||
-        appointment.completedAt ||
-        appointment.cancelledAt ||
-        appointment._count.versions > 0 ||
-        appointment._count.acknowledgements > 0 ||
-        appointment._count.conflictReports > 0
-      ),
-    );
-    if (match.status !== "SCHEDULED" || hasFormalApplicationHistory || hasFormalAppointmentHistory) {
+    const hasApplicationHistory = match.applications.length > 0;
+    const hasAppointmentHistory = Boolean(appointment);
+    if (match.status !== "SCHEDULED" || hasApplicationHistory || hasAppointmentHistory) {
       throw new RefereeServiceError(matchDeletionProtectedMessage, 409);
     }
 
-    const draftAppointmentId = appointment?.id ?? null;
-    const draftPositionCount = appointment?._count.positions ?? 0;
-    if (draftAppointmentId) {
-      await tx.appointmentPosition.deleteMany({ where: { appointmentId: draftAppointmentId } });
-      await tx.refereeAppointment.delete({ where: { id: draftAppointmentId } });
-    }
-    const deletedApplications = await tx.refereeApplication.deleteMany({ where: { matchId: id } });
     await tx.matchPositionRequirement.deleteMany({ where: { matchId: id } });
     await tx.match.delete({ where: { id } });
 
@@ -906,9 +885,8 @@ export async function deleteMatchSafely(
           awayTeamId: match.awayTeam.id,
           kickoff: match.kickoff.toISOString(),
         },
-        cleanedDraftAppointmentId: draftAppointmentId,
-        cleanedDraftPositionCount: draftPositionCount,
-        cleanedApplicationCount: deletedApplications.count,
+        preservedApplicationHistory: true,
+        preservedAppointmentHistory: true,
         cleanedPositionRequirementCount: match._count.positionRequirements,
       },
     }, tx);

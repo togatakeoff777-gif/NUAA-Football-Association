@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { ApplicationWithdrawButton } from "@/components/referees/mvp/application-withdraw-button";
 import { RefereeTaskActions } from "@/components/referees/mvp/referee-task-actions";
+import { RefereeWorkspaceHero } from "@/components/referees/mvp/referee-workspace-hero";
 import { RefereeWorkspaceNav } from "@/components/referees/mvp/referee-workspace-nav";
 import { getRefereeMemberSession } from "@/lib/referee-member-auth";
 import { applicationStatusLabels, formatRefereeDateTime } from "@/lib/referee-presenters";
@@ -57,7 +58,7 @@ export default async function RefereeWorkspacePage() {
   return <>
     <SiteHeader />
     <main className="functional-page" id="main-content">
-      <section className="functional-hero referee-workspace-hero"><div className="detail-shell"><p>REFEREE WORKSPACE</p><h1>{session.referee.name}，现在需要做什么？</h1><p>登录账号 {session.referee.studentId} · 裁判员编号 {session.referee.publicCode}</p></div></section>
+      <RefereeWorkspaceHero description={`登录账号 ${session.referee.studentId} · 从这里查看报名、正式任务与可执裁时间。`} eyebrow="REFEREE WORKSPACE" name={session.referee.name} publicCode={session.referee.publicCode} title={`${session.referee.name}，欢迎回来`} />
       <RefereeWorkspaceNav />
       <section className="functional-section"><div className="detail-shell referee-dashboard">
         <section className="referee-dashboard-priority">

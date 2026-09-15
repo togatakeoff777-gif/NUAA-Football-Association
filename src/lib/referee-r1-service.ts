@@ -286,6 +286,180 @@ export async function createJointTeam(input: {
   });
 }
 
+function isUniqueConstraintError(error: unknown) {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
+}
+
+export async function createHouse(
+  input: { name: string; childUnitIds: string[] },
+  authorization: AdminServiceAuthorization<"competitions:write">,
+) {
+  const actor = requireAdminServiceAuthorization(authorization, "competitions:write");
+  const name = input.name.trim();
+  const childUnitIds = [...new Set(input.childUnitIds)];
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const children = await tx.affiliationUnit.findMany({
+        where: { id: { in: childUnitIds }, type: "COLLEGE" },
+        select: { id: true, name: true },
+      });
+      if (children.length !== childUnitIds.length) {
+        throw new RefereeServiceError("书院组成关系包含无效学院。");
+      }
+      const house = await tx.affiliationUnit.create({
+        data: {
+          name,
+          type: "SHUYUAN",
+          parentRelations: childUnitIds.length
+            ? { create: childUnitIds.map((childUnitId) => ({ childUnitId })) }
+            : undefined,
+        },
+      });
+      await tx.auditLog.create({
+        data: {
+          actorType: "ADMIN",
+          actorId: actor.id,
+          action: "HOUSE_CREATED",
+          entityType: "AffiliationUnit",
+          entityId: house.id,
+          summary: `创建书院 ${house.name}`,
+          metadata: JSON.stringify({ childUnitIds, childUnitNames: children.map((child) => child.name) }),
+        },
+      });
+      return house;
+    });
+  } catch (error) {
+    if (isUniqueConstraintError(error)) throw new RefereeServiceError(`组织单位“${name}”已存在。`, 409);
+    throw error;
+  }
+}
+
+export async function updateHouse(
+  id: string,
+  nameValue: string,
+  authorization: AdminServiceAuthorization<"competitions:write">,
+) {
+  const actor = requireAdminServiceAuthorization(authorization, "competitions:write");
+  const name = nameValue.trim();
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const existing = await tx.affiliationUnit.findUnique({ where: { id } });
+      if (!existing || existing.type !== "SHUYUAN") throw new RefereeServiceError("书院不存在。", 404);
+      const house = await tx.affiliationUnit.update({ where: { id }, data: { name } });
+      await tx.auditLog.create({
+        data: {
+          actorType: "ADMIN",
+          actorId: actor.id,
+          action: "HOUSE_UPDATED",
+          entityType: "AffiliationUnit",
+          entityId: house.id,
+          summary: `更新书院 ${house.name}`,
+          metadata: JSON.stringify({ nameChange: { from: existing.name, to: house.name } }),
+        },
+      });
+      return house;
+    });
+  } catch (error) {
+    if (isUniqueConstraintError(error)) throw new RefereeServiceError(`组织单位“${name}”已存在。`, 409);
+    throw error;
+  }
+}
+
+export async function setHouseChildren(
+  parentUnitId: string,
+  childUnitIds: string[],
+  authorization: AdminServiceAuthorization<"competitions:write">,
+) {
+  const actor = requireAdminServiceAuthorization(authorization, "competitions:write");
+  const uniqueIds = [...new Set(childUnitIds)].filter((id) => id !== parentUnitId);
+  return prisma.$transaction(async (tx) => {
+    const parent = await tx.affiliationUnit.findUnique({
+      where: { id: parentUnitId },
+      include: { parentRelations: { select: { childUnitId: true } } },
+    });
+    if (!parent || parent.type !== "SHUYUAN") throw new RefereeServiceError("书院不存在。", 404);
+    const children = await tx.affiliationUnit.findMany({
+      where: { id: { in: uniqueIds }, type: "COLLEGE" },
+      select: { id: true, name: true },
+    });
+    if (children.length !== uniqueIds.length) throw new RefereeServiceError("书院组成关系包含无效学院。");
+    await tx.affiliationUnitRelation.deleteMany({ where: { parentUnitId } });
+    if (uniqueIds.length) {
+      await tx.affiliationUnitRelation.createMany({
+        data: uniqueIds.map((childUnitId) => ({ parentUnitId, childUnitId })),
+      });
+    }
+    await tx.auditLog.create({
+      data: {
+        actorType: "ADMIN",
+        actorId: actor.id,
+        action: "HOUSE_RELATIONSHIP_UPDATED",
+        entityType: "AffiliationUnit",
+        entityId: parent.id,
+        summary: `更新书院 ${parent.name} 的组成学院`,
+        metadata: JSON.stringify({
+          previousChildUnitIds: parent.parentRelations.map((relation) => relation.childUnitId),
+          childUnitIds: uniqueIds,
+          childUnitNames: children.map((child) => child.name),
+        }),
+      },
+    });
+    return parent;
+  });
+}
+
+export async function deleteHouseSafely(
+  id: string,
+  confirmationName: string,
+  authorization: AdminServiceAuthorization<"competitions:write">,
+) {
+  const actor = requireAdminServiceAuthorization(authorization, "competitions:write");
+  return prisma.$transaction(async (tx) => {
+    const house = await tx.affiliationUnit.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        parentRelations: { select: { childUnit: { select: { id: true, name: true } } } },
+        _count: { select: { childRelations: true, refereeLinks: true, currentReferees: true, teamLinks: true } },
+      },
+    });
+    if (!house || house.type !== "SHUYUAN") throw new RefereeServiceError("书院不存在。", 404);
+    if (confirmationName.trim() !== house.name) throw new RefereeServiceError("书院名称确认不一致，已取消删除。", 409);
+    const reasons = [
+      house._count.refereeLinks || house._count.currentReferees ? "裁判员归属" : "",
+      house._count.teamLinks ? `${house._count.teamLinks} 条球队组织关系` : "",
+      house._count.childRelations ? "其他组织组成关系" : "",
+    ].filter(Boolean);
+    if (reasons.length) {
+      throw new RefereeServiceError(
+        `书院“${house.name}”已有受保护引用（${reasons.join("、")}），不能删除。请保留历史并先调整相关归属。`,
+        409,
+      );
+    }
+    const members = house.parentRelations.map((relation) => relation.childUnit);
+    await tx.affiliationUnit.delete({ where: { id: house.id } });
+    await tx.auditLog.create({
+      data: {
+        actorType: "ADMIN",
+        actorId: actor.id,
+        action: "HOUSE_DELETED",
+        entityType: "AffiliationUnit",
+        entityId: house.id,
+        summary: `删除书院 ${house.name}`,
+        metadata: JSON.stringify({
+          deletedAt: new Date().toISOString(),
+          houseName: house.name,
+          removedComposition: members,
+          collegesDeleted: 0,
+        }),
+      },
+    });
+    return { id: house.id, name: house.name, removedComposition: members };
+  });
+}
+
 export async function deleteTeamSafely(
   id: string,
   authorization: AdminServiceAuthorization<"competitions:write">,

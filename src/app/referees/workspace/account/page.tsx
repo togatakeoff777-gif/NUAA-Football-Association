@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { RefereePasswordForm } from "@/components/referees/mvp/referee-password-form";
+import { RefereeWorkspaceHero } from "@/components/referees/mvp/referee-workspace-hero";
 import { RefereeWorkspaceNav } from "@/components/referees/mvp/referee-workspace-nav";
 import { getRefereeMemberSession } from "@/lib/referee-member-auth";
 
@@ -32,13 +33,7 @@ export default async function RefereeAccountPage() {
     <>
       <SiteHeader />
       <main className="functional-page" id="main-content">
-        <section className="functional-hero">
-          <div className="detail-shell">
-            <p>ACCOUNT SETTINGS</p>
-            <h1>账号与密码设置</h1>
-            <p>{session.referee.publicCode} · {session.referee.name}</p>
-          </div>
-        </section>
+        <RefereeWorkspaceHero description="查看账号状态并维护登录密码。" eyebrow="ACCOUNT SETTINGS" name={session.referee.name} publicCode={session.referee.publicCode} title="账号与密码设置" />
         <RefereeWorkspaceNav />
         <section className="functional-section">
           <div className="detail-shell referee-account-settings">

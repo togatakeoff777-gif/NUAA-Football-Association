@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AdminCompetitionDangerActions } from "@/components/referees/admin/admin-competition-danger-actions";
 import { AdminMatchNavigation } from "@/components/referees/admin/admin-match-navigation";
 import {
   AdminPageHeader,
@@ -21,7 +22,10 @@ export default async function AdminCompetitionsPage() {
       format: true,
       status: true,
       source: true,
-      _count: { select: { teams: true, matches: true } },
+      publicPublished: true,
+      homepageFeatured: true,
+      externalCompetitionId: true,
+      _count: { select: { teams: true, matches: true, disciplineDetails: true } },
     },
     orderBy: [{ year: "desc" }, { createdAt: "desc" }],
   })]);
@@ -34,7 +38,7 @@ export default async function AdminCompetitionsPage() {
       actions={canWrite ? <><Link className="admin-button admin-button-secondary" href="/admin/competitions/import">批量导入</Link><Link className="admin-button" href="/admin/competitions/new">+ 新建赛事</Link></> : <span className="admin-status-badge">只读权限</span>}
     />
     <AdminMatchNavigation active="competitions" />
-    <AdminPanel title={`赛事列表 · ${competitions.length}`} description="Competition 是球队与比赛的上级对象；R1 支持手工维护，保留未来官方数据同步字段。">
+    <AdminPanel title={`赛事列表 · ${competitions.length}`} description="赛事是球队与比赛的上级对象；这里维护手工赛事，并保留后续官方数据接入所需信息。">
       {competitions.length ? <div className="admin-table-scroll"><table className="admin-data-table"><thead><tr><th>赛事名称</th><th>比赛制式</th><th>状态</th><th>比赛</th><th>球队</th><th>数据来源</th><th>操作</th></tr></thead><tbody>{competitions.map((competition) => <tr key={competition.id}>
         <td><strong>{competition.name}</strong><small>{competition.year ?? "赛季未填写"}</small></td>
         <td>{competitionFormatLabels[competition.format]}</td>
@@ -42,7 +46,7 @@ export default async function AdminCompetitionsPage() {
         <td>{competition._count.matches}</td>
         <td>{competition._count.teams}</td>
         <td>{dataSourceLabels[competition.source]}</td>
-        <td><div className="admin-table-actions"><Link href={`/admin/competitions/${competition.id}`}>{canWrite ? "管理赛事" : "查看赛事"}</Link>{canWrite ? <Link href={`/admin/competitions/${competition.id}/edit`}>编辑资料</Link> : null}</div></td>
+        <td><div className="admin-table-actions"><Link href={`/admin/competitions/${competition.id}`}>{canWrite ? "管理赛事" : "查看赛事"}</Link>{canWrite ? <><Link href={`/admin/competitions/${competition.id}/edit`}>编辑资料</Link><AdminCompetitionDangerActions compact competitionId={competition.id} competitionName={competition.name} protectedReason={competition._count.teams || competition._count.matches || competition._count.disciplineDetails || competition.publicPublished || competition.homepageFeatured || competition.source !== "MANUAL" || competition.externalCompetitionId ? "该赛事已有参赛球队、比赛、公开发布或其他正式数据，不能直接删除。" : undefined} /></> : null}</div></td>
       </tr>)}</tbody></table></div> : <div className="admin-empty-state"><strong>当前尚未创建赛事</strong><p>{canWrite ? "请先创建赛事，再继续建立球队和比赛。" : "当前没有可查看的赛事。"}</p>{canWrite ? <Link className="admin-button" href="/admin/competitions/new">新建赛事</Link> : null}</div>}
     </AdminPanel>
   </>;

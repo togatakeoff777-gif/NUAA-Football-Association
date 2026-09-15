@@ -135,7 +135,7 @@ export function AdminMatchForm({
         <label><span>报名窗口</span><select defaultValue={match?.applicationWindowStatus ?? "CLOSED"} name="applicationWindowStatus"><option value="CLOSED">关闭</option><option value="OPEN">开放</option></select></label>
         <label><span>报名截止</span><input defaultValue={match?.applicationDeadline} name="applicationDeadline" type="datetime-local" /></label>
       </div>{competition ? <PositionCounts defaults={match?.positionCounts} definitions={competition.positions} /> : null}</section>
-      <section className="admin-form-section" hidden={tab !== "notes"}><header><h2>说明与来源</h2><p>保留同步预留字段，不在 R1 调用足球中国 API。</p></header><div className="admin-form-grid">
+      <section className="admin-form-section" hidden={tab !== "notes"}><header><h2>说明与来源</h2><p>保留后续数据接入所需字段；当前仅维护本地赛事资料。</p></header><div className="admin-form-grid">
         <label><span>数据来源</span><select defaultValue={match?.source ?? "MANUAL"} name="source"><option value="MANUAL">手工维护</option><option value="FOOTBALL_CHINA">足球中国</option></select></label>
         <label><span>外部比赛 ID</span><input defaultValue={match?.externalMatchId} name="externalMatchId" placeholder="当前不自行生成" /></label>
       </div><label><span>公开说明</span><textarea defaultValue={match?.publicNote} name="publicNote" /></label><label><span>内部备注</span><textarea defaultValue={match?.internalNote} name="internalNote" /></label></section>

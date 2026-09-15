@@ -33,7 +33,7 @@ export default async function UnifiedAdminDashboardPage() {
       <AdminPanel title="授权模块" description="页面、接口和服务均按当前账号权限执行服务端校验。">
         <div className="admin-task-list">
           {canReadContent ? <article className="admin-task-item"><i /><div><strong>新闻公告与媒体</strong><p>数据库草稿、发布、归档、分页及 PUBLIC/PRIVATE 媒体。</p></div><Link href="/admin/content/news">进入内容运营</Link></article> : null}
-          {canReadReferees ? <article className="admin-task-item"><i /><div><strong>裁判中心</strong><p>直接复用已验收裁判页面，不复制业务 Service 或 DTO。</p></div><Link href="/admin/referees">查看裁判员</Link></article> : null}
+          {canReadReferees ? <article className="admin-task-item"><i /><div><strong>裁判中心</strong><p>统一维护裁判员档案、准入、可执裁时间与选派记录。</p></div><Link href="/admin/referees">查看裁判员</Link></article> : null}
           {canReadCompetitions ? <article className="admin-task-item"><i /><div><strong>赛事中心</strong><p>Competition、Team 与 Match 继续使用既有实现。</p></div><Link href="/admin/competitions">进入赛事管理</Link></article> : null}
         </div>
       </AdminPanel>

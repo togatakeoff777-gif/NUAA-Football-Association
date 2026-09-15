@@ -57,9 +57,6 @@ async function main() {
       verifier.team.create({ data: { competitionId: competition.id, name: "能源与动力学院" } }),
       verifier.team.create({ data: { competitionId: competition.id, name: "航空学院" } }),
     ]);
-    const referee = await verifier.referee.create({
-      data: { publicCode: "DEL-001", name: "删除测试裁判", status: "ACTIVE" },
-    });
     const createMatch = (slug: string, status: "SCHEDULED" | "COMPLETED" | "CANCELLED" = "SCHEDULED") => verifier.match.create({
       data: {
         slug,
@@ -80,31 +77,14 @@ async function main() {
 
     const untouchedMatch = await createMatch("untouched-match");
     const deletableMatch = await createMatch("deletable-test-match");
-    const draftAppointment = await verifier.refereeAppointment.create({
-      data: {
-        matchId: deletableMatch.id,
-        status: "DRAFT",
-        positions: {
-          create: { key: "REFEREE", label: "裁判员", sortOrder: 1, refereeId: referee.id },
-        },
-      },
-    });
-    await verifier.refereeApplication.create({
-      data: {
-        matchId: deletableMatch.id,
-        refereeId: referee.id,
-        preferredPositions: JSON.stringify(["REFEREE"]),
-        status: "PENDING",
-      },
-    });
 
     await deleteMatchSafely(deletableMatch.id, "测试数据：验收清理", competitionAuthorization);
     assert(await verifier.match.findUnique({ where: { id: deletableMatch.id } }) === null, "可删除比赛仍存在于比赛列表数据源。");
     assert(await verifier.competition.count({ where: { id: competition.id } }) === 1, "删除比赛误删了 Competition。");
     assert(await verifier.team.count({ where: { id: { in: [homeTeam.id, awayTeam.id] } } }) === 2, "删除比赛误删了 Team。");
     assert(await verifier.match.count({ where: { id: untouchedMatch.id } }) === 1, "删除比赛影响了其他 Match。");
-    assert(await verifier.refereeAppointment.count({ where: { id: draftAppointment.id } }) === 0, "纯草稿选派未随可删除比赛安全清理。");
-    assert(await verifier.refereeApplication.count({ where: { matchId: deletableMatch.id } }) === 0, "纯报名意向未随可删除比赛安全清理。");
+    assert(await verifier.refereeAppointment.count({ where: { matchId: deletableMatch.id } }) === 0, "删除空白比赛后出现了选派残留。");
+    assert(await verifier.refereeApplication.count({ where: { matchId: deletableMatch.id } }) === 0, "删除空白比赛后出现了报名残留。");
     assert(await verifier.matchPositionRequirement.count({ where: { matchId: deletableMatch.id } }) === 0, "比赛岗位要求未随可删除比赛清理。");
     const deletionAudit = await verifier.auditLog.findFirst({
       where: { action: "MATCH_DELETED", entityId: deletableMatch.id },
@@ -184,7 +164,7 @@ async function main() {
     assert(competitionAfterDeletion._count.matches === 5, "Competition 的比赛数量未与删除结果同步。");
 
     console.log(JSON.stringify({
-      deletableDraftRemoved: true,
+      unusedMatchRemoved: true,
       listAndCompetitionCountUpdated: true,
       competitionAndTeamsPreserved: true,
       unrelatedMatchPreserved: true,

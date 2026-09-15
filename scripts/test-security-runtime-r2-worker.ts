@@ -52,9 +52,9 @@ async function main() {
       { username: "r2-admin-invalid", displayName: "R2 Invalid", passwordHash: "invalid-r2-hash", role: "SUPER_ADMIN", isActive: true },
     ] });
     await prisma.referee.createMany({ data: [
-      { publicCode: "R2-REF-ACTIVE", name: "R2 Active", passwordHash: realHash, status: "ACTIVE" },
-      { publicCode: "R2-REF-INACTIVE", name: "R2 Inactive", passwordHash: realHash, status: "INACTIVE" },
-      { publicCode: "R2-REF-NO-HASH", name: "R2 No Hash", passwordHash: null, status: "ACTIVE" },
+      { publicCode: "R2-REF-ACTIVE", studentId: "R2-REF-ACTIVE", name: "R2 Active", passwordHash: realHash, status: "ACTIVE" },
+      { publicCode: "R2-REF-INACTIVE", studentId: "R2-REF-INACTIVE", name: "R2 Inactive", passwordHash: realHash, status: "INACTIVE" },
+      { publicCode: "R2-REF-NO-HASH", studentId: "R2-REF-NO-HASH", name: "R2 No Hash", passwordHash: null, status: "ACTIVE" },
     ] });
 
     async function expectSingleVerification(

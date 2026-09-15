@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   competitionFormatLabels,
@@ -41,10 +41,27 @@ export type AdminCompetitionRecord = {
 export function AdminCompetitionForm({ competition }: { competition?: AdminCompetitionRecord }) {
   const router = useRouter();
   const [message, setMessage] = useState("");
+  const [dirty, setDirty] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    function warnBeforeUnload(event: BeforeUnloadEvent) {
+      if (!dirty) return;
+      event.preventDefault();
+    }
+    window.addEventListener("beforeunload", warnBeforeUnload);
+    return () => window.removeEventListener("beforeunload", warnBeforeUnload);
+  }, [dirty]);
+
+  function cancel() {
+    if (dirty && !window.confirm("当前赛事资料有未保存修改，确认离开吗？")) return;
+    router.back();
+  }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
+    setSubmitting(true);
     const form = new FormData(event.currentTarget);
     const yearText = String(form.get("year") ?? "").trim();
     const payload = {
@@ -82,18 +99,20 @@ export function AdminCompetitionForm({ competition }: { competition?: AdminCompe
     const result = (await response.json()) as { error?: string };
     if (!response.ok) {
       setMessage(result.error ?? "赛事保存失败。");
+      setSubmitting(false);
       return;
     }
+    setDirty(false);
     router.push("/admin/competitions");
     router.refresh();
   }
 
-  return <form className="admin-form" onSubmit={submit}>
+  return <form className="admin-form" onChange={() => setDirty(true)} onSubmit={submit}>
     <section className="admin-form-section">
-      <header><h2>基础资料</h2><p>Slug 是公开路由的稳定身份，创建后不可通过普通编辑修改。</p></header>
+      <header><h2>基础资料</h2><p>页面标识用于生成稳定链接，创建后不可通过普通编辑修改。</p></header>
       <div className="admin-form-grid">
         <label>
-          <span>赛事 Slug</span>
+          <span>页面标识</span>
           {competition
             ? <input aria-readonly="true" readOnly value={competition.slug} />
             : <input maxLength={80} name="slug" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="freshman-cup" required />}
@@ -155,7 +174,6 @@ export function AdminCompetitionForm({ competition }: { competition?: AdminCompe
       {competition?.lastSyncedAt ? <div><span>最近同步</span><strong>{competition.lastSyncedAt}</strong></div> : null}
       <p>手工新建赛事固定使用“手工维护”；现有足球中国同步预留字段保持兼容。</p>
     </div>
-    <p aria-live="polite" className="admin-form-message">{message}</p>
-    <footer><button className="admin-button admin-button-secondary" onClick={() => router.back()} type="button">取消</button><button className="admin-button" type="submit">{competition ? "保存赛事" : "创建赛事"}</button></footer>
+    <div className="admin-form-savebar"><span aria-live="polite">{message || (dirty ? "存在未保存修改" : competition ? "当前赛事资料已同步" : "填写后即可创建赛事")}</span><div><button className="admin-button admin-button-secondary" disabled={submitting} onClick={cancel} type="button">取消</button><button className="admin-button" disabled={submitting || Boolean(competition && !dirty)} type="submit">{submitting ? "保存中…" : competition ? "保存赛事" : "创建赛事"}</button></div></div>
   </form>;
 }

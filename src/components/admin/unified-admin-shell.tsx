@@ -124,7 +124,7 @@ export function UnifiedAdminShell({
         <div className="admin-brand">
           <span>NUAAFA</span>
           <strong>统一管理后台</strong>
-          <small>V2.9 · Foundation</small>
+          <small>V2.9 · Operations</small>
         </div>
         <nav aria-label="统一管理后台导航" className="admin-navigation">
           {mustChangePassword ? (
@@ -157,7 +157,7 @@ export function UnifiedAdminShell({
       <div className="admin-main">
         <header className="admin-topbar">
           <button aria-label="打开后台导航" className="admin-menu-button" onClick={() => setMobileOpen(true)} type="button">☰</button>
-          <div className="admin-topbar-title"><strong>NUAAFA 管理后台</strong><span>One Admin · Multiple Modules</span></div>
+          <div className="admin-topbar-title"><strong>NUAAFA 管理后台</strong><span>统一运营工作台</span></div>
           <div className="admin-account-area">
             <button className="admin-account-trigger" onClick={() => setAccountOpen((current) => !current)} type="button">
               <span>{actorName.slice(0, 1)}</span>

@@ -6,6 +6,10 @@ import type {
 } from "@/generated/prisma-v29/client";
 import type { CompetitionMutationInput } from "@/lib/referee-competition-input";
 import { prisma } from "@/lib/prisma";
+import {
+  requireAdminServiceAuthorization,
+  type AdminServiceAuthorization,
+} from "@/lib/privileged-service-authorization";
 import type { AdminActor } from "@/lib/referee-service";
 import { RefereeServiceError } from "@/lib/referee-service-error";
 
@@ -175,5 +179,68 @@ export async function updateCompetition(id: string, input: CompetitionInput, act
       },
     });
     return competition;
+  });
+}
+
+export async function deleteCompetitionSafely(
+  id: string,
+  confirmationName: string,
+  authorization: AdminServiceAuthorization<"competitions:write">,
+) {
+  const actor = requireAdminServiceAuthorization(authorization, "competitions:write");
+  return prisma.$transaction(async (tx) => {
+    const competition = await tx.competition.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        status: true,
+        source: true,
+        externalCompetitionId: true,
+        publicPublished: true,
+        homepageFeatured: true,
+        _count: { select: { teams: true, matches: true, disciplineDetails: true } },
+      },
+    });
+    if (!competition) throw new RefereeServiceError("赛事不存在。", 404);
+    if (confirmationName.trim() !== competition.name) {
+      throw new RefereeServiceError("赛事名称确认不一致，已取消删除。", 409);
+    }
+
+    const reasons = [
+      competition._count.teams ? `${competition._count.teams} 支参赛球队` : "",
+      competition._count.matches ? `${competition._count.matches} 场比赛` : "",
+      competition._count.disciplineDetails ? `${competition._count.disciplineDetails} 条赛事纪律资料` : "",
+      competition.publicPublished ? "已公开发布" : "",
+      competition.homepageFeatured ? "已进入首页展示" : "",
+      competition.source !== "MANUAL" || competition.externalCompetitionId ? "已关联外部数据来源" : "",
+    ].filter(Boolean);
+    if (reasons.length) {
+      throw new RefereeServiceError(
+        `赛事“${competition.name}”已有受保护业务记录（${reasons.join("、")}），不能删除。请先核对并保留正式历史。`,
+        409,
+      );
+    }
+
+    await tx.competition.delete({ where: { id: competition.id } });
+    await tx.auditLog.create({
+      data: {
+        actorType: "ADMIN",
+        actorId: actor.id,
+        action: "COMPETITION_DELETED",
+        entityType: "Competition",
+        entityId: competition.id,
+        summary: `删除赛事 ${competition.name}`,
+        metadata: JSON.stringify({
+          deletedAt: new Date().toISOString(),
+          competitionName: competition.name,
+          slug: competition.slug,
+          status: competition.status,
+          source: competition.source,
+        }),
+      },
+    });
+    return { id: competition.id, name: competition.name, slug: competition.slug };
   });
 }

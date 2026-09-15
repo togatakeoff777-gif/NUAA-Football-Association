@@ -7,6 +7,7 @@ import { AdminStatusBadge, appointmentStatusLabels, matchStatusLabels } from "@/
 import { adminRefereeSelect } from "@/lib/referee-dto";
 import { detectAppointmentWarnings } from "@/lib/referee-conflicts";
 import { applicationStatusLabels, formatRefereeDateTime, parsePreferredPositions } from "@/lib/referee-presenters";
+import { getBeijingDayBounds, resolveMatchAvailability } from "@/lib/referee-availability";
 import { getPositionTemplate } from "@/lib/referee-roles";
 import { getCompletedRefereeStatistics } from "@/lib/referee-r1-service";
 import { prisma } from "@/lib/prisma";
@@ -34,13 +35,14 @@ export default async function AdminMatchDetailPage({ params, appointmentOnly = f
   ]);
   if (!match) notFound();
   const targetEnd = match.endAt ?? new Date(match.kickoff.getTime() + 60_000);
+  const matchDay = getBeijingDayBounds(match.kickoff);
   const refereeIds = referees.map((referee) => referee.id);
   const [candidateAvailability, candidateOverlaps] = await Promise.all([
     prisma.refereeAvailability.findMany({
       where: {
         refereeId: { in: refereeIds },
-        startAt: { lt: targetEnd },
-        endAt: { gt: match.kickoff },
+        startAt: { lt: matchDay.end },
+        endAt: { gt: matchDay.start },
         OR: [{ competitionFormat: null }, { competitionFormat: match.competition.format }],
       },
       select: { refereeId: true, kind: true, startAt: true, endAt: true },
@@ -61,12 +63,14 @@ export default async function AdminMatchDetailPage({ params, appointmentOnly = f
       select: { refereeId: true },
     }),
   ]);
-  const availabilityByReferee = new Map<string, "AVAILABLE" | "UNAVAILABLE">();
-  for (const item of candidateAvailability) {
-    const current = availabilityByReferee.get(item.refereeId);
-    if (item.kind === "UNAVAILABLE") availabilityByReferee.set(item.refereeId, "UNAVAILABLE");
-    else if (!current && item.startAt <= match.kickoff && item.endAt >= targetEnd) availabilityByReferee.set(item.refereeId, "AVAILABLE");
-  }
+  const availabilityByReferee = new Map(refereeIds.map((refereeId) => [
+    refereeId,
+    resolveMatchAvailability(
+      candidateAvailability.filter((item) => item.refereeId === refereeId),
+      match.kickoff,
+      targetEnd,
+    ),
+  ]));
   const overlappingReferees = new Set(candidateOverlaps.flatMap((item) => item.refereeId ? [item.refereeId] : []));
   const interestedReferees = new Set(match.applications.map((application) => application.refereeId));
   const configured = match.positionRequirements.length ? match.positionRequirements : getPositionTemplate(match.competition.format).map((position) => ({ ...position, count: 1 }));
@@ -78,19 +82,7 @@ export default async function AdminMatchDetailPage({ params, appointmentOnly = f
     id: match.id, appointmentId: match.appointment?.id ?? null, statusKey: match.appointment?.status ?? "NONE",
     format: match.competition.format, publicationNote: match.appointment?.publicationNote ?? "", template, positions: currentPositions,
   };
-  const deletionProtected = match.status !== "SCHEDULED" ||
-    match.applications.some((application) => application.status === "APPOINTED" || application.status === "NOT_SELECTED") ||
-    Boolean(match.appointment && (
-      match.appointment.status !== "DRAFT" ||
-      match.appointment.revision > 0 ||
-      match.appointment.publishedAt ||
-      match.appointment.withdrawnAt ||
-      match.appointment.completedAt ||
-      match.appointment.cancelledAt ||
-      match.appointment.versions.length > 0 ||
-      match.appointment._count.acknowledgements > 0 ||
-      match.appointment._count.conflictReports > 0
-    ));
+  const deletionProtected = match.status !== "SCHEDULED" || match.applications.length > 0 || Boolean(match.appointment);
   const matchLabel = `${match.homeTeam.name} vs ${match.awayTeam.name}`;
   return <>
     <section className="admin-detail-hero">
@@ -99,7 +91,7 @@ export default async function AdminMatchDetailPage({ params, appointmentOnly = f
       </div>
       {!appointmentOnly ? <div className="admin-detail-actions">
         <Link className="admin-button admin-button-secondary" href={`/admin/matches/${match.id}/edit`}>编辑比赛</Link>
-        <AdminMatchDangerActions matchId={match.id} matchLabel={matchLabel} protectedReason={deletionProtected ? "该比赛已经存在正式选派或历史记录，不能直接删除。请使用“取消比赛”保留业务历史。" : undefined} />
+        <AdminMatchDangerActions matchId={match.id} matchLabel={matchLabel} protectedReason={deletionProtected ? "该比赛已有报名意向、选派或正式历史记录，不能直接删除。请使用“取消比赛”保留业务历史。" : undefined} />
       </div> : null}
     </section>
     <AdminAppointmentEditor

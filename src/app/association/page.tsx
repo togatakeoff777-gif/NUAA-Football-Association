@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 export default function AssociationPage() {
   const identity = (
     <div className="association-identity-aside">
-      <div className="archive-identity-card"><BrandMark /><div><span>公开档案编号</span><strong>NUAA-TMH-FA / 2022</strong><small>南京航空航天大学天目湖足球协会</small></div></div>
+      <div className="archive-identity-card"><BrandMark /><div><span>公开档案编号</span><strong>NUAA-TMH-FA / 2021</strong><small>南京航空航天大学天目湖足球协会</small></div></div>
       <Link className="association-join-button" href="/join">加入我们 <span aria-hidden="true">→</span></Link>
     </div>
   );

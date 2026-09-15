@@ -148,9 +148,10 @@ async function main() {
     assert(statistics.some((item) => item.refereeId === onboarded.id && item.totalMatches === 1 && item.elevenASideCount === 1 && item.assistantRoleCount === 1), "Completed appointment statistics are incorrect.");
 
     const workspaceSource = await readFile(path.resolve("src/components/referees/admin/admin-competition-workspace.tsx"), "utf8");
+    const organizationSelectorSource = await readFile(path.resolve("src/components/referees/admin/organization-checkbox-selector.tsx"), "utf8");
     const matchFormSource = await readFile(path.resolve("src/components/referees/admin/admin-match-form.tsx"), "utf8");
     const calendarSource = await readFile(path.resolve("src/components/referees/mvp/referee-availability-calendar.tsx"), "utf8");
-    assert(workspaceSource.includes("搜索组织") && workspaceSource.includes("全选当前结果") && workspaceSource.includes('type="checkbox"') && workspaceSource.includes("创建联合队") && workspaceSource.includes("批量导入自由组队球队"), "Competition team checkbox/search UX is incomplete.");
+    assert(workspaceSource.includes("OrganizationCheckboxSelector") && organizationSelectorSource.includes("搜索学院或书院") && organizationSelectorSource.includes("全选当前结果") && organizationSelectorSource.includes('type="checkbox"') && workspaceSource.includes("创建联合队") && workspaceSource.includes("批量导入自由组队球队"), "Competition team checkbox/search UX is incomplete.");
     assert(!matchFormSource.includes('value={`unit:${unit.id}`}') && matchFormSource.includes("仅显示当前赛事的参赛球队"), "Match form still exposes global unit selections.");
     assert(calendarSource.includes("整天可执裁") && calendarSource.includes("整天不可执裁") && calendarSource.includes("指定时段可执裁"), "Availability calendar states are incomplete.");
 

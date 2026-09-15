@@ -77,9 +77,10 @@ async function prepareFixture(databasePath: string) {
       role: "SUPER_ADMIN" as const,
       isActive: true,
     })) });
-    await prisma.referee.createMany({ data: refereeActive.map((publicCode) => ({
-      publicCode,
-      name: publicCode,
+    await prisma.referee.createMany({ data: refereeActive.map((studentId) => ({
+      publicCode: studentId,
+      studentId,
+      name: studentId,
       passwordHash,
       status: "ACTIVE" as const,
     })) });
@@ -216,7 +217,7 @@ async function loginFailure(origin: string, route: "admin" | "referee", identity
     headers: { origin: mutationOrigin, "content-type": "application/json", "x-real-ip": "127.0.0.1" },
     body: JSON.stringify(route === "admin"
       ? { username: identity, password: wrongPassword }
-      : { publicCode: identity, password: wrongPassword }),
+      : { studentId: identity, password: wrongPassword }),
     signal: AbortSignal.timeout(requestTimeoutMs),
   });
   const body = await response.text();

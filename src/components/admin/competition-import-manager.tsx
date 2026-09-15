@@ -168,7 +168,7 @@ export function CompetitionImportManager({ competitions }: { competitions: Compe
 
     {result ? <section className="admin-panel admin-import-result">
       <header className="admin-panel-header"><div><h2>6. Import Result</h2><p>批次已提交并写入 COMPETITION_IMPORT_COMMITTED AuditLog。</p></div></header>
-      <div className="admin-panel-body"><dl><div><dt>创建球队</dt><dd>{result.createdTeams}</dd></div><div><dt>复用球队</dt><dd>{result.reusedTeams}</dd></div><div><dt>创建比赛</dt><dd>{result.createdMatches}</dd></div><div><dt>跳过重复比赛</dt><dd>{result.skippedMatches}</dd></div><div><dt>警告行</dt><dd>{result.warnings}</dd></div><div><dt>Audit reference</dt><dd><code>{result.auditId}</code></dd></div></dl></div>
+      <div className="admin-panel-body"><dl><div><dt>创建球队</dt><dd>{result.createdTeams}</dd></div><div><dt>复用球队</dt><dd>{result.reusedTeams}</dd></div><div><dt>创建比赛</dt><dd>{result.createdMatches}</dd></div><div><dt>跳过重复比赛</dt><dd>{result.skippedMatches}</dd></div><div><dt>警告行</dt><dd>{result.warnings}</dd></div><div><dt>操作日志编号</dt><dd><code>{result.auditId}</code></dd></div></dl></div>
     </section> : null}
   </div>;
 }

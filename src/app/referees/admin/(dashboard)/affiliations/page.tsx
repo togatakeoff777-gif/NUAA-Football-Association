@@ -6,7 +6,8 @@ import { getUnifiedAdminActor, hasUnifiedAdminPermission } from "@/lib/unified-a
 
 export default async function AdminAffiliationsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const query = await searchParams;
-  const initialTab = query.tab === "teams" ? "teams" : "colleges";
+  const requestedTab = typeof query.tab === "string" ? query.tab : "";
+  const initialTab = (["colleges", "shuyuan", "mappings", "relations", "teams"] as const).find((tab) => tab === requestedTab) ?? "colleges";
   const initialCompetitionId = typeof query.competition === "string" ? query.competition : "";
   const [actor, units, teams, competitions] = await Promise.all([
     getUnifiedAdminActor(),

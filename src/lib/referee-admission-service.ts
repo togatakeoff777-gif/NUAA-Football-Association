@@ -7,12 +7,19 @@ import {
   type AdminActor,
 } from "@/lib/referee-service";
 import { RefereeServiceError } from "@/lib/referee-service-error";
+import {
+  allocateRefereePublicCode,
+  defaultRefereeCapabilities,
+  generateTemporaryRefereePassword,
+  onboardingCapabilitySummary,
+} from "@/lib/referee-onboarding";
 import { hashPassword } from "@/lib/referee-security";
 import {
   assertUnifiedAdminPermission,
   type UnifiedAdminActor,
 } from "@/lib/unified-admin-rbac";
 import { isRecord, readShortText } from "@/lib/referee-validation";
+import { normalizeStudentId, resolveStudentIdCollege } from "@/lib/student-id";
 
 function readAdmissionApplicationInput(input: unknown) {
   if (!isRecord(input)) {
@@ -21,7 +28,7 @@ function readAdmissionApplicationInput(input: unknown) {
 
   try {
     const name = readShortText(input.name, "姓名", 48).normalize("NFKC").replace(/\s+/gu, " ");
-    const studentId = readShortText(input.studentId, "学号", 32, false).normalize("NFKC").toUpperCase();
+    const studentId = normalizeStudentId(readShortText(input.studentId, "学号", 32));
     const phone = readShortText(input.phone, "手机号", 32, false);
     const qq = readShortText(input.qq, "QQ", 32, false);
     const note = readShortText(input.note, "补充说明", 240, false);
@@ -224,25 +231,21 @@ type AdmissionReviewInput =
       action: "APPROVE";
       reviewNote: string;
       mode: "CREATE_NEW";
-      publicCode: string;
-      initialPassword: string;
+      /** Legacy callers may still send these fields; R2 deliberately ignores them. */
+      publicCode?: string;
+      initialPassword?: string;
     }
   | {
       action: "APPROVE";
       reviewNote: string;
       mode: "LINK_EXISTING";
       existingRefereeId: string;
-      initialPassword: string;
+      /** Legacy callers may still send this field; R2 generates the password server-side. */
+      initialPassword?: string;
     };
 
 function validateReviewInput(input: AdmissionReviewInput) {
   if (!input.reviewNote.trim()) throw new RefereeServiceError("请填写审核意见。");
-  if (input.action === "APPROVE" && input.initialPassword.length < 12) {
-    throw new RefereeServiceError("裁判员初始密码不能少于 12 个字符。");
-  }
-  if (input.action === "APPROVE" && input.mode === "CREATE_NEW" && !input.publicCode.trim()) {
-    throw new RefereeServiceError("请填写裁判员编号。");
-  }
   if (input.action === "APPROVE" && input.mode === "LINK_EXISTING" && !input.existingRefereeId.trim()) {
     throw new RefereeServiceError("请选择要明确关联的裁判员账号。");
   }
@@ -294,21 +297,33 @@ export async function reviewRefereeAdmissionApplication(
             }),
           },
         });
-        return rejected;
+        return { ...rejected, onboarding: null };
       }
 
+      if (!application.studentId?.trim()) {
+        throw new RefereeServiceError("该申请缺少学号，不能创建或启用登录账号。请先核验申请资料。", 409);
+      }
+      const college = await resolveStudentIdCollege(tx, application.studentId);
+      const temporaryPassword = generateTemporaryRefereePassword();
       let refereeId: string;
+      let publicCode: string;
       if (input.mode === "LINK_EXISTING") {
         const existing = await tx.referee.findUnique({
           where: { id: input.existingRefereeId },
-          select: { id: true, publicCode: true, status: true },
+          select: { id: true, publicCode: true, status: true, studentId: true, collegeId: true },
         });
         if (!existing) throw new RefereeServiceError("明确选择的裁判员账号不存在。", 404);
-        const passwordHash = await hashPassword(input.initialPassword);
+        if (existing.studentId && normalizeStudentId(existing.studentId) !== college.studentId) {
+          throw new RefereeServiceError("所选现有账号已有不同学号，不能关联该申请。", 409);
+        }
+        const passwordHash = await hashPassword(temporaryPassword);
         await tx.referee.update({
           where: { id: existing.id },
           data: {
             status: "ACTIVE",
+            studentId: college.studentId,
+            collegeId: existing.collegeId ?? college.collegeId,
+            publicDirectoryEnabled: true,
             passwordHash,
             mustChangePassword: true,
             passwordChangedAt: reviewedAt,
@@ -332,33 +347,38 @@ export async function reviewRefereeAdmissionApplication(
           },
         });
         refereeId = existing.id;
+        publicCode = existing.publicCode;
       } else {
-        if (application.studentId) {
-          const studentIdOwner = await tx.referee.findUnique({
-            where: { studentId: application.studentId },
-            select: { id: true, publicCode: true },
-          });
-          if (studentIdOwner) {
-            throw new RefereeServiceError(
-              `该学号已对应裁判员 ${studentIdOwner.publicCode}，请明确选择关联现有账号。`,
-              409,
-            );
-          }
+        const studentIdOwner = await tx.referee.findUnique({
+          where: { studentId: college.studentId },
+          select: { id: true, publicCode: true },
+        });
+        if (studentIdOwner) {
+          throw new RefereeServiceError(
+            `该学号已对应裁判员 ${studentIdOwner.publicCode}，请明确选择关联现有账号。`,
+            409,
+          );
         }
+        publicCode = await allocateRefereePublicCode(tx);
         const referee = await createRefereeAccountInTransaction({
-          publicCode: input.publicCode.trim(),
+          publicCode,
           name: application.name,
-          initialPassword: input.initialPassword,
+          initialPassword: temporaryPassword,
           status: "ACTIVE",
-          trainingStatus: "PENDING_ASSESSMENT",
-          assignmentEligibility: "NOT_ELIGIBLE",
-          elevenASide: false,
-          futsal: false,
-          publicDirectoryEnabled: false,
-          studentId: application.studentId ?? undefined,
+          trainingStatus: "IN_TRAINING",
+          assignmentEligibility: "ELIGIBLE",
+          elevenASide: true,
+          futsal: true,
+          publicDirectoryEnabled: true,
+          studentId: college.studentId,
+          collegeId: college.collegeId,
           phone: application.phone ?? undefined,
           qq: application.qq ?? undefined,
-          capabilities: [],
+          capabilities: defaultRefereeCapabilities.map(([format, positionKey, status]) => ({
+            format,
+            positionKey,
+            status,
+          })),
         }, refereeAdminActor(actor), tx, {
           admissionApplicationId: id,
           source: "REFEREE_ADMISSION_APPROVAL",
@@ -395,7 +415,22 @@ export async function reviewRefereeAdmissionApplication(
           }),
         },
       });
-      return approved;
+      return {
+        ...approved,
+        onboarding: {
+          refereeId,
+          name: application.name,
+          studentId: college.studentId,
+          publicCode,
+          temporaryPassword,
+          college: college.collegeName,
+          trainingStatus: "IN_TRAINING" as const,
+          assignmentEligibility: "ELIGIBLE" as const,
+          publicDirectoryEnabled: true,
+          capabilitySummary: onboardingCapabilitySummary(),
+          accountMode: input.mode,
+        },
+      };
     });
   } catch (error) {
     if (error instanceof RefereeServiceError) throw error;
@@ -404,4 +439,56 @@ export async function reviewRefereeAdmissionApplication(
     }
     throw error;
   }
+}
+
+export async function createOnboardedRefereeAccount(
+  input: { name: string; studentId: string },
+  actor: UnifiedAdminActor,
+) {
+  assertAdmissionWrite(actor);
+  const name = input.name.trim().normalize("NFKC").replace(/\s+/gu, " ");
+  if (!name) throw new RefereeServiceError("请填写姓名。");
+  return prisma.$transaction(async (tx) => {
+    const college = await resolveStudentIdCollege(tx, input.studentId);
+    const existing = await tx.referee.findUnique({
+      where: { studentId: college.studentId },
+      select: { publicCode: true },
+    });
+    if (existing) {
+      throw new RefereeServiceError(`该学号已对应裁判员 ${existing.publicCode}，请维护现有账号。`, 409);
+    }
+    const publicCode = await allocateRefereePublicCode(tx);
+    const temporaryPassword = generateTemporaryRefereePassword();
+    const referee = await createRefereeAccountInTransaction({
+      publicCode,
+      name,
+      initialPassword: temporaryPassword,
+      status: "ACTIVE",
+      trainingStatus: "IN_TRAINING",
+      assignmentEligibility: "ELIGIBLE",
+      elevenASide: true,
+      futsal: true,
+      publicDirectoryEnabled: true,
+      studentId: college.studentId,
+      collegeId: college.collegeId,
+      capabilities: defaultRefereeCapabilities.map(([format, positionKey, status]) => ({
+        format,
+        positionKey,
+        status,
+      })),
+    }, refereeAdminActor(actor), tx, { source: "ADMIN_DIRECT_ONBOARDING" });
+    return {
+      refereeId: referee.id,
+      name,
+      studentId: college.studentId,
+      publicCode,
+      temporaryPassword,
+      college: college.collegeName,
+      trainingStatus: "IN_TRAINING" as const,
+      assignmentEligibility: "ELIGIBLE" as const,
+      publicDirectoryEnabled: true,
+      capabilitySummary: onboardingCapabilitySummary(),
+      accountMode: "CREATE_NEW" as const,
+    };
+  });
 }

@@ -34,7 +34,7 @@ async function main() {
     const login = async (password: string) => fetch(`${baseUrl}/api/referees/login`, {
       method: "POST",
       headers: { "content-type": "application/json", origin: mutationOrigin },
-      body: JSON.stringify({ publicCode: "SMOKE-R1-001", password }),
+      body: JSON.stringify({ studentId: referee.studentId, password }),
       redirect: "manual",
     });
     assert((await login(oldPassword)).status === 401, "Old initial password remained valid.");

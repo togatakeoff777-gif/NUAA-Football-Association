@@ -73,6 +73,7 @@ async function main() {
     for (let index = 2; index <= 4; index += 1) {
       await admission.submitRefereeAdmissionApplication({
         name: `共享出口申请人 ${index}`,
+        studentId: `1626100${index}`,
         phone: `1380000000${index}`,
       }, { rateLimitKey: rateKey });
     }
@@ -121,6 +122,7 @@ async function main() {
     try {
       await admission.submitRefereeAdmissionApplication({
         name: "达到限额申请人",
+        studentId: "16261999",
         phone: "13800000099",
       }, { rateLimitKey: blockedKey, now: new Date(blockedAttempt.updatedAt.getTime() + 1_000) });
     } catch (error) {
@@ -145,6 +147,7 @@ async function main() {
     const resetNow = new Date(expiredAt.getTime() + 1);
     await admission.submitRefereeAdmissionApplication({
       name: "固定窗口重置申请人",
+      studentId: "16262000",
       phone: "13800000100",
     }, { rateLimitKey: resetKey, now: resetNow });
     const resetAttempt = await prisma.loginAttempt.findUniqueOrThrow({

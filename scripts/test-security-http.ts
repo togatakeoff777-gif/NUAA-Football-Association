@@ -12,6 +12,10 @@ type Fixture = {
   refereeId: string;
 };
 
+const NEXT_RESERVED_PORTS = new Set([
+  2049, 3659, 4045, 5060, 5061, 6000, 6566, 6665, 6666, 6667, 6668, 6669, 6697, 10080,
+]);
+
 function runCapture(args: string[], environment: NodeJS.ProcessEnv) {
   return new Promise<string>((resolve, reject) => {
     const child = spawn(process.execPath, args, { cwd: process.cwd(), env: environment, stdio: ["ignore", "pipe", "inherit"] });
@@ -42,6 +46,12 @@ function findPort() {
     server.listen(0, "127.0.0.1", () => {
       const address = server.address();
       if (!address || typeof address === "string") return server.close(() => reject(new Error("Failed to allocate a test port.")));
+      if (NEXT_RESERVED_PORTS.has(address.port)) {
+        return server.close((error) => {
+          if (error) reject(error);
+          else findPort().then(resolve, reject);
+        });
+      }
       server.close((error) => error ? reject(error) : resolve(address.port));
     });
   });

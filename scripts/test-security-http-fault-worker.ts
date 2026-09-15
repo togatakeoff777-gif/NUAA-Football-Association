@@ -9,9 +9,9 @@ async function main() {
   if (!baseUrl) throw new Error("SECURITY_HTTP_BASE_URL is required.");
   const origin = "https://nuaafa.cn";
   const requests = [
-    ["member login database failure", "/api/referees/login", { publicCode: "SMOKE-R1-001", password: "not-a-secret" }],
+    ["member login database failure", "/api/referees/login", { studentId: "16268888", password: "not-a-secret" }],
     ["admin login database failure", "/api/referees/admin/login", { username: "smoke-referee", password: "not-a-secret" }],
-    ["public admission database failure", "/api/referees/admission-applications", { name: "Fault Applicant", phone: "13999998888" }],
+    ["public admission database failure", "/api/referees/admission-applications", { name: "Fault Applicant", studentId: "16269999", phone: "13999998888" }],
     ["legacy authorization database failure", "/api/referees/admin/competitions", {}],
   ] as const;
   for (const [label, pathname, body] of requests) {

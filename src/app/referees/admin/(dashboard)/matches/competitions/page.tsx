@@ -42,7 +42,7 @@ export default async function AdminCompetitionsPage() {
         <td>{competition._count.matches}</td>
         <td>{competition._count.teams}</td>
         <td>{dataSourceLabels[competition.source]}</td>
-        <td><div className="admin-table-actions">{canWrite ? <><Link href={`/admin/matches/new?competition=${competition.id}`}>新建比赛</Link><Link href={`/admin/organizations?tab=teams&competition=${competition.id}`}>管理球队</Link><Link href={`/admin/competitions/${competition.id}/edit`}>编辑</Link></> : <span>查看</span>}</div></td>
+        <td><div className="admin-table-actions"><Link href={`/admin/competitions/${competition.id}`}>{canWrite ? "管理赛事" : "查看赛事"}</Link>{canWrite ? <Link href={`/admin/competitions/${competition.id}/edit`}>编辑资料</Link> : null}</div></td>
       </tr>)}</tbody></table></div> : <div className="admin-empty-state"><strong>当前尚未创建赛事</strong><p>{canWrite ? "请先创建赛事，再继续建立球队和比赛。" : "当前没有可查看的赛事。"}</p>{canWrite ? <Link className="admin-button" href="/admin/competitions/new">新建赛事</Link> : null}</div>}
     </AdminPanel>
   </>;

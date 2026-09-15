@@ -444,3 +444,40 @@
 .admin-role-selector label input { margin-top: 3px; }
 .admin-role-selector label span { display: grid; gap: 2px; }
 .admin-role-selector label small, .admin-role-selector > p { color: var(--admin-muted); }
+
+/* Admin Operations R2: scoped operational workspace controls. */
+.admin-form input:not([type="checkbox"]):not([type="radio"]), .admin-form select { min-height: 42px; }
+.admin-form label > span, .admin-operation-body label > span { display: block; margin-bottom: 6px; color: var(--admin-muted); font-size: 12px; font-weight: 700; }
+.admin-form-readonly { display: grid; align-content: center; min-height: 42px; padding: 7px 11px; border: 1px solid var(--admin-line); border-radius: 8px; background: #f4f7fb; }
+.admin-form-readonly small { color: var(--admin-muted); }
+.admin-onboarding-result code { padding: 4px 8px; border-radius: 6px; background: #eef5ff; color: #0a4c9b; font-size: 16px; font-weight: 800; }
+.admin-workspace-tabs { margin-bottom: 18px; background: white; border-radius: 10px 10px 0 0; }
+.admin-team-cards { display: grid; gap: 8px; }
+.admin-team-card { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px; border: 1px solid var(--admin-line); border-radius: 10px; background: #fbfdff; }
+.admin-team-card > div { display: grid; gap: 3px; }
+.admin-team-card span { color: var(--admin-muted); font-size: 12px; }
+.admin-workspace-operations { display: grid; gap: 12px; margin-top: 18px; }
+.admin-workspace-operations details { border: 1px solid var(--admin-line); border-radius: 10px; background: white; }
+.admin-workspace-operations summary { padding: 14px 16px; color: #17365f; font-weight: 800; cursor: pointer; }
+.admin-operation-body { display: grid; gap: 14px; padding: 0 16px 16px; border-top: 1px solid var(--admin-line); }
+.admin-operation-body > :first-child { margin-top: 14px; }
+.admin-operation-body input:not([type="checkbox"]), .admin-operation-body textarea, .admin-operation-body select { width: 100%; padding: 9px 11px; border: 1px solid #bdcadb; border-radius: 8px; background: white; }
+.admin-selection-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.admin-selection-toolbar input { flex: 1; min-width: 220px; }
+.admin-selection-toolbar button, .admin-quick-filters a { padding: 8px 11px; border: 1px solid var(--admin-line); border-radius: 8px; background: #f7f9fc; color: #29435f; }
+.admin-selection-toolbar strong { margin-left: auto; }
+.admin-unit-picker { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); max-height: 330px; overflow: auto; gap: 7px; }
+.admin-unit-picker label { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; padding: 10px; border: 1px solid var(--admin-line); border-radius: 8px; }
+.admin-unit-picker label[data-selected="true"] { border-color: #4d83c5; background: #eef6ff; }
+.admin-unit-picker label[data-existing="true"] { background: #f0f5f2; color: #456253; }
+.admin-unit-picker small { color: #357354; }
+.admin-quick-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: -4px 0 16px; }
+.admin-quick-filters a[aria-current="page"] { border-color: var(--admin-blue); background: #eaf3ff; color: var(--admin-blue); font-weight: 800; }
+.admin-warning-link { color: #a34b00; font-weight: 700; }
+
+@media (max-width: 760px) {
+  .admin-team-card { align-items: flex-start; flex-direction: column; }
+  .admin-unit-picker { grid-template-columns: 1fr; }
+  .admin-selection-toolbar { align-items: stretch; flex-direction: column; }
+  .admin-selection-toolbar strong { margin-left: 0; }
+}

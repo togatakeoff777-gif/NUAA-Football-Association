@@ -79,9 +79,14 @@ async function main() {
       );
       return persisted;
     };
-    const assertRejected = async (input: unknown, message: string) => {
+    let rejectedStudentSequence = 0;
+    const assertRejected = async (input: unknown, message: string, preserveMissingStudentId = false) => {
       const count = await verifier.refereeAdmissionApplication.count();
-      const response = await postJson(input);
+      rejectedStudentSequence += 1;
+      const bodyInput = !preserveMissingStudentId && input && typeof input === "object" && !Array.isArray(input) && !("studentId" in input)
+        ? { ...input, studentId: `16R2${String(rejectedStudentSequence).padStart(4, "0")}` }
+        : input;
+      const response = await postJson(bodyInput);
       const body = await response.json() as { error?: string };
       assert(response.status === 400, `${message}未返回 400。`);
       assert(typeof body.error === "string" && body.error.length > 0, `${message}未返回可读错误。`);
@@ -110,22 +115,22 @@ async function main() {
     );
 
     await assertAccepted(
-      { name: "QQ申请人", phone: "", qq: "12345678" },
+      { name: "QQ申请人", studentId: "16260002", phone: "", qq: "12345678" },
       { phone: null, qq: "12345678" },
       "仅 QQ 申请",
     );
     await assertAccepted(
-      { name: "QQ五位边界", qq: "12345" },
+      { name: "QQ五位边界", studentId: "16260003", qq: "12345" },
       { phone: null, qq: "12345" },
       "五位 QQ 申请",
     );
     await assertAccepted(
-      { name: "QQ十二位边界", qq: "123456789012" },
+      { name: "QQ十二位边界", studentId: "16260004", qq: "123456789012" },
       { phone: null, qq: "123456789012" },
       "十二位 QQ 申请",
     );
     await assertAccepted(
-      { name: "双联系方式申请", phone: "18912345678", qq: "12345678" },
+      { name: "双联系方式申请", studentId: "16260005", phone: "18912345678", qq: "12345678" },
       { phone: "18912345678", qq: "12345678" },
       "双联系方式申请",
     );
@@ -134,6 +139,7 @@ async function main() {
       "有效场景没有且仅创建五条准入申请。",
     );
 
+    await assertRejected({ name: "缺少学号", phone: "13800000000" }, "缺少学号", true);
     await assertRejected({ name: "手机号十位", phone: "1380000000" }, "十位手机号");
     await assertRejected({ name: "手机号十二位", phone: "138000000000" }, "十二位手机号");
     await assertRejected({ name: "手机号含字母", phone: "13800abc000" }, "含字母手机号");
@@ -167,7 +173,7 @@ async function main() {
 
     const originCount = await verifier.refereeAdmissionApplication.count();
     const badOriginResponse = await postJson(
-      { name: "外部来源", phone: "13800000001" },
+      { name: "外部来源", studentId: "16260006", phone: "13800000001" },
       "https://evil.example",
     );
     assert(badOriginResponse.status === 403, "准入申请接口未拒绝非法 Origin。");
@@ -197,7 +203,7 @@ async function main() {
     };
     const internalResponse = await (async () => {
       try {
-        return await postJson({ name: "内部错误测试", phone: "13800000000" });
+        return await postJson({ name: "内部错误测试", studentId: "16260007", phone: "13800000000" });
       } finally {
         console.error = originalConsoleError;
       }

@@ -54,19 +54,15 @@ export async function PATCH(
         ["CREATE_NEW", "LINK_EXISTING"] as const,
         "账号处理方式",
       );
-      const initialPassword = readShortText(body.initialPassword, "初始密码", 256);
       const approveInput:
-        | { mode: "CREATE_NEW"; publicCode: string; initialPassword: string }
-        | { mode: "LINK_EXISTING"; existingRefereeId: string; initialPassword: string } = mode === "CREATE_NEW"
+        | { mode: "CREATE_NEW" }
+        | { mode: "LINK_EXISTING"; existingRefereeId: string } = mode === "CREATE_NEW"
         ? {
             mode,
-            publicCode: readShortText(body.publicCode, "裁判员编号", 32),
-            initialPassword,
           }
         : {
             mode,
             existingRefereeId: readShortText(body.existingRefereeId, "现有裁判员", 64),
-            initialPassword,
           };
       application = await reviewRefereeAdmissionApplication(
         id,

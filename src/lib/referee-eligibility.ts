@@ -73,16 +73,16 @@ export async function assertRefereeCanApply(input: {
     errorStatus: 403,
   });
 
-  const readyPositions = new Set(
+  const selectablePositions = new Set(
     referee.capabilities
-      .filter((capability) => capability.status === "READY")
+      .filter((capability) => capability.status !== "NOT_ASSIGNED")
       .map((capability) => capability.positionKey),
   );
-  if (!readyPositions.size) {
-    throw new RefereeServiceError("该裁判员尚无本场赛制的 READY 岗位能力。", 409);
+  if (!selectablePositions.size) {
+    throw new RefereeServiceError("该裁判员尚无本场赛制可选派的岗位能力。", 409);
   }
-  if (!input.preferredPositions.some((positionKey) => readyPositions.has(positionKey))) {
-    throw new RefereeServiceError("所选意向岗位中没有已达到 READY 的岗位能力。", 409);
+  if (!input.preferredPositions.some((positionKey) => selectablePositions.has(positionKey))) {
+    throw new RefereeServiceError("所选意向岗位均为“暂不安排”，不能提交报名。", 409);
   }
   return referee;
 }
@@ -124,8 +124,8 @@ export async function assertAppointmentPositionsEligible(input: {
     const capability = referee.capabilities.find(
       (item) => item.positionKey === position.key,
     );
-    if (capability?.status !== "READY") {
-      throw new RefereeServiceError("岗位中包含赛制不匹配或该具体岗位尚未达到 READY 的裁判员。", 409);
+    if (!capability || capability.status === "NOT_ASSIGNED") {
+      throw new RefereeServiceError("岗位中包含赛制不匹配或该具体岗位为“暂不安排”的裁判员。", 409);
     }
   }
 }

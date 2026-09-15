@@ -28,7 +28,7 @@ async function loginMember() {
   const response = await expectStatus("required member login", await fetch(`${baseUrl}/api/referees/login`, {
     method: "POST",
     headers: { origin: mutationOrigin, "content-type": "application/json", "x-real-ip": "203.0.113.10" },
-    body: JSON.stringify({ publicCode: "SMOKE-R1-001", password }),
+    body: JSON.stringify({ studentId: "16268888", password }),
   }), 200);
   const body = await response.json() as { mustChangePassword?: boolean };
   assert(body.mustChangePassword === true, "Required member login did not report mustChangePassword.");
@@ -131,7 +131,7 @@ async function main() {
     await expectStatus("public admission rate limit", await fetch(`${baseUrl}/api/referees/admission-applications`, {
       method: "POST",
       headers: { ...admissionHeaders, "x-real-ip": blockedAddress },
-      body: JSON.stringify({ name: "HTTP Rate Applicant", phone: "13911113333" }),
+      body: JSON.stringify({ name: "HTTP Rate Applicant", studentId: "16267777", phone: "13911113333" }),
     }), 429);
     assert(await prisma.refereeAdmissionApplication.count() === beforeRate, "HTTP rate limit created a business row.");
 
@@ -144,7 +144,7 @@ async function main() {
           "x-real-ip": "203.0.113.90",
           "x-forwarded-for": `${attempt}.${attempt}.${attempt}.${attempt}`,
         },
-        body: JSON.stringify({ publicCode: "SMOKE-R1-001", password: "wrong-password" }),
+        body: JSON.stringify({ studentId: "16268888", password: "wrong-password" }),
       });
       assert(response.status === (attempt === 6 ? 429 : 401), `Spoof attempt ${attempt} returned ${response.status}.`);
     }

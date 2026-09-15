@@ -33,6 +33,42 @@ export default async function AdminMatchDetailPage({ params, appointmentOnly = f
     getCompletedRefereeStatistics(),
   ]);
   if (!match) notFound();
+  const targetEnd = match.endAt ?? new Date(match.kickoff.getTime() + 60_000);
+  const refereeIds = referees.map((referee) => referee.id);
+  const [candidateAvailability, candidateOverlaps] = await Promise.all([
+    prisma.refereeAvailability.findMany({
+      where: {
+        refereeId: { in: refereeIds },
+        startAt: { lt: targetEnd },
+        endAt: { gt: match.kickoff },
+        OR: [{ competitionFormat: null }, { competitionFormat: match.competition.format }],
+      },
+      select: { refereeId: true, kind: true, startAt: true, endAt: true },
+    }),
+    prisma.appointmentPosition.findMany({
+      where: {
+        refereeId: { in: refereeIds },
+        appointment: {
+          matchId: { not: match.id },
+          status: { in: ["PUBLISHED", "COMPLETED"] },
+          match: {
+            status: { not: "CANCELLED" },
+            kickoff: { lt: targetEnd },
+            endAt: { gt: match.kickoff },
+          },
+        },
+      },
+      select: { refereeId: true },
+    }),
+  ]);
+  const availabilityByReferee = new Map<string, "AVAILABLE" | "UNAVAILABLE">();
+  for (const item of candidateAvailability) {
+    const current = availabilityByReferee.get(item.refereeId);
+    if (item.kind === "UNAVAILABLE") availabilityByReferee.set(item.refereeId, "UNAVAILABLE");
+    else if (!current && item.startAt <= match.kickoff && item.endAt >= targetEnd) availabilityByReferee.set(item.refereeId, "AVAILABLE");
+  }
+  const overlappingReferees = new Set(candidateOverlaps.flatMap((item) => item.refereeId ? [item.refereeId] : []));
+  const interestedReferees = new Set(match.applications.map((application) => application.refereeId));
   const configured = match.positionRequirements.length ? match.positionRequirements : getPositionTemplate(match.competition.format).map((position) => ({ ...position, count: 1 }));
   const template = configured.flatMap((position) => Array.from({ length: position.count }, (_, index) => ({ key: position.key, label: position.label, slot: index + 1 })));
   const currentPositions = match.appointment?.positions.map(({ key, slot, refereeId }) => ({ key, slot, refereeId })) ?? [];
@@ -70,7 +106,17 @@ export default async function AdminMatchDetailPage({ params, appointmentOnly = f
       applications={match.applications.map((item) => ({ id: item.id, referee: `${item.referee.publicCode} · ${item.referee.name}`, status: item.status, statusLabel: applicationStatusLabels[item.status], preferred: parsePreferredPositions(item.preferredPositions).map((key) => getPositionTemplate(match.competition.format).find((position) => position.key === key)?.label ?? key).join(" / "), note: item.note, createdAt: formatRefereeDateTime(item.createdAt) }))}
       initialWarnings={initialWarnings.map((warning) => ({ code: warning.code, refereeId: warning.refereeId, refereeName: warning.refereeName, message: warning.message, severity: warning.severity, overridable: warning.overridable }))}
       match={appointmentView}
-      referees={referees.map((item) => ({ id: item.id, label: `${item.publicCode} · ${item.name}`, status: item.status, assignmentEligibility: item.assignmentEligibility, capabilities: item.capabilities.map((capability) => `${capability.format}:${capability.positionKey}:${capability.status}`), completedCount: completedCounts.get(item.id) ?? 0 }))}
+      referees={referees.map((item) => ({
+        id: item.id,
+        label: `${item.publicCode} · ${item.name}`,
+        status: item.status,
+        assignmentEligibility: item.assignmentEligibility,
+        capabilities: item.capabilities.map((capability) => `${capability.format}:${capability.positionKey}:${capability.status}`),
+        completedCount: completedCounts.get(item.id) ?? 0,
+        availability: availabilityByReferee.get(item.id) ?? "UNSET",
+        overlap: overlappingReferees.has(item.id),
+        interested: interestedReferees.has(item.id),
+      }))}
     />
     <section className="admin-panel admin-history-panel"><details className="admin-history-details"><summary><div><h2>版本历史（{match.appointment?.versions.length ?? 0}）</h2><p>确认知悉绑定具体发布版本，重新发布后须重新确认。</p></div><span aria-hidden="true" className="admin-history-action" /></summary><div className="admin-history-content">
       {match.appointment?.versions.length ? <div className="admin-table-scroll"><table className="admin-data-table"><thead><tr><th>版本</th><th>状态</th><th>操作人</th><th>修改原因</th><th>冲突覆盖原因</th><th>确认人数</th><th>时间</th></tr></thead><tbody>{match.appointment.versions.map((version) => <tr key={version.id}><td><strong>R{version.revision}</strong></td><td><AdminStatusBadge status={version.status} label={appointmentStatusLabels[version.status]} /></td><td>{version.createdByAdmin ? `${version.createdByAdmin.displayName} (${version.createdByAdmin.username})` : "Legacy / 未记录"}</td><td>{version.reason || "—"}</td><td>{version.overrideReason || "—"}</td><td>{version.acknowledgements.length}</td><td>{formatRefereeDateTime(version.createdAt)}</td></tr>)}</tbody></table></div> : <div className="admin-empty-state"><strong>暂无版本记录</strong><p>首次保存或发布后会形成版本留痕。</p></div>}

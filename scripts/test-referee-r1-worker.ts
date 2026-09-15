@@ -66,6 +66,8 @@ async function main() {
   await applyMigration(raw, "20260823091228_unified_admin_r1_foundation");
   await applyMigration(raw, "20260823160000_referee_admission_application_intake");
   await applyMigration(raw, "20260824120000_referee_admission_eligibility");
+  await applyMigration(raw, "20260913120000_public_competition_dynamic_r1");
+  await applyMigration(raw, "20260914210000_admin_operations_r2");
   raw.close();
 
   const verifier = new PrismaClient({ adapter: new PrismaLibSql({ url }) });

@@ -984,6 +984,51 @@
   font-size: 15px;
 }
 
+/* Authenticated referee workspace: distinct from public visitor navigation. */
+.referee-workspace-nav { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 12px max(24px,calc((100vw - 1180px) / 2)); border-bottom: 1px solid var(--line); background: #071b3f; color: white; }
+.referee-workspace-nav a, .referee-workspace-nav button { padding: 8px 10px; border: 0; border-radius: 7px; background: transparent; color: inherit; font-size: 13px; font-weight: 700; }
+.referee-workspace-nav a:hover, .referee-workspace-nav a:focus-visible, .referee-workspace-nav button:hover, .referee-workspace-nav button:focus-visible { background: rgba(255,255,255,.12); }
+.referee-workspace-nav .referee-workspace-nav-public { margin-left: auto; color: #b8d8ff; font-weight: 500; }
+.referee-dashboard { display: grid; gap: 34px; }
+.referee-dashboard-priority { padding: 24px; border: 1px solid #b9d3f0; border-radius: 16px; background: linear-gradient(135deg,#f4f9ff,#fff); box-shadow: 0 12px 32px rgba(23,70,130,.08); }
+.referee-task-list { display: grid; gap: 12px; }
+.referee-task-list > article { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px 18px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: white; }
+.referee-task-list > article.is-nearest { border-left: 4px solid var(--aviation-blue); }
+.referee-task-list h3 { margin: 4px 0; }
+.referee-task-list p, .referee-task-list span, .referee-dashboard-secondary small { color: var(--muted); }
+.referee-task-actions { grid-column: 1 / -1; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.referee-task-actions > button, .referee-conflict-form button { padding: 8px 12px; border: 1px solid var(--line); border-radius: 7px; background: #f3f7fc; }
+.referee-task-actions > p { flex-basis: 100%; }
+.referee-conflict-form { flex-basis: 100%; display: grid; grid-template-columns: 180px minmax(0,1fr); gap: 10px; padding: 14px; border-radius: 10px; background: #fff8ef; }
+.referee-conflict-form label { display: grid; gap: 5px; }
+.referee-conflict-form select, .referee-conflict-form textarea { width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 7px; background: white; }
+.referee-conflict-form > div { grid-column: 1 / -1; display: flex; gap: 8px; }
+.referee-dashboard-secondary { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.referee-dashboard-secondary > section { display: grid; align-content: start; gap: 12px; padding: 22px; border: 1px solid var(--line); border-radius: 14px; background: white; }
+.referee-dashboard-secondary dl { display: grid; gap: 8px; }
+.referee-dashboard-secondary dl div { display: grid; grid-template-columns: 120px 1fr; }
+.referee-dashboard-secondary dt { color: var(--muted); }
+.referee-dashboard-secondary a { color: var(--aviation-blue); font-weight: 800; }
+.referee-availability-layout { display: grid; grid-template-columns: minmax(0,1.55fr) minmax(310px,.8fr); gap: 20px; }
+.referee-calendar, .referee-availability-editor { padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: white; }
+.referee-calendar > header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.referee-calendar > header button { width: 38px; height: 38px; border: 1px solid var(--line); border-radius: 8px; background: #f7faff; }
+.referee-calendar-weekdays, .referee-calendar-grid { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); }
+.referee-calendar-weekdays span { padding: 8px 3px; color: var(--muted); text-align: center; font-size: 12px; }
+.referee-calendar-grid button { display: grid; align-content: space-between; min-height: 78px; padding: 9px; border: 1px solid #e2eaf4; background: white; text-align: left; }
+.referee-calendar-grid button[data-current-month="false"] { opacity: .4; }
+.referee-calendar-grid button[data-state="available"] { background: #edf9f2; color: #14633a; }
+.referee-calendar-grid button[data-state="unavailable"] { background: #fff0ef; color: #96352d; }
+.referee-calendar-grid button[aria-pressed="true"] { position: relative; z-index: 1; outline: 3px solid #4c8bd3; }
+.referee-calendar-grid small { font-size: 10px; }
+.referee-availability-editor { display: grid; align-content: start; gap: 16px; }
+.referee-availability-editor fieldset { display: grid; gap: 7px; padding: 12px; border: 1px solid var(--line); border-radius: 9px; }
+.referee-availability-editor fieldset label { display: flex; gap: 8px; }
+.referee-time-window { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.referee-day-records { display: grid; gap: 8px; }
+.referee-day-records article { display: grid; gap: 3px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; }
+.referee-day-records article > button { justify-self: start; border: 0; background: transparent; color: var(--danger); }
+
 @media (max-width: 1020px) {
   .referee-contact-layout,
   .referee-auth-layout {
@@ -1000,6 +1045,7 @@
   .referee-work-file-list dl {
     grid-template-columns: repeat(3, 1fr);
   }
+  .referee-availability-layout { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 720px) {
@@ -1063,6 +1109,13 @@
   .referee-work-file-list dl {
     grid-template-columns: 1fr;
   }
+
+  .referee-workspace-nav { align-items: stretch; flex-direction: column; padding: 12px 16px; }
+  .referee-workspace-nav .referee-workspace-nav-public { margin-left: 0; }
+  .referee-dashboard-secondary, .referee-conflict-form { grid-template-columns: 1fr; }
+  .referee-conflict-form > div { grid-column: auto; }
+  .referee-calendar, .referee-availability-editor { padding: 12px; }
+  .referee-calendar-grid button { min-height: 58px; padding: 5px; }
 
   .functional-section-heading {
     align-items: flex-start;

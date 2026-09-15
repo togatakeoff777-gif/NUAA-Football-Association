@@ -141,6 +141,7 @@ async function main() {
 
     const rejectedInput = await admission.submitRefereeAdmissionApplication({
       name: "应拒绝申请人",
+      studentId: "16260002",
       phone: "13800000011",
     });
     const rejectedRefereeCount = await verifier.referee.count();
@@ -171,14 +172,13 @@ async function main() {
       409,
     );
 
-    const initialPassword = "R1-3A-New-Referee-Initial-2026";
     const approved = await admission.reviewRefereeAdmissionApplication(pending.id, {
       action: "APPROVE",
       reviewNote: "资料完整，准入培养",
       mode: "CREATE_NEW",
-      publicCode: "R13A-NEW-001",
-      initialPassword,
     }, refereeActor);
+    assert(approved.onboarding, "Admission APPROVE 未返回一次性 onboarding 结果。");
+    const initialPassword = approved.onboarding.temporaryPassword;
     const approvedReferee = await verifier.referee.findUniqueOrThrow({
       where: { id: approved.referee?.id },
       include: { capabilities: true },
@@ -189,14 +189,15 @@ async function main() {
         approved.referee?.id === approvedReferee.id &&
         approved.reviewedByAdmin?.id === refereeActor.id &&
         approvedReferee.status === "ACTIVE" &&
-        approvedReferee.trainingStatus === "PENDING_ASSESSMENT" &&
-        approvedReferee.assignmentEligibility === "NOT_ELIGIBLE" &&
+        approvedReferee.trainingStatus === "IN_TRAINING" &&
+        approvedReferee.assignmentEligibility === "ELIGIBLE" &&
         approvedReferee.mustChangePassword &&
-        approvedReferee.capabilities.length === 0,
+        approvedReferee.capabilities.length === 10 &&
+        approvedReferee.publicDirectoryEnabled,
       "Admission APPROVE 默认状态或 application-referee trace 不正确。",
     );
     assert(
-      (await credentials.authenticateRefereeCredentials("R13A-NEW-001", initialPassword))?.id === approvedReferee.id,
+      (await credentials.authenticateRefereeCredentials("16260001", initialPassword))?.id === approvedReferee.id,
       "批准后的裁判员不能进入首次登录流程。",
     );
     const approvalAudits = await verifier.auditLog.findMany({
@@ -235,15 +236,15 @@ async function main() {
     }, superRefereeAuthorization);
     const linkAdmission = await admission.submitRefereeAdmissionApplication({
       name: "明确关联申请人",
+      studentId: "16260003",
       phone: "13800000012",
     });
-    const linkPassword = "R1-3A-Link-New-Password-2026";
     const linked = await admission.reviewRefereeAdmissionApplication(linkAdmission.id, {
       action: "APPROVE",
       reviewNote: "管理员按 ID 确认既有账号",
       mode: "LINK_EXISTING",
       existingRefereeId: linkTarget.id,
-      initialPassword: linkPassword,
+      initialPassword: "legacy-input-is-ignored",
     }, superActor);
     const linkedReferee = await verifier.referee.findUniqueOrThrow({ where: { id: linkTarget.id } });
     assert(
@@ -265,8 +266,8 @@ async function main() {
     const changedReferee = await verifier.referee.findUniqueOrThrow({ where: { id: approvedReferee.id } });
     assert(
       !changedReferee.mustChangePassword &&
-        !(await credentials.authenticateRefereeCredentials("R13A-NEW-001", initialPassword)) &&
-        (await credentials.authenticateRefereeCredentials("R13A-NEW-001", changedPassword))?.id === approvedReferee.id,
+        !(await credentials.authenticateRefereeCredentials("16260001", initialPassword)) &&
+        (await credentials.authenticateRefereeCredentials("16260001", changedPassword))?.id === approvedReferee.id,
       "首次密码修改未清除标记或未更新登录凭据。",
     );
     const availability = await r1.saveRefereeAvailability({
@@ -318,7 +319,7 @@ async function main() {
     });
     const manuallyMatured = await verifier.referee.findUniqueOrThrow({ where: { id: approvedReferee.id } });
     assert(
-      manuallyMatured.trainingStatus === "PENDING_ASSESSMENT" &&
+      manuallyMatured.trainingStatus === "IN_TRAINING" &&
         manuallyMatured.assignmentEligibility === "ELIGIBLE",
       "管理员不能独立于 trainingStatus 将成熟裁判设置为 ELIGIBLE。",
     );
@@ -337,8 +338,8 @@ async function main() {
     assert(
       await verifier.auditLog.count({
         where: { action: "REFEREE_ASSIGNMENT_ELIGIBILITY_CHANGED", entityId: approvedReferee.id },
-      }) >= 3,
-      "资格授予、暂停或恢复未完整写入 AuditLog。",
+      }) >= 2,
+      "资格暂停或恢复未完整写入 AuditLog。",
     );
 
     const competition = await verifier.competition.create({
@@ -453,10 +454,10 @@ async function main() {
       ["REFEREE"],
     );
     await assertApplicationBlocked(async () => undefined, ["REFEREE"], "FUTSAL");
-    await assertApplicationBlocked(
-      () => setCapabilities([{ format: "ELEVEN_A_SIDE", positionKey: "REFEREE", status: "TRAINING" }]),
-      ["REFEREE"],
-    );
+    await normalizedEligible();
+    await setCapabilities([{ format: "ELEVEN_A_SIDE", positionKey: "REFEREE", status: "TRAINING" }]);
+    const trainingApplicationMatch = await createMatch();
+    assert((await service.createRefereeApplication({ matchId: trainingApplicationMatch.id, refereeId: approvedReferee.id, preferredPositions: ["REFEREE"] })).status === "PENDING", "TRAINING 岗位未能报名。");
     await assertApplicationBlocked(
       () => setCapabilities([{ format: "ELEVEN_A_SIDE", positionKey: "REFEREE", status: "NOT_ASSIGNED" }]),
       ["REFEREE"],
@@ -510,9 +511,10 @@ async function main() {
     await assertDraftBlocked(() => setCapabilities([
       { format: "ELEVEN_A_SIDE", positionKey: "ASSISTANT_REFEREE_1", status: "READY" },
     ]));
-    await assertDraftBlocked(() => setCapabilities([
-      { format: "ELEVEN_A_SIDE", positionKey: "REFEREE", status: "TRAINING" },
-    ]));
+    await normalizedEligible();
+    await setCapabilities([{ format: "ELEVEN_A_SIDE", positionKey: "REFEREE", status: "TRAINING" }]);
+    const trainingDraftMatch = await createMatch({ open: false });
+    assert((await saveDraft(trainingDraftMatch.id)).appointment.status === "DRAFT", "TRAINING 岗位未能进入选派草稿。");
 
     await normalizedEligible();
     const unavailableMatch = await createMatch({ open: false });
@@ -572,11 +574,7 @@ async function main() {
     const staleCapabilityMatch = await createMatch({ open: false });
     await saveDraft(staleCapabilityMatch.id);
     await setCapabilities([{ format: "ELEVEN_A_SIDE", positionKey: "REFEREE", status: "TRAINING" }]);
-    await expectServiceError(
-      () => service.publishAppointment(staleCapabilityMatch.id, "", "", refereeAuthorization),
-      "Draft 后 READY→TRAINING 未在 publish 时重新拒绝。",
-      409,
-    );
+    assert((await service.publishAppointment(staleCapabilityMatch.id, "", "", refereeAuthorization)).appointment.status === "PUBLISHED", "Draft 后 READY→TRAINING 不应阻断发布。");
 
     await normalizedEligible();
     const staleAccountMatch = await createMatch({ open: false });

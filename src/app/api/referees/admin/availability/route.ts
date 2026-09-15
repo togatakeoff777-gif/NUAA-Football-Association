@@ -18,6 +18,9 @@ export async function POST(request: Request) {
       startAt: readDate(body.startAt, "开始时间")!,
       endAt: readDate(body.endAt, "结束时间")!,
       kind: readEnum(body.kind, ["AVAILABLE", "UNAVAILABLE"] as const, "时间类型"),
+      competitionFormat: readEnum(body.competitionType ?? "BOTH", ["BOTH", "ELEVEN_A_SIDE", "FUTSAL"] as const, "比赛制式") === "BOTH"
+        ? null
+        : readEnum(body.competitionType, ["ELEVEN_A_SIDE", "FUTSAL"] as const, "比赛制式"),
       note: readShortText(body.note, "说明", 240, false),
       actor: { type: "ADMIN", id: actor.id },
     });

@@ -79,11 +79,8 @@ export async function resolveCompetitionTeamSelection(
   input: { competitionId: string; selection: string },
 ) {
   const [kind, id, ...rest] = input.selection.split(":");
-  if (!id || rest.length || (kind !== "team" && kind !== "unit")) {
+  if (!id || rest.length || kind !== "team") {
     throw new RefereeServiceError("参赛球队选择无效。");
-  }
-  if (kind === "unit") {
-    return ensureOrganizationTeam(db, { competitionId: input.competitionId, unitId: id });
   }
   const team = await db.team.findFirst({
     where: { id, competitionId: input.competitionId },

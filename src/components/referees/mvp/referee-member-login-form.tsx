@@ -18,7 +18,7 @@ export function RefereeMemberLoginForm() {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        publicCode: form.get("publicCode"),
+        studentId: form.get("studentId"),
         password: form.get("password"),
       }),
     });
@@ -35,12 +35,12 @@ export function RefereeMemberLoginForm() {
   return (
     <form className="referee-form referee-login-form" onSubmit={submit}>
       <label>
-        <span>裁判员编号</span>
+        <span>学号</span>
         <input
           autoComplete="username"
           maxLength={32}
-          name="publicCode"
-          placeholder="例如 NUAA-R001"
+          name="studentId"
+          placeholder="请输入学号"
           required
         />
       </label>

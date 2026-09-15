@@ -25,11 +25,11 @@ export function getRefereeMemberConfigurationIssue() {
   return null;
 }
 
-export async function createRefereeMemberSession(publicCode: string, password: string) {
+export async function createRefereeMemberSession(studentId: string, password: string) {
   const secret = getSessionSecret();
   if (!secret) return null;
 
-  const referee = await authenticateRefereeCredentials(publicCode, password);
+  const referee = await authenticateRefereeCredentials(studentId, password);
   if (!referee) return null;
 
   const token = randomBytes(32).toString("base64url");

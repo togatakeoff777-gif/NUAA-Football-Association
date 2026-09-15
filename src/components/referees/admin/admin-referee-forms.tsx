@@ -124,10 +124,21 @@ function CapabilityGroups({
   </section>)}</div>;
 }
 
-export function RefereeCreateForm({ colleges }: { colleges: CollegeOption[] }) {
+type DirectOnboardingResult = {
+  refereeId: string;
+  name: string;
+  studentId: string;
+  publicCode: string;
+  temporaryPassword: string;
+  college: string;
+  capabilitySummary: string[];
+};
+
+export function RefereeCreateForm() {
   const router = useRouter();
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [onboarding, setOnboarding] = useState<DirectOnboardingResult | null>(null);
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -136,29 +147,45 @@ export function RefereeCreateForm({ colleges }: { colleges: CollegeOption[] }) {
     const response = await fetch("/api/referees/admin/accounts", {
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        publicCode: text(form, "publicCode"), name: text(form, "name"), studentId: text(form, "studentId"),
-        collegeId: text(form, "collegeId"), currentAffiliationUnitId: "", grade: "", phone: "", qq: "", refereeLevel: refereeQualifications[0], joinedAt: "",
-        initialPassword: text(form, "initialPassword"), status: text(form, "status"), assignmentEligibility: "NOT_ELIGIBLE", elevenASide: false, futsal: false,
-        certificateNote: "", qualificationNote: "", trainingStatus: "PENDING_ASSESSMENT", publicDirectoryEnabled: false,
-        publicBio: "", internalNote: "", capabilities: [],
+        name: text(form, "name"), studentId: text(form, "studentId"),
       }),
     });
-    const result = (await response.json()) as { error?: string; refereeId?: string };
+    const result = (await response.json()) as { error?: string; onboarding?: DirectOnboardingResult };
     setSubmitting(false);
     if (!response.ok) { setMessage(result.error ?? "创建失败。"); return; }
-    router.push(`/admin/referees/${result.refereeId}`);
-    router.refresh();
+    if (!result.onboarding) { setMessage("账号已创建，但未收到一次性登录凭据，请立即停止并核查。"); return; }
+    setOnboarding(result.onboarding);
+    setMessage("账号已创建。请立即复制并通过安全渠道交付一次性临时密码。");
   }
+  async function copyCredentials() {
+    if (!onboarding) return;
+    await navigator.clipboard.writeText([
+      `姓名：${onboarding.name}`,
+      `登录学号：${onboarding.studentId}`,
+      `裁判员编号：${onboarding.publicCode}`,
+      `临时密码：${onboarding.temporaryPassword}`,
+      "首次登录必须修改密码。",
+    ].join("\n"));
+    setMessage("登录凭据已复制。首次登录后应立即废弃临时密码。");
+  }
+  if (onboarding) return <section className="admin-form admin-form-section admin-onboarding-result">
+    <header><h2>裁判员账号已创建</h2><p>临时密码仅显示一次，不会写入数据库、日志或 AuditLog。</p></header>
+    <dl className="admin-detail-meta">
+      <div><dt>姓名</dt><dd>{onboarding.name}</dd></div><div><dt>学号 / 登录账号</dt><dd>{onboarding.studentId}</dd></div>
+      <div><dt>裁判员编号</dt><dd>{onboarding.publicCode}</dd></div><div><dt>学院</dt><dd>{onboarding.college}</dd></div>
+      <div><dt>默认状态</dt><dd>已启用 · 培训中 · 可选派 · 默认进入公开名录</dd></div><div><dt>临时密码</dt><dd><code>{onboarding.temporaryPassword}</code></dd></div>
+    </dl>
+    <div><strong>默认岗位培养状态</strong><ul>{onboarding.capabilitySummary.map((item) => <li key={item}>{item}</li>)}</ul></div>
+    <p aria-live="polite" className="admin-form-message">{message}</p>
+    <footer><button className="admin-button admin-button-secondary" onClick={() => void copyCredentials()} type="button">复制登录凭据</button><button className="admin-button" onClick={() => router.push(`/admin/referees/${onboarding.refereeId}`)} type="button">进入裁判员档案</button></footer>
+  </section>;
   return <form className="admin-form admin-form-section" onSubmit={submit}>
-    <header><h2>必要信息</h2><p>创建后进入裁判员详情继续维护资质、岗位能力和联系方式。</p></header>
+    <header><h2>一键创建账号</h2><p>填写姓名和学号后，系统自动识别学院、分配裁判员编号和临时密码，并应用标准培养模板。</p></header>
     <div className="admin-form-grid">
       <label><span>姓名</span><input autoFocus maxLength={48} name="name" required /></label>
-      <label><span>裁判员编号</span><input maxLength={32} name="publicCode" required /></label>
-      <label><span>学号</span><input maxLength={32} name="studentId" /></label>
-      <label><span>学院背景</span><select name="collegeId"><option value="">待确认</option>{colleges.map((college) => <option key={college.id} value={college.id}>{college.label}</option>)}</select></label>
-      <label><span>初始密码</span><input minLength={12} name="initialPassword" required type="password" /></label>
-      <label><span>账号状态</span><select defaultValue="PENDING_ACTIVATION" name="status">{Object.entries(refereeStatusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+      <label><span>学号</span><input maxLength={32} name="studentId" required /></label>
     </div>
+    <p className="admin-form-message">未知学号前缀会被明确拒绝，不会猜测学院。登录凭据只在成功结果中显示一次。</p>
     <p aria-live="polite" className="admin-form-message">{message}</p>
     <footer><button className="admin-button admin-button-secondary" onClick={() => router.back()} type="button">取消</button><button className="admin-button" disabled={submitting} type="submit">{submitting ? "创建中…" : "创建裁判员"}</button></footer>
   </form>;

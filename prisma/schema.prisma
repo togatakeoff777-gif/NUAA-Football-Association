@@ -396,15 +396,16 @@ model RefereePositionCapability {
 }
 
 model RefereeAvailability {
-  id        String           @id @default(cuid())
-  refereeId String
-  startAt   DateTime
-  endAt     DateTime
-  kind      AvailabilityKind
-  note      String?
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-  referee   Referee          @relation(fields: [refereeId], references: [id], onDelete: Cascade)
+  id                String             @id @default(cuid())
+  refereeId         String
+  startAt           DateTime
+  endAt             DateTime
+  kind              AvailabilityKind
+  competitionFormat CompetitionFormat?
+  note              String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  referee           Referee            @relation(fields: [refereeId], references: [id], onDelete: Cascade)
 
   @@index([refereeId, startAt, endAt])
 }
@@ -540,6 +541,8 @@ model AppointmentConflictReport {
   versionId         String
   refereeId         String
   reason            String
+  reasonCode        String?
+  explanation       String?
   reportedAt        DateTime             @default(now())
   status            ConflictReportStatus @default(PENDING)
   resolutionNote    String?
@@ -554,6 +557,14 @@ model AppointmentConflictReport {
   @@index([status, reportedAt])
   @@index([appointmentId, refereeId])
   @@index([resolvedByAdminId])
+}
+
+model RefereePublicCodeSequence {
+  id        String   @id
+  prefix    String   @default("")
+  width     Int      @default(3)
+  nextValue Int
+  updatedAt DateTime @updatedAt
 }
 
 model AuditLog {

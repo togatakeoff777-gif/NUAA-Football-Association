@@ -83,7 +83,12 @@ export async function detectAppointmentWarnings(
           select: { positionKey: true, status: true },
         },
         availability: {
-          where: { kind: "UNAVAILABLE", startAt: { lte: targetEndForAvailability }, endAt: { gte: match.kickoff } },
+          where: {
+            kind: "UNAVAILABLE",
+            startAt: { lte: targetEndForAvailability },
+            endAt: { gte: match.kickoff },
+            OR: [{ competitionFormat: null }, { competitionFormat: match.competition.format }],
+          },
           select: { id: true, startAt: true, endAt: true, note: true },
         },
       },
@@ -195,8 +200,8 @@ export async function detectAppointmentWarnings(
           code: "CAPABILITY_TRAINING",
           refereeId: referee.id,
           refereeName: referee.name,
-          message: `岗位能力不满足：${referee.name}在本制式该岗位仍处于“培养中”。`,
-          severity: "HARD",
+          message: `培养中，可选派：${referee.name}在本制式该岗位仍需关注培养状态。`,
+          severity: "ADVISORY",
           overridable: false,
           details: { positionKey: assignedPosition.key, capabilityStatus: capability.status },
         });

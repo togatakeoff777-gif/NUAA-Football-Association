@@ -3,8 +3,8 @@ import { redirect } from "next/navigation";
 
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
-import { RefereeSubnav } from "@/components/referees/mvp/public-appointment-list";
 import { RefereePasswordForm } from "@/components/referees/mvp/referee-password-form";
+import { RefereeWorkspaceNav } from "@/components/referees/mvp/referee-workspace-nav";
 import { getRefereeMemberSession } from "@/lib/referee-member-auth";
 
 export const metadata: Metadata = {
@@ -39,13 +39,14 @@ export default async function RefereeAccountPage() {
             <p>{session.referee.publicCode} · {session.referee.name}</p>
           </div>
         </section>
-        <RefereeSubnav showWorkspace />
+        <RefereeWorkspaceNav />
         <section className="functional-section">
           <div className="detail-shell referee-account-settings">
             <article>
               <h2>账号状态</h2>
               <dl>
-                <div><dt>账号</dt><dd>已启用</dd></div>
+                <div><dt>登录账号</dt><dd>{session.referee.studentId}</dd></div>
+                <div><dt>裁判员编号</dt><dd>{session.referee.publicCode}</dd></div>
                 <div><dt>培训状态</dt><dd>{trainingLabels[session.referee.trainingStatus]}</dd></div>
                 <div><dt>正式选派资格</dt><dd>{eligibilityLabels[session.referee.assignmentEligibility]}</dd></div>
                 <div><dt>密码状态</dt><dd>{session.referee.mustChangePassword ? "须修改初始密码" : "已设置"}</dd></div>

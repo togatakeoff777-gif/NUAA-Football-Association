@@ -30,6 +30,8 @@
     "test:competition-import:http": "tsx scripts/test-competition-import-http-runtime.ts",
     "test:public-competition-dynamic": "tsx scripts/test-public-competition-dynamic.ts",
     "test:public-competition-dynamic:http": "tsx scripts/test-public-competition-dynamic-http.ts",
+    "test:admin-operations-r2": "tsx scripts/test-admin-operations-r2.ts",
+    "test:admin-operations-r2:migration": "tsx scripts/test-admin-operations-r2-migration-runner.ts",
     "test:unified-admin-migration": "tsx scripts/test-unified-admin-migration.ts",
     "test:security-csv": "tsx scripts/test-security-csv.ts",
     "test:security-admission": "tsx scripts/test-security-admission.ts",

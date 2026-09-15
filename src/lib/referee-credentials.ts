@@ -4,6 +4,7 @@ import {
   isUsablePasswordHash,
   verifyPassword,
 } from "@/lib/referee-security";
+import { normalizeStudentId } from "@/lib/student-id";
 
 export type PasswordVerifier = (password: string, storedHash: string) => Promise<boolean>;
 
@@ -60,15 +61,17 @@ export async function authenticateAdminCredentials(
 }
 
 export async function authenticateRefereeCredentials(
-  publicCode: string,
+  studentId: string,
   password: string,
   verifier: PasswordVerifier = verifyPassword,
 ) {
+  const normalizedStudentId = normalizeStudentId(studentId);
   const referee = await prisma.referee.findUnique({
-    where: { publicCode },
+    where: { studentId: normalizedStudentId },
     select: {
       id: true,
       publicCode: true,
+      studentId: true,
       name: true,
       status: true,
       passwordHash: true,

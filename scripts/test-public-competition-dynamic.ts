@@ -52,8 +52,9 @@ async function verifyExistingDatabaseMigration(databasePath: string) {
   const client = createClient({ url: `file:${databasePath.replaceAll("\\", "/")}` });
   try {
     const entries = await migrationEntries();
-    assert(entries.at(-1) === migrationName, "The public Competition migration is not the final migration.");
-    for (const entry of entries.filter((name) => name !== migrationName)) await apply(client, entry);
+    const migrationIndex = entries.indexOf(migrationName);
+    assert(migrationIndex >= 0, "The public Competition migration is missing.");
+    for (const entry of entries.slice(0, migrationIndex)) await apply(client, entry);
     await client.executeMultiple(`
       INSERT INTO "Competition" ("id","slug","name","year","campus","format","status","isTestData","source","createdAt","updatedAt")
       VALUES ('existing-competition','existing-competition','既有赛事',2026,'天目湖校区','ELEVEN_A_SIDE','ONGOING',0,'MANUAL',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);

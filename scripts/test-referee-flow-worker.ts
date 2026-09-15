@@ -164,6 +164,7 @@ async function main() {
     for (let index = 1; index <= 6; index += 1) {
       const account = await service.createRefereeAccount({
         publicCode: `TEST-R${String(index).padStart(2, "0")}`,
+        studentId: `1627${String(index).padStart(4, "0")}`,
         name: `自动化测试裁判 ${index}`,
         initialPassword: index === 1 ? initialPassword : randomBytes(24).toString("base64url"),
         status: "ACTIVE",
@@ -202,11 +203,11 @@ async function main() {
       "新密码未正确保存。",
     );
     assert(
-      await credentials.authenticateRefereeCredentials(referees[0].publicCode, replacementPassword),
+      await credentials.authenticateRefereeCredentials(referees[0].studentId!, replacementPassword),
       "裁判员正确账号密码验证失败。",
     );
     assert(
-      !(await credentials.authenticateRefereeCredentials(referees[0].publicCode, initialPassword)),
+      !(await credentials.authenticateRefereeCredentials(referees[0].studentId!, initialPassword)),
       "裁判员旧密码未失效。",
     );
     assert(
@@ -483,7 +484,7 @@ async function main() {
       "账号停用后仍保留有效 Session。",
     );
     assert(
-      !(await credentials.authenticateRefereeCredentials(referees[0].publicCode, replacementPassword)),
+      !(await credentials.authenticateRefereeCredentials(referees[0].studentId!, replacementPassword)),
       "停用账号仍可通过登录验证。",
     );
     let disabledApplicationBlocked = false;
@@ -517,7 +518,7 @@ async function main() {
     await sourceContains("src/app/api/referees/admin/exports/[kind]/route.ts", ["authorizeLegacyAdminRequest", '"referees:read"']);
     await sourceContains("src/app/api/referees/admin/logout/route.ts", ["destroyAdminSession"]);
     await sourceContains("src/app/api/referees/logout/route.ts", ["destroyRefereeMemberSession"]);
-    await sourceContains("src/app/api/referees/admin/accounts/route.ts", ["authorizeLegacyAdminRequest", '"referees:write"']);
+    await sourceContains("src/app/api/referees/admin/accounts/route.ts", ["authorizeUnifiedAdminRequest", '"referees:write"', "mutation: true"]);
     await sourceContains("src/app/api/referees/applications/route.ts", ["authorizeRefereeMemberBusinessRequest"]);
     await sourceContains("src/lib/referee-member-api.ts", ["getRefereeMemberSession", "mustChangePassword"]);
     await sourceContains("src/app/api/referees/admin/login/route.ts", ["登录信息不正确或后台当前不可用"]);

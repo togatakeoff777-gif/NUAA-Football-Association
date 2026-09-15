@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { refereeApiErrorResponse, readRefereeApiJson, RefereeApiInputError } from "@/lib/referee-api";
 import { authorizeRefereeMemberBusinessRequest } from "@/lib/referee-member-api";
 import { reportAppointmentConflict } from "@/lib/referee-r1-service";
-import { isRecord, readShortText } from "@/lib/referee-validation";
+import { isRecord, readEnum, readShortText } from "@/lib/referee-validation";
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
@@ -15,7 +15,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     await reportAppointmentConflict(
       id,
       authorization.session.refereeId,
-      readShortText(body.reason, "冲突原因", 500),
+      {
+        reasonCode: readEnum(body.reasonCode, ["TIME_CONFLICT", "UNABLE_TO_ATTEND", "COURSE_EXAM", "HEALTH", "OTHER"] as const, "冲突原因"),
+        explanation: readShortText(body.explanation, "补充说明", 500),
+      },
     );
     return NextResponse.json({ ok: true });
   } catch (error) {

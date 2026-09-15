@@ -106,6 +106,7 @@ async function main() {
     } });
     const smokeReferee = await prisma.referee.create({ data: {
       publicCode: "SMOKE-R1-001",
+      studentId: "16268888",
       name: "R1 浏览器隔离测试裁判",
       passwordHash,
       mustChangePassword: true,

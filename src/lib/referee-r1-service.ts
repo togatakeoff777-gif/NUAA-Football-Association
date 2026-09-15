@@ -16,6 +16,7 @@ import type { AdminActor } from "@/lib/referee-service";
 import { RefereeServiceError } from "@/lib/referee-service";
 import { hashPassword, verifyPassword } from "@/lib/referee-security";
 import { ensureOrganizationTeam } from "@/lib/referee-team-service";
+import { getStudentIdPrefix } from "@/lib/student-id";
 
 async function audit(input: {
   actorType: "ADMIN" | "REFEREE";
@@ -40,7 +41,7 @@ async function audit(input: {
 }
 
 export async function inferCollegeSuggestion(studentId: string) {
-  const prefix = studentId.trim().slice(0, 2).toUpperCase();
+  const prefix = getStudentIdPrefix(studentId);
   if (prefix.length !== 2) return null;
   return prisma.collegeCodeMapping.findUnique({
     where: { prefix },
@@ -267,15 +268,67 @@ export async function createJointTeam(input: {
 }) {
   const unitIds = [...new Set(input.unitIds)];
   if (unitIds.length < 2) throw new RefereeServiceError("联合队须选择至少两个组织单位。");
+  const name = input.name.trim();
+  if (!name || name.length > 80) throw new RefereeServiceError("联合队名称须为 1 至 80 个字符。");
   return prisma.$transaction(async (tx) => {
+    const competition = await tx.competition.findUnique({ where: { id: input.competitionId }, select: { id: true } });
+    if (!competition) throw new RefereeServiceError("赛事不存在。", 404);
+    const duplicate = await tx.team.findUnique({ where: { competitionId_name: { competitionId: input.competitionId, name } }, select: { id: true } });
+    if (duplicate) throw new RefereeServiceError(`当前赛事已存在球队“${name}”。`, 409);
     const units = await tx.affiliationUnit.findMany({ where: { id: { in: unitIds } }, select: { id: true, legacyCollegeId: true } });
     if (units.length !== unitIds.length) throw new RefereeServiceError("包含无效组织单位。");
-    const team = await tx.team.create({ data: { competitionId: input.competitionId, name: input.name.trim(), teamType: "JOINT" } });
+    const team = await tx.team.create({ data: { competitionId: input.competitionId, name, teamType: "JOINT" } });
     await tx.teamUnitAffiliation.createMany({ data: unitIds.map((unitId) => ({ teamId: team.id, unitId })) });
     const collegeIds = units.flatMap((unit) => unit.legacyCollegeId ? [unit.legacyCollegeId] : []);
     if (collegeIds.length) await tx.teamAffiliation.createMany({ data: collegeIds.map((collegeId) => ({ teamId: team.id, collegeId })) });
     await tx.auditLog.create({ data: { actorType: "ADMIN", actorId: input.actor.id, action: "JOINT_TEAM_CREATED", entityType: "Team", entityId: team.id, summary: `创建联合队 ${team.name}`, metadata: JSON.stringify({ unitIds }) } });
     return team;
+  });
+}
+
+export async function deleteTeamSafely(
+  id: string,
+  authorization: AdminServiceAuthorization<"competitions:write">,
+) {
+  const actor = requireAdminServiceAuthorization(authorization, "competitions:write");
+  return prisma.$transaction(async (tx) => {
+    const team = await tx.team.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        teamType: true,
+        competition: { select: { id: true, name: true } },
+        _count: { select: { homeMatches: true, awayMatches: true } },
+      },
+    });
+    if (!team) throw new RefereeServiceError("球队不存在。", 404);
+    const matchCount = team._count.homeMatches + team._count.awayMatches;
+    if (matchCount > 0) {
+      throw new RefereeServiceError(
+        `球队“${team.name}”已被 ${matchCount} 场比赛引用，不能删除。请保留正式赛程历史。`,
+        409,
+      );
+    }
+    await tx.team.delete({ where: { id: team.id } });
+    await tx.auditLog.create({
+      data: {
+        actorType: "ADMIN",
+        actorId: actor.id,
+        action: "TEAM_DELETED",
+        entityType: "Team",
+        entityId: team.id,
+        summary: `删除球队 ${team.name}`,
+        metadata: JSON.stringify({
+          deletedAt: new Date().toISOString(),
+          teamName: team.name,
+          teamType: team.teamType,
+          competitionId: team.competition.id,
+          competitionName: team.competition.name,
+        }),
+      },
+    });
+    return { id: team.id, name: team.name, competitionId: team.competition.id };
   });
 }
 
@@ -285,6 +338,7 @@ export async function saveRefereeAvailability(input: {
   startAt: Date;
   endAt: Date;
   kind: AvailabilityKind;
+  competitionFormat?: CompetitionFormat | null;
   note?: string;
   actor: { type: "ADMIN" | "REFEREE"; id: string | null };
 }) {
@@ -298,7 +352,13 @@ export async function saveRefereeAvailability(input: {
   const availability = input.id
     ? await prisma.refereeAvailability.update({
         where: { id: input.id },
-        data: { startAt: input.startAt, endAt: input.endAt, kind: input.kind, note: input.note || null },
+        data: {
+          startAt: input.startAt,
+          endAt: input.endAt,
+          kind: input.kind,
+          competitionFormat: input.competitionFormat ?? null,
+          note: input.note || null,
+        },
       })
     : await prisma.refereeAvailability.create({
         data: {
@@ -306,6 +366,7 @@ export async function saveRefereeAvailability(input: {
           startAt: input.startAt,
           endAt: input.endAt,
           kind: input.kind,
+          competitionFormat: input.competitionFormat ?? null,
           note: input.note || null,
         },
       });
@@ -316,7 +377,11 @@ export async function saveRefereeAvailability(input: {
     entityType: "RefereeAvailability",
     entityId: availability.id,
     summary: "保存裁判员可执裁时间",
-    metadata: { refereeId: input.refereeId, kind: input.kind },
+    metadata: {
+      refereeId: input.refereeId,
+      kind: input.kind,
+      competitionFormat: input.competitionFormat ?? "BOTH",
+    },
   });
   return availability;
 }
@@ -389,14 +454,29 @@ export async function acknowledgeAppointment(appointmentId: string, refereeId: s
 export async function reportAppointmentConflict(
   appointmentId: string,
   refereeId: string,
-  reason: string,
+  input: string | {
+    reasonCode: "TIME_CONFLICT" | "UNABLE_TO_ATTEND" | "COURSE_EXAM" | "HEALTH" | "OTHER";
+    explanation: string;
+  },
 ) {
-  if (!reason.trim()) throw new RefereeServiceError("请填写冲突原因。");
+  const structuredInput = typeof input === "string"
+    ? { reasonCode: "OTHER" as const, explanation: input }
+    : input;
+  if (!structuredInput.explanation.trim()) throw new RefereeServiceError("请填写冲突补充说明。");
+  const reasonLabels = {
+    TIME_CONFLICT: "时间冲突",
+    UNABLE_TO_ATTEND: "临时无法到场",
+    COURSE_EXAM: "课程/考试",
+    HEALTH: "身体原因",
+    OTHER: "其他",
+  } as const;
+  const explanation = structuredInput.explanation.trim();
+  const reason = `${reasonLabels[structuredInput.reasonCode]}：${explanation}`;
   const { version } = await getCurrentPublishedVersion(appointmentId, refereeId);
   const report = await prisma.appointmentConflictReport.upsert({
     where: { versionId_refereeId: { versionId: version.id, refereeId } },
-    update: { reason, reportedAt: new Date(), status: "PENDING", resolutionNote: null, resolvedAt: null, resolvedByAdminId: null },
-    create: { appointmentId, versionId: version.id, refereeId, reason },
+    update: { reason, reasonCode: structuredInput.reasonCode, explanation, reportedAt: new Date(), status: "PENDING", resolutionNote: null, resolvedAt: null, resolvedByAdminId: null },
+    create: { appointmentId, versionId: version.id, refereeId, reason, reasonCode: structuredInput.reasonCode, explanation },
   });
   await audit({
     actorType: "REFEREE",
@@ -405,7 +485,7 @@ export async function reportAppointmentConflict(
     entityType: "AppointmentConflictReport",
     entityId: report.id,
     summary: "裁判员报告已发布选派冲突",
-    metadata: { appointmentId, versionId: version.id },
+    metadata: { appointmentId, versionId: version.id, reasonCode: structuredInput.reasonCode },
   });
   return report;
 }
@@ -570,9 +650,29 @@ export async function changeAdminPassword(input: {
   });
 }
 
-export async function getCompletedRefereeStatistics() {
+export async function getCompletedRefereeStatistics(options: {
+  from?: Date;
+  to?: Date;
+  competitionId?: string;
+  positionKey?: AppointmentPositionKey;
+} = {}) {
   const positions = await prisma.appointmentPosition.findMany({
-    where: { refereeId: { not: null }, appointment: { status: "COMPLETED" } },
+    where: {
+      refereeId: { not: null },
+      ...(options.positionKey ? { key: options.positionKey } : {}),
+      appointment: {
+        status: "COMPLETED",
+        match: {
+          ...(options.competitionId ? { competitionId: options.competitionId } : {}),
+          ...((options.from || options.to) ? {
+            kickoff: {
+              ...(options.from ? { gte: options.from } : {}),
+              ...(options.to ? { lt: options.to } : {}),
+            },
+          } : {}),
+        },
+      },
+    },
     select: {
       refereeId: true,
       key: true,
@@ -585,7 +685,7 @@ export async function getCompletedRefereeStatistics() {
           match: {
             select: {
               kickoff: true,
-              competition: { select: { id: true, name: true } },
+              competition: { select: { id: true, name: true, format: true } },
               homeTeam: { select: { name: true } },
               awayTeam: { select: { name: true } },
             },
@@ -602,6 +702,12 @@ export async function getCompletedRefereeStatistics() {
     appointmentIds: Set<string>;
     positions: Record<string, number>;
     competitions: Record<string, { name: string; count: number }>;
+    elevenASideAppointmentIds: Set<string>;
+    futsalAppointmentIds: Set<string>;
+    refereeRoleAppointmentIds: Set<string>;
+    assistantRoleAppointmentIds: Set<string>;
+    otherRoleAppointmentIds: Set<string>;
+    mostRecentAssignment: Date | null;
     recent: Array<{ appointmentId: string; matchup: string; kickoff: Date; position: string }>;
   }>();
   for (const position of positions) {
@@ -613,11 +719,25 @@ export async function getCompletedRefereeStatistics() {
       appointmentIds: new Set<string>(),
       positions: {},
       competitions: {},
+      elevenASideAppointmentIds: new Set<string>(),
+      futsalAppointmentIds: new Set<string>(),
+      refereeRoleAppointmentIds: new Set<string>(),
+      assistantRoleAppointmentIds: new Set<string>(),
+      otherRoleAppointmentIds: new Set<string>(),
+      mostRecentAssignment: null,
       recent: [],
     };
     row.appointmentIds.add(position.appointmentId);
     row.positions[position.key] = (row.positions[position.key] ?? 0) + 1;
     const competition = position.appointment.match.competition;
+    if (competition.format === "ELEVEN_A_SIDE") row.elevenASideAppointmentIds.add(position.appointmentId);
+    else row.futsalAppointmentIds.add(position.appointmentId);
+    if (position.key === "REFEREE") row.refereeRoleAppointmentIds.add(position.appointmentId);
+    else if (["ASSISTANT_REFEREE_1", "ASSISTANT_REFEREE_2", "RESERVE_ASSISTANT_REFEREE", "SECOND_REFEREE"].includes(position.key)) row.assistantRoleAppointmentIds.add(position.appointmentId);
+    else row.otherRoleAppointmentIds.add(position.appointmentId);
+    if (!row.mostRecentAssignment || position.appointment.match.kickoff > row.mostRecentAssignment) {
+      row.mostRecentAssignment = position.appointment.match.kickoff;
+    }
     row.competitions[competition.id] = {
       name: competition.name,
       count: (row.competitions[competition.id]?.count ?? 0) + 1,
@@ -637,6 +757,12 @@ export async function getCompletedRefereeStatistics() {
     publicCode: row.publicCode,
     name: row.name,
     totalMatches: row.appointmentIds.size,
+    elevenASideCount: row.elevenASideAppointmentIds.size,
+    futsalCount: row.futsalAppointmentIds.size,
+    refereeRoleCount: row.refereeRoleAppointmentIds.size,
+    assistantRoleCount: row.assistantRoleAppointmentIds.size,
+    otherRoleCount: row.otherRoleAppointmentIds.size,
+    mostRecentAssignment: row.mostRecentAssignment,
     positions: row.positions,
     competitions: Object.values(row.competitions),
     recent: row.recent,

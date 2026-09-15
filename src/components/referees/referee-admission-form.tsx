@@ -46,12 +46,12 @@ export function RefereeAdmissionForm() {
     <form className="referee-form referee-admission-form" onSubmit={submit}>
       <div className="referee-admission-form-grid">
         <label><span>姓名</span><input autoComplete="name" maxLength={48} name="name" required /></label>
-        <label><span>学号（选填）</span><input autoComplete="off" maxLength={32} name="studentId" /></label>
+        <label><span>学号</span><input autoComplete="off" maxLength={32} name="studentId" required /></label>
         <label><span>手机号（选填）</span><input autoComplete="tel" inputMode="numeric" maxLength={11} name="phone" pattern="\d{11}" title="请输入 11 位纯数字手机号" /></label>
         <label><span>QQ（选填）</span><input autoComplete="off" inputMode="numeric" maxLength={12} name="qq" pattern="\d{5,12}" title="请输入 5 至 12 位纯数字 QQ" /></label>
       </div>
       <label><span>补充说明（选填）</span><textarea maxLength={240} name="note" rows={4} /></label>
-      <p className="referee-form-note">手机号或 QQ 至少填写一项。提交的是“成为裁判员”的准入申请，不是某场比赛的执裁报名。</p>
+      <p className="referee-form-note">学号用于审核通过后的登录和学院识别；手机号或 QQ 至少填写一项。这里提交的是裁判员准入申请，不是某场比赛的执裁报名。</p>
       <button disabled={submitting} type="submit">{submitting ? "提交中…" : "提交裁判准入申请"}</button>
       <p aria-live="polite" className="referee-form-message" data-success={success}>{message}</p>
     </form>

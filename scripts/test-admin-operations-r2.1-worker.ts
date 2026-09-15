@@ -123,12 +123,21 @@ async function main() {
     const calendarSource = await readFile(path.resolve("src/components/referees/mvp/referee-availability-calendar.tsx"), "utf8");
     const workspaceNavSource = await readFile(path.resolve("src/components/referees/mvp/referee-workspace-nav.tsx"), "utf8");
     const workspaceHeroSource = await readFile(path.resolve("src/components/referees/mvp/referee-workspace-hero.tsx"), "utf8");
+    const openMatchesShellSource = await readFile(path.resolve("src/components/referees/mvp/referee-open-matches-shell.tsx"), "utf8");
+    const openMatchesPageSource = await readFile(path.resolve("src/app/referees/open-matches/page.tsx"), "utf8");
+    const openMatchDetailSource = await readFile(path.resolve("src/app/referees/open-matches/[slug]/page.tsx"), "utf8");
+    const competitionFormSource = await readFile(path.resolve("src/components/referees/admin/admin-competition-form.tsx"), "utf8");
+    const adminStylesSource = await readFile(path.resolve("src/styles/referee-admin.css"), "utf8");
     assert(associationSource.includes("establishedYear: 2021") && associationSource.includes('period: "2021年"') && associationPageSource.includes("NUAA-TMH-FA / 2021"), "Founding-year content was not corrected to 2021.");
     assert(associationSource.includes('period: "2022-2023"') && associationSource.includes('academicYear: "2022-2023"'), "Legitimate 2022 history was corrupted.");
     assert(selectorSource.includes("type=\"search\"") && selectorSource.includes("type=\"checkbox\"") && selectorSource.includes("全选当前结果") && selectorSource.includes("已选择"), "Shared organization selector behaviors are incomplete.");
     assert(!affiliationsSource.includes("<select multiple") && affiliationsSource.includes("OrganizationCheckboxSelector"), "House or Team management still uses native multi-select.");
     assert(calendarSource.includes("referee-status-options") && calendarSource.includes('mode === "WINDOW"') && calendarSource.includes("referee-calendar-legend"), "Availability visual-state contracts are incomplete.");
     assert(!workspaceNavSource.includes("RefereeMemberLogoutButton") && workspaceHeroSource.includes("RefereeMemberLogoutButton") && workspaceHeroSource.includes("账号与安全") && workspaceHeroSource.includes("返回公开裁判中心"), "Workspace account actions were not moved out of primary navigation.");
+    assert(competitionFormSource.includes("页面地址标识") && competitionFormSource.includes("用于生成赛事固定网址，仅支持小写英文字母、数字和连字符；创建后不建议修改。") && competitionFormSource.includes("admin-competition-slug-help"), "Competition slug label, help copy, or independent help region is missing.");
+    assert(adminStylesSource.includes(".admin-competition-slug-help { grid-column: 1 / -1") && adminStylesSource.includes(".admin-tabs a, .admin-tabs button { min-height: 40px; display: inline-flex; align-items: center; justify-content: center;") && adminStylesSource.includes(".admin-tabs a:focus-visible, .admin-tabs button:focus-visible"), "Competition alignment or shared admin tab alignment/focus contracts are missing.");
+    assert(openMatchesShellSource.includes("member ? <RefereeWorkspaceNav /> : <RefereeSubnav />") && openMatchesShellSource.includes("RefereeWorkspaceHero") && openMatchesPageSource.includes("getRefereeMemberSession") && openMatchesPageSource.includes("RefereeOpenMatchesShell") && openMatchDetailSource.includes("RefereeOpenMatchesShell"), "Open-match routes are not using the authenticated/public session-aware shell.");
+    assert(workspaceNavSource.includes('aria-current={current("/referees/open-matches")') && workspaceNavSource.includes("pathname.startsWith(`${href}/`)"), "Open-match workspace navigation does not retain its active state on list and detail routes.");
 
     const competitionRoute = await readFile(path.resolve("src/app/api/referees/admin/competitions/[id]/route.ts"), "utf8");
     const houseRoute = await readFile(path.resolve("src/app/api/referees/admin/affiliation-units/route.ts"), "utf8");
@@ -149,6 +158,8 @@ async function main() {
       houseCrudRelationsSafeDeleteRbacAudit: true,
       sharedOrganizationSelectorContracts: true,
       refereeWorkspaceAccountHierarchy: true,
+      competitionFormAndAdminTabsPolished: true,
+      sessionAwareOpenMatchWorkspaceShell: true,
       sqliteIntegrityCheck: "ok",
       foreignKeyViolations: 0,
     }, null, 2));

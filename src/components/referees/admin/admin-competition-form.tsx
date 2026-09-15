@@ -107,18 +107,18 @@ export function AdminCompetitionForm({ competition }: { competition?: AdminCompe
     router.refresh();
   }
 
-  return <form className="admin-form" onChange={() => setDirty(true)} onSubmit={submit}>
+  return <form className="admin-form admin-competition-form" onChange={() => setDirty(true)} onSubmit={submit}>
     <section className="admin-form-section">
-      <header><h2>基础资料</h2><p>页面标识用于生成稳定链接，创建后不可通过普通编辑修改。</p></header>
-      <div className="admin-form-grid">
+      <header><h2>基础资料</h2><p>页面地址标识用于生成稳定链接，创建后不可通过普通编辑修改。</p></header>
+      <div className="admin-form-grid admin-competition-basics-grid">
         <label>
-          <span>页面标识</span>
+          <span>页面地址标识</span>
           {competition
             ? <input aria-readonly="true" readOnly value={competition.slug} />
             : <input maxLength={80} name="slug" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="freshman-cup" required />}
-          <small>仅限小写 ASCII 字母、数字与单个连字符分段。</small>
         </label>
         <label><span>赛事名称</span><input defaultValue={competition?.name} maxLength={120} name="name" placeholder="例如：2026 新生杯" required /></label>
+        <p className="admin-competition-slug-help">用于生成赛事固定网址，仅支持小写英文字母、数字和连字符；创建后不建议修改。</p>
         <label><span>赛事简称</span><input defaultValue={competition?.shortName} maxLength={60} name="shortName" placeholder="例如：新生杯" /></label>
         <label><span>赛季年份</span><input defaultValue={competition?.year ?? ""} max={2200} min={1900} name="year" placeholder="2026" type="number" /></label>
         <label><span>校区</span><input defaultValue={competition?.campus ?? "天目湖校区"} maxLength={60} name="campus" required /></label>

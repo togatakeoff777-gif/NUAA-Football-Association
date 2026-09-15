@@ -112,7 +112,7 @@ export function AdminCompetitionWorkspace({
 
     <section className="admin-panel" hidden={section !== "overview"}>
       <header className="admin-panel-header"><div><h2>赛事资料</h2><p>当前赛事上下文贯穿球队与赛程操作；公开发布开关不在本工作台中自动变更。</p></div>{canWrite ? <div className="admin-page-actions"><Link className="admin-button admin-button-secondary" href={`/admin/competitions/${competition.id}/edit`}>编辑赛事资料</Link><AdminCompetitionDangerActions competitionId={competition.id} competitionName={competition.name} protectedReason={competition.deletionProtectedReason} /></div> : null}</header>
-      <dl className="admin-detail-meta"><div><dt>赛事名称</dt><dd>{competition.name}</dd></div><div><dt>比赛制式</dt><dd>{competition.formatLabel}</dd></div><div><dt>状态</dt><dd>{competition.statusLabel}</dd></div><div><dt>年份</dt><dd>{competition.year ?? "未设置"}</dd></div><div><dt>页面标识</dt><dd>{competition.slug}</dd></div></dl>
+      <dl className="admin-detail-meta"><div><dt>赛事名称</dt><dd>{competition.name}</dd></div><div><dt>比赛制式</dt><dd>{competition.formatLabel}</dd></div><div><dt>状态</dt><dd>{competition.statusLabel}</dd></div><div><dt>年份</dt><dd>{competition.year ?? "未设置"}</dd></div><div><dt>页面地址标识</dt><dd>{competition.slug}</dd></div></dl>
     </section>
 
     <section className="admin-panel admin-workspace-team-panel" hidden={section !== "teams"}>

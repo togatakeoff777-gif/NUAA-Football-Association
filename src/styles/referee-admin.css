@@ -220,8 +220,9 @@
 .admin-detail-meta dt { color: #586a7f; font-size: 12px; font-weight: 600; }
 .admin-detail-meta dd { margin: 6px 0 0; font-size: 14px; font-weight: 650; }
 .admin-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--admin-line); }
-.admin-tabs a, .admin-tabs button { min-height: 40px; padding: 0 14px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--admin-muted); font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer; }
+.admin-tabs a, .admin-tabs button { min-height: 40px; display: inline-flex; align-items: center; justify-content: center; padding: 0 14px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--admin-muted); font-size: 13px; font-weight: 600; line-height: 1.2; text-decoration: none; vertical-align: middle; cursor: pointer; }
 .admin-tabs a[aria-current="page"], .admin-tabs button[aria-selected="true"] { border-bottom-color: var(--admin-blue); color: var(--admin-blue); }
+.admin-tabs a:focus-visible, .admin-tabs button:focus-visible { border-radius: 6px; outline: 3px solid rgba(45,104,184,.25); outline-offset: -4px; }
 .admin-route-tabs { margin-top: -6px; }
 .admin-assignment-panel { margin-bottom: 20px; }
 .admin-assignment-form { padding: 18px; }
@@ -501,6 +502,12 @@
 .admin-shell .admin-form input:not([type="checkbox"]):not([type="radio"]),
 .admin-shell .admin-form select,
 .admin-shell .admin-form textarea { border-radius: 8px; }
+.admin-shell .admin-competition-basics-grid { align-items: start; }
+.admin-shell .admin-competition-basics-grid > label { align-content: start; gap: 6px; }
+.admin-shell .admin-competition-basics-grid > label > span { min-height: 18px; display: flex; align-items: center; margin-bottom: 0; }
+.admin-shell .admin-competition-basics-grid > label > input,
+.admin-shell .admin-competition-basics-grid > label > select { height: 42px; padding-block: 8px; }
+.admin-shell .admin-competition-slug-help { grid-column: 1 / -1; margin: -4px 0 0; padding-inline: 1px; color: var(--admin-muted); font-size: var(--admin-type-help); line-height: 1.55; }
 .admin-shell .admin-form input:focus,
 .admin-shell .admin-form select:focus,
 .admin-shell .admin-form textarea:focus,

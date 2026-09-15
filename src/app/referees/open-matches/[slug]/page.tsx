@@ -2,12 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
 import { RefereeApplicationForm } from "@/components/referees/mvp/referee-application-form";
+import { RefereeOpenMatchesShell } from "@/components/referees/mvp/referee-open-matches-shell";
 import { JsonLd } from "@/components/seo/json-ld";
 import { ShareActions } from "@/components/share/share-actions";
-import { RefereeSubnav } from "@/components/referees/mvp/public-appointment-list";
 import { ASSOCIATION_EMAIL } from "@/data/platforms";
 import {
   getRefereeMemberConfigurationIssue,
@@ -127,21 +125,14 @@ export default async function OpenMatchDetailPage({
 
   return (
     <>
-      <SiteHeader />
       <JsonLd data={sportsEventJsonLd({ name: `${match.homeTeam.name} vs ${match.awayTeam.name}`, description: `${match.competition.name} · ${match.stage}`, path: `/referees/open-matches/${match.slug}`, status: match.status === "CANCELLED" ? "EventCancelled" : match.status === "COMPLETED" ? "EventCompleted" : "EventScheduled", startDate: match.kickoff.toISOString(), location: match.venue })} />
-      <main className="functional-page" id="main-content">
-        <section className="functional-hero">
-          <div className="detail-shell">
-            <p>MATCH APPOINTMENT</p>
-            <h1>
-              {match.homeTeam.name} vs {match.awayTeam.name}
-            </h1>
-            <p>
-              {match.competition.name} · {match.stage}
-            </p>
-          </div>
-        </section>
-        <RefereeSubnav />
+      <RefereeOpenMatchesShell
+        description={`${match.competition.name} · ${match.stage}`}
+        eyebrow="MATCH APPOINTMENT"
+        member={session?.referee ?? null}
+        title={`${match.homeTeam.name} vs ${match.awayTeam.name}`}
+        workspaceDescription={`${match.competition.name} · ${match.stage} · 在工作区中查看岗位并管理执裁意向。`}
+      >
         <section className="functional-section">
           <div className="detail-shell referee-match-detail">
             <article>
@@ -192,8 +183,7 @@ export default async function OpenMatchDetailPage({
             </aside>
           </div>
         </section>
-      </main>
-      <SiteFooter />
+      </RefereeOpenMatchesShell>
     </>
   );
 }

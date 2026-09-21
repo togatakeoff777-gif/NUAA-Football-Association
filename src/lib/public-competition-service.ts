@@ -234,6 +234,13 @@ export async function getCurrentPublicCompetitions() {
 export async function getHomepagePublicCompetitions() {
   const competitions = await getCurrentPublicCompetitions();
   return competitions
-    .filter((competition) => competition.dataOrigin === "static-fallback" || competition.homepageFeatured)
+    .map((competition) => {
+      if (competition.dataOrigin === "database" && competition.homepageFeatured) {
+        return competition;
+      }
+      const fallback = getCoreCompetition(competition.slug);
+      return fallback ? staticFallback(fallback) : undefined;
+    })
+    .filter((competition): competition is PublicCompetitionView => Boolean(competition))
     .sort((left, right) => left.publicOrder - right.publicOrder);
 }

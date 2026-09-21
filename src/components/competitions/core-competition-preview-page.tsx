@@ -9,12 +9,27 @@ type CoreCompetitionPreviewPageProps = {
   competition: PublicCompetitionView;
 };
 
-const pendingMessage = "当前暂无已公布信息，请关注赛事公告。";
+function getSchedulePresentation(competition: PublicCompetitionView) {
+  const forecast = competition.nextMatch;
+  if (forecast.state === "scheduled") {
+    return {
+      summary: `下一场：${forecast.homeTeam} vs ${forecast.awayTeam} · ${forecast.dateLabel} ${forecast.timeLabel} · ${forecast.venue}`,
+      href: forecast.detailHref,
+      actionLabel: "查看比赛详情",
+    };
+  }
+  return {
+    summary: forecast.summary,
+    href: "/competitions/schedule",
+    actionLabel: "进入赛程与赛果中心",
+  };
+}
 
 export function CoreCompetitionPreviewPage({
   competition,
 }: CoreCompetitionPreviewPageProps) {
   const reports = competition.slug === "freshman-cup" ? freshmanCupReports : [];
+  const schedule = getSchedulePresentation(competition);
   return (
     <CompetitionArchiveLayout
       className="core-competition-preview-page"
@@ -95,8 +110,8 @@ export function CoreCompetitionPreviewPage({
             <p>SCHEDULE & RESULTS</p>
             <h2 id={`${competition.id}-schedule-title`}>赛程与赛果</h2>
           </div>
-          <p>{pendingMessage}</p>
-          <Link href="/competitions/schedule">进入赛程与赛果中心 →</Link>
+          <p>{schedule.summary}</p>
+          <Link href={schedule.href}>{schedule.actionLabel} →</Link>
         </div>
       </section>
 

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { BrandMark } from "@/components/ui/brand-mark";
 import { associationIdentity } from "@/data/association";
+import { publicSiteCompliance } from "@/data/site-compliance";
 import {
   bilibiliPlatform,
   emailPlatform,
@@ -15,8 +16,11 @@ type SiteFooterProps = {
 };
 
 export function SiteFooter({ homeCompact = false }: SiteFooterProps) {
+  const currentYear = new Date().getFullYear();
+  const publicSecurityFiling = publicSiteCompliance.publicSecurityFiling;
+
   return (
-    <footer className={`site-footer${homeCompact ? " site-footer-home" : ""}`}>
+    <footer className={`site-footer${homeCompact ? " site-footer-home" : ""}`} data-public-footer="shared">
       <div className="page-shell">
         <div className="footer-main">
           <div>
@@ -64,7 +68,39 @@ export function SiteFooter({ homeCompact = false }: SiteFooterProps) {
         </div>
 
         <div className="footer-bottom">
-          <p>© 2026 {associationIdentity.formalName} · {associationIdentity.establishedLabel}</p>
+          <div className="footer-legal" aria-label="版权与备案信息">
+            <p className="footer-copyright">
+              {`© ${associationIdentity.establishedYear}–${currentYear} ${associationIdentity.formalName}`}
+            </p>
+            <p className="footer-credit">网站建设与维护：HAN</p>
+            <a
+              className="footer-filing-link"
+              href={publicSiteCompliance.icpFiling.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`${publicSiteCompliance.icpFiling.number}，前往工业和信息化部政务服务平台，将在新标签页打开`}
+            >
+              {publicSiteCompliance.icpFiling.number}
+            </a>
+            {publicSecurityFiling ? (
+              <a
+                className="footer-filing-link footer-public-security-filing"
+                href={publicSecurityFiling.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`${publicSecurityFiling.number}，前往公安联网备案服务平台，将在新标签页打开`}
+              >
+                <Image
+                  className="footer-public-security-icon"
+                  src={publicSecurityFiling.icon.src}
+                  alt={publicSecurityFiling.icon.alt}
+                  width={16}
+                  height={16}
+                />
+                {publicSecurityFiling.number}
+              </a>
+            ) : null}
+          </div>
         </div>
       </div>
     </footer>

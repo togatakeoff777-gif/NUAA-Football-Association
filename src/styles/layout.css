@@ -73,7 +73,13 @@
 .footer-emblem p strong { color: rgba(255,255,255,.82); font-weight: 720; }
 .footer-declarations { position: relative; display: grid; gap: 10px; padding: 26px 0; border-top: 1px solid rgba(255,255,255,.12); }
 .footer-declarations p { color: rgba(255,255,255,.72); font-size: 12px; line-height: 1.7; }
-.footer-bottom { position: relative; min-height: 62px; display: flex; align-items: center; justify-content: space-between; gap: 20px; border-top: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.68); font-size: 11px; }
+.footer-bottom { position: relative; min-height: 62px; display: flex; align-items: center; justify-content: center; gap: 20px; padding: 14px 0; border-top: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.68); font-size: 11px; }
+.footer-legal { min-width: 0; width: 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 18px; text-align: center; }
+.footer-copyright { color: rgba(255,255,255,.78); font-weight: 620; }
+.footer-credit { color: rgba(255,255,255,.58); }
+.footer-filing-link { display: inline-flex; align-items: center; gap: 6px; color: rgba(255,255,255,.72); white-space: nowrap; text-underline-offset: 3px; }
+.footer-filing-link:hover { color: white; text-decoration: underline; }
+.footer-public-security-icon { width: 16px; height: 16px; flex: 0 0 auto; object-fit: contain; }
 
 @media (max-width: 1160px) {
   .desktop-nav, .header-cta { display: none; }
@@ -92,5 +98,6 @@
   .brand-copy small { max-width: 160px; overflow: hidden; font-size: 7px; white-space: nowrap; }
   .footer-main { grid-template-columns: 1fr; gap: 38px; }
   .footer-main > :first-child { grid-column: auto; }
-  .footer-bottom { align-items: flex-start; flex-direction: column; justify-content: center; padding: 18px 0; }
+  .footer-bottom { align-items: center; justify-content: center; padding: 18px 0; }
+  .footer-legal { flex-direction: column; gap: 5px; }
 }

@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
 function getNextArrangement(competition: PublicCompetitionView) {
   const forecast = competition.nextMatch;
   if (forecast.state === "scheduled") {
-    return `${forecast.homeTeam} vs ${forecast.awayTeam} · ${forecast.dateLabel} ${forecast.timeLabel}`;
+    return `${forecast.homeTeam} vs ${forecast.awayTeam} · ${forecast.dateLabel} ${forecast.timeLabel} · ${forecast.venue}`;
   }
   return forecast.summary;
 }

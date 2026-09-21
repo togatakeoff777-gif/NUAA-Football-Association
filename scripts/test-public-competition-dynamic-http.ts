@@ -16,6 +16,41 @@ function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
 
+function homepageCards(html: string) {
+  return [...html.matchAll(/<article class="next-match-forecast-card"[\s\S]*?<\/article>/gu)]
+    .map((match) => match[0]);
+}
+
+function assertTwoUniqueHomepageCards(html: string, label: string) {
+  const cards = homepageCards(html);
+  assert(cards.length === 2, `${label} did not render exactly two homepage Competition cards.`);
+}
+
+function assertOneHomepageCardIncludes(html: string, marker: string, label: string) {
+  const matchingCards = homepageCards(html).filter((card) => card.includes(marker));
+  assert(matchingCards.length === 1, `${label} did not appear in exactly one homepage Competition card.`);
+}
+
+function assertPublicFooter(html: string, route: string) {
+  const footer = html.match(/<footer class="site-footer[^"]*" data-public-footer="shared">[\s\S]*?<\/footer>/u)?.[0];
+  assert(footer, `${route} did not render the shared public footer.`);
+  const currentYear = new Date().getFullYear();
+  assert(
+    footer.includes(`© ${2021}–${currentYear} 南京航空航天大学天目湖足球协会`),
+    `${route} did not render the dynamic Association copyright range.`,
+  );
+  assert(footer.includes("网站建设与维护：HAN"), `${route} did not render the exact developer credit.`);
+  assert(footer.includes(">鲁ICP备2026052413号</a>"), `${route} did not render the exact ICP filing number.`);
+  assert(
+    /<a[^>]*href="https:\/\/beian\.miit\.gov\.cn\/"[^>]*target="_blank"[^>]*rel="noopener noreferrer"[^>]*>\s*鲁ICP备2026052413号\s*<\/a>/u.test(footer),
+    `${route} did not render the secure official MIIT filing link.`,
+  );
+  for (const placeholder of ["公安备案待补充", "公安备案号待确认", "XXXX号"]) {
+    assert(!footer.includes(placeholder), `${route} rendered a Public Security filing placeholder.`);
+  }
+  assert(!footer.includes("footer-public-security-filing"), `${route} rendered an unset Public Security filing item.`);
+}
+
 function findPort() {
   return new Promise<number>((resolve, reject) => {
     const probe = createServer();
@@ -208,7 +243,20 @@ async function main() {
     const zeroFutsal = await pageHtml(origin, "/competitions/tianmuhu-futsal-league");
     const historicalMen = await pageHtml(origin, "/competitions/2026-mens-intercollege-cup");
     const historicalWomen = await pageHtml(origin, "/competitions/2026-womens-intercollege-cup");
+    const publicFooterPages = [
+      ["/", zeroHome],
+      ["/competitions", zeroCenter],
+      ["/competitions/freshman-cup", zeroFreshman],
+      ["/news", await pageHtml(origin, "/news")],
+      ["/news/2026-freshman-cup-preparation-notice", await pageHtml(origin, "/news/2026-freshman-cup-preparation-notice")],
+      ["/referees", await pageHtml(origin, "/referees")],
+      ["/association", await pageHtml(origin, "/association")],
+    ] as const;
+    for (const [route, html] of publicFooterPages) assertPublicFooter(html, route);
     assert(zeroHome.includes("2026南京航空航天大学新生杯足球赛事") && zeroHome.includes("2026天目湖五人制联赛"), "Zero-row homepage fallback failed.");
+    assertTwoUniqueHomepageCards(zeroHome, "Zero-row fallback");
+    assertOneHomepageCardIncludes(zeroHome, "2026南京航空航天大学新生杯足球赛事", "Zero-row Freshman Cup fallback");
+    assertOneHomepageCardIncludes(zeroHome, "2026天目湖五人制联赛", "Zero-row Futsal fallback");
     assert(zeroHome.includes("两项赛事，关注最新安排") && !zeroHome.includes("筹备中 · 赛程待发布"), "Zero-row homepage presentation changed.");
     assert(zeroCenter.includes("筹备工作已启动") && zeroCenter.includes("2026天目湖五人制联赛"), "Zero-row Competition center fallback failed.");
     assert(zeroFreshman.includes("面向新生开展的院系十一人制足球赛事") && !zeroFreshman.includes("赛事公告："), "Freshman Cup static fallback failed.");
@@ -264,7 +312,14 @@ async function main() {
       409,
       "duplicate stable slug",
     );
-    assert(!(await pageHtml(origin, "/")).includes("R1动态新生杯"), "Unpublished Competition replaced homepage fallback.");
+    const unpublishedFeaturedHome = await pageHtml(origin, "/");
+    assert(!unpublishedFeaturedHome.includes("R1动态新生杯"), "Unpublished Competition replaced homepage fallback.");
+    assert(
+      unpublishedFeaturedHome.includes("2026南京航空航天大学新生杯足球赛事")
+      && unpublishedFeaturedHome.includes("2026天目湖五人制联赛"),
+      "publicPublished=false/homepageFeatured=true did not preserve both static homepage fallbacks.",
+    );
+    assertTwoUniqueHomepageCards(unpublishedFeaturedHome, "Unpublished featured Competition");
     assert(!(await pageHtml(origin, "/competitions")).includes("动态新生杯赛事简介"), "Unpublished Competition replaced center fallback.");
     assert(!(await pageHtml(origin, "/competitions/freshman-cup")).includes("动态新生杯球场"), "Unpublished Competition replaced detail fallback.");
 
@@ -285,10 +340,15 @@ async function main() {
     const dynamicCenter = await pageHtml(origin, "/competitions");
     const dynamicFreshman = await pageHtml(origin, "/competitions/freshman-cup");
     assert(
-      dynamicHome.includes("R1动态新生杯") && dynamicHome.includes("报名中"),
+      dynamicHome.includes("R1动态新生杯")
+      && dynamicHome.includes("报名中")
+      && dynamicHome.includes("2026天目湖五人制联赛"),
       `Published status did not reach homepage (name=${dynamicHome.includes("R1动态新生杯")}, status=${dynamicHome.includes("报名中")}, fallback=${dynamicHome.includes("面向新生开展的院系十一人制足球赛事")}).`,
     );
+    assertTwoUniqueHomepageCards(dynamicHome, "One featured Competition");
+    assertOneHomepageCardIncludes(dynamicHome, "R1动态新生杯", "One-featured dynamic Freshman Cup");
     assert(dynamicCenter.includes("R1动态新生杯") && dynamicCenter.includes("报名中"), "Competition center dynamic title/status failed.");
+    assert(dynamicCenter.includes("报名进行中，赛程待正式发布。"), "Competition center did not show status-appropriate safe no-Match wording.");
     assert(
       dynamicFreshman.includes("动态新生杯球场") &&
       dynamicFreshman.includes("动态新生杯主办单位") &&
@@ -299,6 +359,7 @@ async function main() {
       dynamicFreshman.includes("2026.09.25 18:30"),
       "Published Competition profile did not reach its detail page.",
     );
+    assert(dynamicFreshman.includes("报名进行中，赛程待正式发布。"), "Competition detail did not show status-appropriate safe no-Match wording.");
     const adminEdit = await pageHtml(origin, `/admin/competitions/${freshmanId}/edit`, competitionCookie);
     assert(adminEdit.includes("freshman-cup") && adminEdit.includes("北京时间（UTC+8）"), "Admin edit did not show read-only slug and timezone labels.");
 
@@ -322,6 +383,25 @@ async function main() {
       status: "SCHEDULED",
       isTestData: true,
     } });
+    await verifier.match.create({ data: {
+      slug: "past-match-must-not-drive-public",
+      competitionId: freshmanId,
+      stage: "过往比赛不得显示",
+      kickoff: new Date("2020-09-01T10:00:00.000Z"),
+      venue: "过往比赛不得显示场地",
+      homeTeamId: teams[0].id,
+      awayTeamId: teams[1].id,
+      status: "SCHEDULED",
+    } });
+    const noEligibleMatchCenter = await pageHtml(origin, "/competitions");
+    const noEligibleMatchDetail = await pageHtml(origin, "/competitions/freshman-cup");
+    assert(
+      noEligibleMatchCenter.includes("报名进行中，赛程待正式发布。")
+      && noEligibleMatchDetail.includes("报名进行中，赛程待正式发布。")
+      && !noEligibleMatchCenter.includes("过往比赛不得显示")
+      && !noEligibleMatchDetail.includes("过往比赛不得显示"),
+      "Past or test Match incorrectly replaced the safe pending presentation.",
+    );
     const matchBody = (slug: string, stage: string, kickoff: string) => ({
       slug,
       competitionId: freshmanId,
@@ -347,13 +427,26 @@ async function main() {
     const firstMatchId = (await firstResponse.json() as { matchId?: string }).matchId;
     assert(firstMatchId, "First Match response omitted its ID.");
     const firstHome = await pageHtml(origin, "/");
-    assert(firstHome.includes("动态主队") && firstHome.includes("动态客队") && firstHome.includes("2030.09.25") && firstHome.includes("18:30"), "First future Match did not reach homepage.");
-    assert(!firstHome.includes("测试比赛不得显示") && !firstHome.includes("PUBLIC DTO MUST NOT EXPOSE"), "Public DTO exposed test or internal Match data.");
+    const firstCenter = await pageHtml(origin, "/competitions");
+    const firstDetail = await pageHtml(origin, "/competitions/freshman-cup");
+    for (const [label, html] of [["homepage", firstHome], ["Competition center", firstCenter], ["Competition detail", firstDetail]] as const) {
+      assert(
+        html.includes("动态主队")
+        && html.includes("动态客队")
+        && html.includes("2030.09.25")
+        && html.includes("18:30")
+        && html.includes("动态第一场球场"),
+        `First future Match did not reach the ${label}.`,
+      );
+      assert(!html.includes("测试比赛不得显示") && !html.includes("PUBLIC DTO MUST NOT EXPOSE"), `${label} exposed test or internal Match data.`);
+    }
 
     const secondBody = matchBody("dynamic-match-two", "动态第二场", "2030-10-02T19:00");
     const secondResponse = await apiRequest(origin, "/api/referees/admin/matches", "POST", secondBody, competitionCookie);
     await expectStatus(secondResponse, 201, "second Match create");
-    assert((await pageHtml(origin, "/")).includes("2030.09.25"), "Later Match incorrectly displaced the first future Match.");
+    for (const route of ["/", "/competitions", "/competitions/freshman-cup"]) {
+      assert((await pageHtml(origin, route)).includes("2030.09.25"), `Later Match incorrectly displaced the first future Match on ${route}.`);
+    }
     const { homeTeamSelection, awayTeamSelection, ...firstPatchBody } = firstBody;
     assert(homeTeamSelection && awayTeamSelection, "Match fixture selections are missing.");
     const completeFirst = {
@@ -367,8 +460,16 @@ async function main() {
       200,
       "complete first Match",
     );
-    const advancedHome = await pageHtml(origin, "/");
-    assert(advancedHome.includes("2030.10.02") && advancedHome.includes("19:00") && !advancedHome.includes("2030.09.25"), "Homepage did not advance to the next future Match.");
+    for (const route of ["/", "/competitions", "/competitions/freshman-cup"]) {
+      const advancedHtml = await pageHtml(origin, route);
+      assert(
+        advancedHtml.includes("2030.10.02")
+        && advancedHtml.includes("19:00")
+        && advancedHtml.includes("动态第二场球场")
+        && !advancedHtml.includes("2030.09.25"),
+        `${route} did not advance to the next future Match.`,
+      );
+    }
 
     for (const status of ["PREPARING", "REGISTRATION", "ONGOING", "COMPLETED"] as const) {
       await expectStatus(
@@ -388,8 +489,25 @@ async function main() {
       200,
       "disable homepage feature",
     );
-    assert(!(await pageHtml(origin, "/")).includes("R1动态新生杯"), "homepageFeatured=false did not remove the published Competition card.");
-    assert((await pageHtml(origin, "/competitions")).includes("R1动态新生杯"), "homepageFeatured incorrectly removed the Competition from the center.");
+    const unfeaturedPublishedHome = await pageHtml(origin, "/");
+    const unfeaturedPublishedCards = homepageCards(unfeaturedPublishedHome).join("\n");
+    assert(
+      !unfeaturedPublishedCards.includes("R1动态新生杯")
+      && !unfeaturedPublishedCards.includes("动态主队")
+      && unfeaturedPublishedCards.includes("2026南京航空航天大学新生杯足球赛事")
+      && unfeaturedPublishedCards.includes("2026天目湖五人制联赛"),
+      "publicPublished=true/homepageFeatured=false did not restore the complete static homepage fallback.",
+    );
+    assertTwoUniqueHomepageCards(unfeaturedPublishedHome, "Published unfeatured Competition");
+    const unfeaturedPublishedCenter = await pageHtml(origin, "/competitions");
+    const unfeaturedPublishedDetail = await pageHtml(origin, "/competitions/freshman-cup");
+    assert(
+      unfeaturedPublishedCenter.includes("R1动态新生杯")
+      && unfeaturedPublishedCenter.includes("2030.10.02")
+      && unfeaturedPublishedDetail.includes("R1动态新生杯")
+      && unfeaturedPublishedDetail.includes("2030.10.02"),
+      "homepageFeatured incorrectly changed dynamic overview/detail or Match presentation.",
+    );
 
     const futsalDraft = competitionPayload({
       slug: "tianmuhu-futsal-league",
@@ -406,6 +524,49 @@ async function main() {
     assert(futsalId, "Futsal create response omitted its ID.");
     assert((await pageHtml(origin, "/competitions")).includes("R1动态天目湖五人制联赛"), "Futsal dynamic profile did not reach Competition center.");
     assert((await pageHtml(origin, "/competitions/tianmuhu-futsal-league")).includes("动态五人制赛事简介"), "Futsal dynamic detail failed.");
+    const oneFeaturedHome = await pageHtml(origin, "/");
+    const oneFeaturedCards = homepageCards(oneFeaturedHome).join("\n");
+    assert(
+      oneFeaturedCards.includes("R1动态天目湖五人制联赛")
+      && oneFeaturedCards.includes("2026南京航空航天大学新生杯足球赛事")
+      && !oneFeaturedCards.includes("R1动态新生杯")
+      && !oneFeaturedCards.includes("2026天目湖五人制联赛"),
+      "One-featured homepage did not combine the eligible dynamic card with the non-duplicate fallback card.",
+    );
+    assertTwoUniqueHomepageCards(oneFeaturedHome, "One featured Futsal Competition");
+
+    const futsalTeams = await Promise.all([
+      verifier.team.create({ data: { competitionId: futsalId, name: "五人制主队" } }),
+      verifier.team.create({ data: { competitionId: futsalId, name: "五人制客队" } }),
+    ]);
+    await verifier.match.create({ data: {
+      slug: "dynamic-futsal-match",
+      competitionId: futsalId,
+      stage: "五人制独立场次",
+      kickoff: new Date("2030-09-20T10:00:00.000Z"),
+      venue: "五人制独立球场",
+      homeTeamId: futsalTeams[0].id,
+      awayTeamId: futsalTeams[1].id,
+      status: "SCHEDULED",
+    } });
+    const isolatedFreshmanDetail = await pageHtml(origin, "/competitions/freshman-cup");
+    const isolatedFutsalDetail = await pageHtml(origin, "/competitions/tianmuhu-futsal-league");
+    assert(
+      isolatedFreshmanDetail.includes("动态主队")
+      && isolatedFreshmanDetail.includes("动态客队")
+      && !isolatedFreshmanDetail.includes("五人制主队")
+      && !isolatedFreshmanDetail.includes("五人制客队"),
+      "Freshman Cup detail leaked Futsal Teams or Match data.",
+    );
+    assert(
+      isolatedFutsalDetail.includes("五人制主队")
+      && isolatedFutsalDetail.includes("五人制客队")
+      && isolatedFutsalDetail.includes("2030.09.20")
+      && isolatedFutsalDetail.includes("五人制独立球场")
+      && !isolatedFutsalDetail.includes("动态主队")
+      && !isolatedFutsalDetail.includes("动态客队"),
+      "Futsal detail leaked Freshman Cup Teams or Match data.",
+    );
     const { slug: futsalSlug, ...futsalEditable } = futsalDraft;
     assert(futsalSlug === "tianmuhu-futsal-league", "Futsal fixture slug changed unexpectedly.");
     await expectStatus(
@@ -413,6 +574,65 @@ async function main() {
       200,
       "SUPER_ADMIN edit",
     );
+
+    await expectStatus(
+      apiRequest(origin, `/api/referees/admin/competitions/${freshmanId}`, "PATCH", { ...publishedFreshman, status: "ONGOING", homepageFeatured: true }, competitionCookie),
+      200,
+      "restore Freshman Cup homepage feature",
+    );
+    const twoFeaturedHome = await pageHtml(origin, "/");
+    const twoFeaturedCards = homepageCards(twoFeaturedHome).join("\n");
+    assert(
+      twoFeaturedCards.includes("R1动态新生杯")
+      && twoFeaturedCards.includes("R1动态天目湖五人制联赛")
+      && twoFeaturedCards.includes("动态主队")
+      && twoFeaturedCards.includes("五人制主队")
+      && !twoFeaturedCards.includes("2026南京航空航天大学新生杯足球赛事")
+      && !twoFeaturedCards.includes("2026天目湖五人制联赛"),
+      "Two-featured homepage did not render both dynamic Competition cards without static duplicates.",
+    );
+    assertTwoUniqueHomepageCards(twoFeaturedHome, "Two featured Competitions");
+
+    await verifier.referee.create({ data: {
+      publicCode: "901",
+      name: "隐私边界测试裁判",
+      studentId: "PRIVATE-STUDENT-ID-MARKER",
+      phone: "PRIVATE-PHONE-MARKER",
+      qq: "PRIVATE-QQ-MARKER",
+      passwordHash: "PRIVATE-PASSWORD-HASH-MARKER",
+      sourceNote: "PRIVATE-SOURCE-NOTE-MARKER",
+      internalNote: "PRIVATE-REFEREE-INTERNAL-NOTE-MARKER",
+    } });
+    await verifier.auditLog.create({ data: {
+      actorType: "SYSTEM",
+      action: "PRIVATE_AUDIT_MARKER",
+      entityType: "Competition",
+      entityId: freshmanId,
+      summary: "PRIVATE-AUDIT-SUMMARY-MARKER",
+      metadata: "PRIVATE-ADMIN-METADATA-MARKER",
+    } });
+    const publicPrivacyHtml = [
+      await pageHtml(origin, "/"),
+      await pageHtml(origin, "/competitions"),
+      await pageHtml(origin, "/competitions/freshman-cup"),
+      await pageHtml(origin, "/competitions/tianmuhu-futsal-league"),
+    ].join("\n");
+    for (const privateMarker of [
+      "PRIVATE-STUDENT-ID-MARKER",
+      "PRIVATE-PHONE-MARKER",
+      "PRIVATE-QQ-MARKER",
+      "PRIVATE-PASSWORD-HASH-MARKER",
+      "PRIVATE-SOURCE-NOTE-MARKER",
+      "PRIVATE-REFEREE-INTERNAL-NOTE-MARKER",
+      "PUBLIC DTO MUST NOT EXPOSE THIS INTERNAL NOTE",
+      "PRIVATE-AUDIT-SUMMARY-MARKER",
+      "PRIVATE-ADMIN-METADATA-MARKER",
+      competitionCookie,
+      contentCookie,
+      superCookie,
+    ]) {
+      assert(!publicPrivacyHtml.includes(privateMarker), `Public Competition HTML exposed private marker: ${privateMarker}`);
+    }
 
     const auditRows = await verifier.auditLog.findMany({ where: { entityType: "Competition" } });
     const auditText = auditRows.map((row) => row.metadata ?? "").join("\n");
@@ -427,17 +647,24 @@ async function main() {
       zeroRowFallback: "PASS",
       unpublishedFallback: "PASS",
       dynamicPublish: "PASS",
+      homepageZeroFeatured: "PASS",
+      homepageOneFeatured: "PASS",
+      homepageTwoFeatured: "PASS",
+      homepageNoDuplicates: "PASS",
       homepageDynamic: "PASS",
       competitionCenterDynamic: "PASS",
       freshmanCupDynamic: "PASS",
       futsalDynamic: "PASS",
+      noEligibleMatchPending: "PASS",
       nextMatch: "PASS",
       nextMatchAdvance: "PASS",
+      competitionIsolation: "PASS",
       beijingTimezone: "PASS",
       statusLifecycle: "PASS",
       registrationUrl: "PASS",
       rbac: "PASS",
       publicDto: "PASS",
+      publicFooter: "PASS",
       historicalArchives: "PASS",
       serverStarts: 1,
       serverPid,

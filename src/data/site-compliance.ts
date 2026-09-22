@@ -20,5 +20,12 @@ export const publicSiteCompliance: PublicSiteCompliance = {
     number: "鲁ICP备2026052413号",
     href: "https://beian.miit.gov.cn/",
   },
-  publicSecurityFiling: null,
+  publicSecurityFiling: {
+    number: "鲁公网安备37010302001865号",
+    href: "https://beian.mps.gov.cn/#/query/webSearch?code=37010302001865",
+    icon: {
+      src: "/compliance/beian-police.png",
+      alt: "",
+    },
+  },
 };

@@ -1,4 +1,5 @@
 import { spawn, type ChildProcess } from "node:child_process";
+import { createHash } from "node:crypto";
 import { access, mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { createServer } from "node:net";
 import os from "node:os";
@@ -49,7 +50,10 @@ function assertPublicFooter(html: string, route: string) {
   for (const placeholder of ["公安备案待补充", "公安备案号待确认", "XXXX号"]) {
     assert(!footer.includes(placeholder), `${route} rendered a Public Security filing placeholder.`);
   }
-  assert(!footer.includes("footer-public-security-filing"), `${route} rendered an unset Public Security filing item.`);
+  assert(
+    /<a[^>]*class="[^"]*footer-public-security-filing[^"]*"[^>]*href="https:\/\/beian\.mps\.gov\.cn\/#\/query\/webSearch\?code=37010302001865"[^>]*target="_blank"[^>]*rel="noopener noreferrer"[^>]*aria-label="鲁公网安备37010302001865号[^"]*"[^>]*>[\s\S]*?<img[^>]*alt=""[^>]*width="18"[^>]*height="20"[^>]*class="footer-public-security-icon"[^>]*(?:%2Fcompliance%2Fbeian-police\.png|\/compliance\/beian-police\.png)[^>]*>[\s\S]*?鲁公网安备37010302001865号\s*<\/a>/u.test(footer),
+    `${route} omitted the official Public Security filing link and icon.`,
+  );
 }
 
 function findPort() {
@@ -671,6 +675,14 @@ async function main() {
       ["/association", await pageHtml(origin, "/association")],
     ] as const;
     for (const [route, html] of footerPages) assertPublicFooter(html, route);
+    const publicSecurityIcon = await fetch(`${origin}/compliance/beian-police.png`);
+    assert(publicSecurityIcon.ok, "The official Public Security filing icon was not served.");
+    assert(publicSecurityIcon.headers.get("content-type") === "image/png", "The Public Security filing icon has the wrong content type.");
+    assert(
+      createHash("sha256").update(Buffer.from(await publicSecurityIcon.arrayBuffer())).digest("hex")
+        === "8dfecad0dfcb3dc584f2c2447943eefb1fd65a058856eb0611e2c56ddc4c1fe1",
+      "The served Public Security filing icon differs from the official supplied asset.",
+    );
 
     const [serviceSource, routeSource] = await Promise.all([
       readFile(path.resolve("src/lib/public-competition-service.ts"), "utf8"),

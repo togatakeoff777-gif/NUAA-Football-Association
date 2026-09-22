@@ -94,8 +94,8 @@ export function SiteFooter({ homeCompact = false }: SiteFooterProps) {
                   className="footer-public-security-icon"
                   src={publicSecurityFiling.icon.src}
                   alt={publicSecurityFiling.icon.alt}
-                  width={16}
-                  height={16}
+                  width={18}
+                  height={20}
                 />
                 {publicSecurityFiling.number}
               </a>

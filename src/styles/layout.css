@@ -79,7 +79,7 @@
 .footer-credit { color: rgba(255,255,255,.58); }
 .footer-filing-link { display: inline-flex; align-items: center; gap: 6px; color: rgba(255,255,255,.72); white-space: nowrap; text-underline-offset: 3px; }
 .footer-filing-link:hover { color: white; text-decoration: underline; }
-.footer-public-security-icon { width: 16px; height: 16px; flex: 0 0 auto; object-fit: contain; }
+.footer-public-security-icon { width: 18px; height: 20px; flex: 0 0 auto; object-fit: contain; }
 
 @media (max-width: 1160px) {
   .desktop-nav, .header-cta { display: none; }

@@ -12,7 +12,7 @@ import {
   getRefereeMemberSession,
 } from "@/lib/referee-member-auth";
 import { formatRefereeDateTime } from "@/lib/referee-presenters";
-import { formatLabels, getPositionTemplate } from "@/lib/referee-roles";
+import { formatLabels, getPositionTemplate, hasPositionTemplate } from "@/lib/referee-roles";
 import { prisma } from "@/lib/prisma";
 import { sportsEventJsonLd } from "@/lib/structured-data";
 
@@ -48,7 +48,10 @@ export default async function OpenMatchDetailPage({
   });
   if (!match) notFound();
 
+  const templateConfigured = hasPositionTemplate(match.competition.format);
+
   const accepting =
+    templateConfigured &&
     match.status === "SCHEDULED" &&
     match.applicationWindowStatus === "OPEN" &&
     Boolean(
@@ -81,7 +84,16 @@ export default async function OpenMatchDetailPage({
     </div>
   );
 
-  if (accepting && eligible) {
+  if (!templateConfigured) {
+    applicationPanel = (
+      <div className="functional-empty functional-empty-compact" role="status">
+        <strong>该赛事暂未配置对应的裁判岗位模板。</strong>
+        <p>当前不开放裁判报名或自动岗位选派。</p>
+      </div>
+    );
+  }
+
+  if (templateConfigured && accepting && eligible) {
     applicationPanel = (
       <RefereeApplicationForm
         matchId={match.id}
@@ -137,7 +149,7 @@ export default async function OpenMatchDetailPage({
           <div className="detail-shell referee-match-detail">
             <article>
               <header>
-                <span>{formatLabels[match.competition.format]}</span>
+                <span>{match.competition.playingFormat ?? formatLabels[match.competition.format]}</span>
                 <strong>{accepting ? "开放报名" : "报名已关闭"}</strong>
               </header>
               <dl>

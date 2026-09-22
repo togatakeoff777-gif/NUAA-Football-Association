@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
 import { prisma } from "@/lib/prisma";
-import { revalidatePublicCompetitionPaths } from "@/lib/public-competition-revalidation";
+import { revalidatePublicCompetitionById } from "@/lib/public-competition-revalidation";
 import { refereeApiErrorResponse, RefereeApiInputError } from "@/lib/referee-api";
 import {
   createMatch,
@@ -76,11 +76,7 @@ export async function PATCH(
     if (!isRecord(body)) throw new RefereeApiInputError("场次内容格式不正确。");
     const { id } = await context.params;
     const match = await updateMatch(id, inputFromBody(body), authorization.actor);
-    const competition = await prisma.competition.findUnique({
-      where: { id: match.competitionId },
-      select: { slug: true },
-    });
-    revalidatePublicCompetitionPaths(competition?.slug);
+    await revalidatePublicCompetitionById(match.competitionId);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return refereeApiErrorResponse(error, "场次更新失败，请稍后重试。");
@@ -121,6 +117,7 @@ export async function POST(
         source.positionRequirements.map((item) => [item.key, item.count]),
       ),
     }, authorization.actor);
+    await revalidatePublicCompetitionById(copied.competitionId);
     return NextResponse.json({ ok: true, matchId: copied.id }, { status: 201 });
   } catch (error) {
     return refereeApiErrorResponse(error, "场次复制失败，请稍后重试。");
@@ -137,11 +134,12 @@ export async function DELETE(
     const body: unknown = await request.json();
     if (!isRecord(body)) throw new RefereeApiInputError("删除内容格式不正确。");
     const { id } = await context.params;
-    await deleteMatchSafely(
+    const deleted = await deleteMatchSafely(
       id,
       readShortText(body.reason, "删除原因", 240),
       authorization.authorization,
     );
+    await revalidatePublicCompetitionById(deleted.competitionId);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return refereeApiErrorResponse(error, "比赛删除失败，请稍后重试。");

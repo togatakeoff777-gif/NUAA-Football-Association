@@ -12,18 +12,8 @@ function ForecastCard({
   index: number;
 }) {
   const forecast = competition.nextMatch;
-  const actionHref =
-    forecast.state === "scheduled"
-      ? forecast.detailHref
-      : forecast.state === "completed"
-        ? forecast.archiveHref
-        : competition.detailHref;
-  const actionLabel =
-    forecast.state === "scheduled"
-      ? "查看比赛详情"
-      : forecast.state === "completed"
-        ? "查看赛事归档"
-        : "进入赛事主页";
+  const actionHref = competition.detailHref;
+  const actionLabel = forecast.state === "completed" ? "查看赛事详情" : "进入赛事主页";
 
   return (
     <article
@@ -40,7 +30,7 @@ function ForecastCard({
         </StatusBadge>
       </header>
       <div className="next-match-forecast-copy">
-        <p>{competition.semesterLabel} · {competition.teamFormation}</p>
+        <p>{competition.year ?? "年份待确认"} · {competition.semesterLabel} · {competition.teamFormation}</p>
         <h3>{competition.name}</h3>
       </div>
 

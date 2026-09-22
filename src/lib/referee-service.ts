@@ -28,7 +28,7 @@ import {
   assertAppointmentPositionsEligible,
   assertRefereeCanApply,
 } from "@/lib/referee-eligibility";
-import { getPositionTemplate } from "@/lib/referee-roles";
+import { getPositionTemplate, hasPositionTemplate } from "@/lib/referee-roles";
 import { isRefereeQualification, normalizeRefereeQualification } from "@/lib/referee-qualifications";
 import { isRefereeGrade } from "@/lib/referee-profile-options";
 import { hashPassword, verifyPassword } from "@/lib/referee-security";
@@ -41,6 +41,14 @@ export type AdminActor = {
   id: string | null;
   role: AdminRole;
 };
+
+const missingPositionTemplateMessage = "该赛事暂未配置对应的裁判岗位模板。";
+
+function assertPositionTemplateConfigured(format: CompetitionFormat) {
+  if (!hasPositionTemplate(format)) {
+    throw new RefereeServiceError(missingPositionTemplateMessage, 409);
+  }
+}
 
 function authorizedAdminActor<P extends UnifiedAdminPermission>(
   authorization: AdminServiceAuthorization<P>,
@@ -449,6 +457,8 @@ export async function createRefereeApplication(input: {
       throw new RefereeServiceError("该场比赛的报名时间已截止。", 409);
     }
 
+    assertPositionTemplateConfigured(match.competition.format);
+
     const allowed = new Set(getPositionTemplate(match.competition.format).map((item) => item.key));
     const preferred = [...new Set(input.preferredPositions)];
     if (!preferred.length || preferred.some((key) => !allowed.has(key))) {
@@ -535,6 +545,7 @@ export async function createAdminApplicationException(input: {
       include: { competition: true },
     });
     if (!match) throw new RefereeServiceError("比赛不存在。", 404);
+    assertPositionTemplateConfigured(match.competition.format);
     const allowed = new Set(getPositionTemplate(match.competition.format).map((item) => item.key));
     const preferred = [...new Set(input.preferredPositions)];
     if (!preferred.length || preferred.some((key) => !allowed.has(key))) {
@@ -632,6 +643,7 @@ export async function createMatch(input: {
     include: { teams: true },
   });
   if (!competition) throw new RefereeServiceError("赛事不存在。", 404);
+  if (input.applicationWindowStatus === "OPEN") assertPositionTemplateConfigured(competition.format);
   const teamIds = new Set(competition.teams.map((team) => team.id));
   if (!teamIds.has(input.homeTeamId) || !teamIds.has(input.awayTeamId)) {
     throw new RefereeServiceError("比赛球队不属于所选赛事。");
@@ -693,6 +705,7 @@ export async function createMatchFromSelections(
       select: { id: true, format: true },
     });
     if (!competition) throw new RefereeServiceError("赛事不存在。", 404);
+    if (input.applicationWindowStatus === "OPEN") assertPositionTemplateConfigured(competition.format);
     const home = await resolveCompetitionTeamSelection(tx, {
       competitionId: input.competitionId,
       selection: input.homeTeamSelection,
@@ -768,6 +781,7 @@ export async function updateMatch(
     include: { teams: true },
   });
   if (!competition) throw new RefereeServiceError("赛事不存在。", 404);
+  if (input.applicationWindowStatus === "OPEN") assertPositionTemplateConfigured(competition.format);
   const teamIds = new Set(competition.teams.map((team) => team.id));
   if (!teamIds.has(input.homeTeamId) || !teamIds.has(input.awayTeamId)) {
     throw new RefereeServiceError("比赛球队不属于所选赛事。");
@@ -891,7 +905,7 @@ export async function deleteMatchSafely(
       },
     }, tx);
 
-    return { id: match.id, label: matchLabel };
+    return { id: match.id, label: matchLabel, competitionId: match.competition.id };
   });
 }
 
@@ -960,6 +974,7 @@ export async function saveAppointmentDraft(input: {
       include: { competition: true, positionRequirements: true },
     });
     if (!match) throw new RefereeServiceError("比赛不存在。", 404);
+    assertPositionTemplateConfigured(match.competition.format);
     if (match.status !== "SCHEDULED") {
       throw new RefereeServiceError("只有已安排且未取消的比赛可以配置选派。", 409);
     }
@@ -1113,6 +1128,7 @@ export async function publishAppointment(
       include: { positions: true, match: { include: { competition: true } } },
     });
     if (!appointment) throw new RefereeServiceError("请先保存选派草稿。", 409);
+    assertPositionTemplateConfigured(appointment.match.competition.format);
     assertAppointmentTransition(appointment.status, "publish");
     if (appointment.match.status !== "SCHEDULED") {
       throw new RefereeServiceError("比赛已结束或取消，不能发布选派。", 409);

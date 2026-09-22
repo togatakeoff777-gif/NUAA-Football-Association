@@ -1,7 +1,10 @@
 import type { MetadataRoute } from "next";
 
 import { publishedNews, publicAnnouncements } from "@/data/content";
+import { getPublicCompetitionCatalog } from "@/lib/public-competition-service";
 import { absoluteSiteUrl } from "@/lib/site-metadata";
+
+export const dynamic = "force-dynamic";
 
 const publicRoutes = [
   "/",
@@ -11,12 +14,10 @@ const publicRoutes = [
   "/competitions/2026-womens-intercollege-cup",
   "/competitions/arbitration",
   "/competitions/files",
-  "/competitions/freshman-cup",
   "/competitions/history",
   "/competitions/schedule",
   "/competitions/scorers",
   "/competitions/standings",
-  "/competitions/tianmuhu-futsal-league",
   "/join",
   "/media",
   "/news",
@@ -37,7 +38,8 @@ const publicRoutes = [
   "/teams",
 ] as const;
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const competitions = await getPublicCompetitionCatalog();
   const staticEntries: MetadataRoute.Sitemap = publicRoutes.map((pathname) => ({
     url: absoluteSiteUrl(pathname),
     changeFrequency: pathname === "/" || pathname === "/news" ? "weekly" : "monthly",
@@ -53,5 +55,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticEntries, ...newsEntries];
+  const competitionEntries: MetadataRoute.Sitemap = competitions.map((competition) => ({
+    url: absoluteSiteUrl(competition.detailHref),
+    changeFrequency: "weekly",
+    priority: 0.8,
+  }));
+
+  return [...staticEntries, ...competitionEntries, ...newsEntries];
 }

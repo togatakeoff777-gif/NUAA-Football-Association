@@ -7,7 +7,7 @@ import { SectionContactCard } from "@/components/ui/section-contact-card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { publicSectionContacts } from "@/data/contacts";
 import { competitionNavigation } from "@/data/navigation";
-import { getCurrentPublicCompetitions } from "@/lib/public-competition-service";
+import { getPublicCompetitionCatalog } from "@/lib/public-competition-service";
 import type { PublicCompetitionView } from "@/types/competition-center";
 
 export const metadata: Metadata = {
@@ -27,7 +27,7 @@ function getNextArrangement(competition: PublicCompetitionView) {
 }
 
 export default async function CompetitionsPage() {
-  const currentCompetitions = await getCurrentPublicCompetitions();
+  const currentCompetitions = await getPublicCompetitionCatalog();
   return (
     <>
       <SiteHeader />
@@ -64,11 +64,11 @@ export default async function CompetitionsPage() {
                   <span>CURRENT TERM</span>
                   <h2>当前学期赛事</h2>
                 </div>
-                <p>关注新生杯与天目湖五人制联赛的筹备进度和后续安排。</p>
+                <p>查看已公开发布赛事的筹备进度、赛程与后续安排。</p>
               </div>
 
-              <div className="current-competition-grid">
-                {currentCompetitions.map((competition, index) => (
+              <div className={`current-competition-grid${currentCompetitions.length === 1 ? " is-single" : ""}`}>
+                {currentCompetitions.length ? currentCompetitions.map((competition, index) => (
                   <article className="current-competition-card" key={competition.id}>
                     <header>
                       <span>{String(index + 1).padStart(2, "0")} / {competition.semesterLabel}</span>
@@ -102,7 +102,7 @@ export default async function CompetitionsPage() {
                       进入赛事详情 <span aria-hidden="true">→</span>
                     </Link>
                   </article>
-                ))}
+                )) : <div className="functional-empty"><strong>当前暂无公开赛事</strong><p>赛事资料将在管理员正式发布后显示。</p></div>}
               </div>
 
               <aside className="competition-pending-notice" aria-labelledby="competition-pending-title">

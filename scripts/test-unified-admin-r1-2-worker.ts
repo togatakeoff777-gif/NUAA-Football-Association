@@ -1,4 +1,4 @@
-import { mkdir, readFile, readdir, rename, rm, utimes, writeFile } from "node:fs/promises";
+import { cp, mkdir, readFile, readdir, rm, utimes, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { createClient } from "@libsql/client";
@@ -201,10 +201,12 @@ async function main() {
     await writeFile(snapshotPath, "bad checksum");
     await rejects(() => backup.readAndVerifyCombinedBackup(backupRoot), "Checksum mismatch was accepted.");
     await writeFile(snapshotPath, snapshotBytes);
-    const hiddenSnapshot = path.join(backupRoot, "database.hidden");
-    await rename(snapshotPath, hiddenSnapshot);
-    await rejects(() => backup.readAndVerifyCombinedBackup(backupRoot), "Missing database snapshot was accepted.");
-    await rename(hiddenSnapshot, snapshotPath);
+    const missingSnapshotRoot = path.join(root, "backup-missing-snapshot");
+    await cp(backupRoot, missingSnapshotRoot, {
+      recursive: true,
+      filter: (source) => path.basename(source) !== "database.sqlite",
+    });
+    await rejects(() => backup.readAndVerifyCombinedBackup(missingSnapshotRoot), "Missing database snapshot was accepted.");
 
     await verifier.$disconnect();
     await prisma.$disconnect();

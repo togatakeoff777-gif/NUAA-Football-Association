@@ -20,14 +20,16 @@ type CompetitionInput = {
   year?: number | null;
   campus?: string;
   format: CompetitionFormat;
+  playingFormat?: string;
   status: CompetitionStatus;
-} & Partial<Omit<CompetitionMutationInput, "name" | "year" | "campus" | "format" | "status">>;
+} & Partial<Omit<CompetitionMutationInput, "name" | "year" | "campus" | "format" | "playingFormat" | "status">>;
 
 const publicProfileFields = [
   "name",
   "year",
   "campus",
   "format",
+  "playingFormat",
   "status",
   "shortName",
   "semesterLabel",
@@ -67,6 +69,17 @@ function changedFields(existing: Record<string, unknown>, updated: Record<string
   return publicProfileFields.filter((field) => dateValue(existing[field]) !== dateValue(updated[field]));
 }
 
+function resolvePlayingFormat(format: CompetitionFormat, value?: string | null, existing?: string | null) {
+  const playingFormat = value?.trim() || existing?.trim();
+  if (playingFormat) {
+    if (playingFormat.length > 40) throw new RefereeServiceError("比赛制式不能超过 40 个字符。");
+    return playingFormat;
+  }
+  if (format === "ELEVEN_A_SIDE") return "十一人制";
+  if (format === "FUTSAL") return "五人制";
+  throw new RefereeServiceError("自定义赛事必须填写实际比赛制式。");
+}
+
 async function assertHomepageFeatureAllowed(
   tx: Prisma.TransactionClient,
   input: { publicPublished: boolean; homepageFeatured: boolean },
@@ -94,6 +107,7 @@ export async function createCompetition(input: CompetitionInput, actor: AdminAct
     return await prisma.$transaction(async (tx) => {
       const publicPublished = input.publicPublished ?? false;
       const homepageFeatured = input.homepageFeatured ?? false;
+      const playingFormat = resolvePlayingFormat(input.format, input.playingFormat);
       await assertHomepageFeatureAllowed(tx, { publicPublished, homepageFeatured });
       const competition = await tx.competition.create({
         data: {
@@ -103,6 +117,7 @@ export async function createCompetition(input: CompetitionInput, actor: AdminAct
           year: input.year ?? null,
           campus: input.campus ?? "天目湖校区",
           format: input.format,
+          playingFormat,
           status: input.status,
           semesterLabel: input.semesterLabel ?? null,
           teamFormation: input.teamFormation ?? null,
@@ -162,6 +177,7 @@ export async function updateCompetition(id: string, input: CompetitionInput, act
     }
     const publicPublished = input.publicPublished ?? existing.publicPublished;
     const homepageFeatured = input.homepageFeatured ?? existing.homepageFeatured;
+    const playingFormat = resolvePlayingFormat(input.format, input.playingFormat, existing.playingFormat);
     await assertHomepageFeatureAllowed(
       tx,
       { publicPublished, homepageFeatured },
@@ -173,6 +189,7 @@ export async function updateCompetition(id: string, input: CompetitionInput, act
       year: input.year === undefined ? existing.year : input.year,
       campus: input.campus ?? existing.campus,
       format: input.format,
+      playingFormat,
       status: input.status,
       semesterLabel: input.semesterLabel === undefined ? existing.semesterLabel : input.semesterLabel,
       teamFormation: input.teamFormation === undefined ? existing.teamFormation : input.teamFormation,

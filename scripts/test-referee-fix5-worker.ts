@@ -89,13 +89,16 @@ async function main() {
     const selectorSources = await Promise.all([
       "src/app/referees/admin/(dashboard)/affiliations/page.tsx",
       "src/app/referees/admin/(dashboard)/referees/page.tsx",
-      "src/app/referees/admin/(dashboard)/referees/new/page.tsx",
       "src/app/referees/admin/(dashboard)/referees/[id]/page.tsx",
       "src/app/referees/admin/(dashboard)/matches/new/page.tsx",
       "src/app/referees/admin/(dashboard)/matches/[id]/edit/page.tsx",
     ].map((file) => readFile(path.resolve(file), "utf8")));
     assert(selectorSources.every((source) => source.includes("referee-affiliation-options")), "仍有后台组织选择器未复用统一排序 helper。");
-    assert(affiliationManagerSource.includes("AdminAffiliationOptionGroups") && matchFormSource.includes('optgroup label="学院代表队"') && matchFormSource.includes('optgroup label="书院代表队"'), "学院与书院未在联合队、批量代表队或比赛选择器中正确分组。");
+    assert(
+      affiliationManagerSource.includes("OrganizationCheckboxSelector")
+      && matchFormSource.includes('optgroup label="当前赛事参赛球队"'),
+      "组织维护或比赛球队选择器未复用当前统一分组结构。",
+    );
 
     const aviation = units.find((unit) => unit.name === "航空学院")!;
     const energy = units.find((unit) => unit.name === "能源与动力学院")!;
@@ -115,6 +118,9 @@ async function main() {
     assert(joint.teamType === "JOINT" && await verifier.teamUnitAffiliation.count({ where: { teamId: joint.id } }) === 2, "联合队多组织关联回归失败。");
     const fromUnits = await r1.createTeamsFromUnits({ competitionId: competition.id, unitIds: [civilAviation.id], actor });
     assert(fromUnits.createdNames.join() === "民航学院", "从组织批量创建代表队回归失败。");
+    await r1.createTeamsFromUnits({ competitionId: competition.id, unitIds: [aviation.id, zhihui.id], actor });
+    const aviationTeam = await verifier.team.findUniqueOrThrow({ where: { competitionId_name: { competitionId: competition.id, name: "航空学院" } } });
+    const zhihuiTeam = await verifier.team.findUniqueOrThrow({ where: { competitionId_name: { competitionId: competition.id, name: "致慧书院" } } });
 
     const matchInput = {
       competitionId: competition.id,
@@ -129,15 +135,15 @@ async function main() {
       ...matchInput,
       slug: "fix5-on-demand-first",
       stage: "第一轮",
-      homeTeamSelection: `unit:${aviation.id}`,
-      awayTeamSelection: `unit:${zhihui.id}`,
+      homeTeamSelection: `team:${aviationTeam.id}`,
+      awayTeamSelection: `team:${zhihuiTeam.id}`,
     }, actor);
     const firstMatchRecord = await verifier.match.findUniqueOrThrow({
       where: { id: firstMatch.id },
       include: { homeTeam: { include: { unitAffiliations: true } }, awayTeam: { include: { unitAffiliations: true } } },
     });
     assert(firstMatchRecord.competitionId === competition.id && firstMatchRecord.homeTeam.name === "航空学院" && firstMatchRecord.awayTeam.name === "致慧书院", "比赛的 Competition / Team 引用不正确。");
-    assert(firstMatchRecord.homeTeam.unitAffiliations.some((link) => link.unitId === aviation.id) && firstMatchRecord.awayTeam.unitAffiliations.some((link) => link.unitId === zhihui.id), "按需创建的学院或书院代表队缺少组织关联。");
+    assert(firstMatchRecord.homeTeam.unitAffiliations.some((link) => link.unitId === aviation.id) && firstMatchRecord.awayTeam.unitAffiliations.some((link) => link.unitId === zhihui.id), "学院或书院代表队缺少组织关联。");
     assert(!/^\d{2}\s/.test(firstMatchRecord.homeTeam.name) && !firstMatchRecord.homeTeam.name.includes("CG/CZ"), "正式 Team.name 错误包含学院代码。");
 
     await refereeService.createMatchFromSelections({
@@ -146,7 +152,7 @@ async function main() {
       stage: "第二轮",
       kickoff: new Date("2030-09-19T16:00:00+08:00"),
       endAt: new Date("2030-09-19T18:00:00+08:00"),
-      homeTeamSelection: `unit:${aviation.id}`,
+      homeTeamSelection: `team:${aviationTeam.id}`,
       awayTeamSelection: `team:${freeform.id}`,
     }, actor);
     assert(await verifier.team.count({ where: { competitionId: competition.id, name: "航空学院" } }) === 1, "再次使用组织代表队时产生重复 Team。");
@@ -154,6 +160,8 @@ async function main() {
     assert((await verifier.team.findMany({ where: { competitionId: competition.id } })).some((team) => team.id === freeform.id), "自由队未保持为比赛候选球队。");
 
     const rollbackCompetition = await competitionService.createCompetition({ name: "回滚测试赛事", format: "FUTSAL", status: "PREPARING" }, actor);
+    await r1.createTeamsFromUnits({ competitionId: rollbackCompetition.id, unitIds: [energy.id], actor });
+    const rollbackTeam = await verifier.team.findUniqueOrThrow({ where: { competitionId_name: { competitionId: rollbackCompetition.id, name: "能源与动力学院" } } });
     let sameTeamRejected = false;
     try {
       await refereeService.createMatchFromSelections({
@@ -161,20 +169,20 @@ async function main() {
         competitionId: rollbackCompetition.id,
         slug: "fix5-same-team",
         stage: "同队检查",
-        homeTeamSelection: `unit:${energy.id}`,
-        awayTeamSelection: `unit:${energy.id}`,
+        homeTeamSelection: `team:${rollbackTeam.id}`,
+        awayTeamSelection: `team:${rollbackTeam.id}`,
       }, actor);
     } catch (error) {
       sameTeamRejected = error instanceof Error && error.message === "比赛双方不能相同。";
     }
     assert(sameTeamRejected, "服务端未拒绝相同主客队。");
-    assert(await verifier.team.count({ where: { competitionId: rollbackCompetition.id } }) === 0, "相同主客队失败后按需创建 Team 未事务回滚。");
+    assert(await verifier.match.count({ where: { competitionId: rollbackCompetition.id } }) === 0, "相同主客队失败后仍写入了 Match。");
 
     assert(matchFormSource.includes("disabled={!competition}") && matchFormSource.includes("请先选择赛事"), "未选择赛事时主客队未禁用或缺少提示。");
     assert(matchFormSource.includes('setHomeTeamSelection(""); setAwayTeamSelection("")'), "更换赛事时未清空原主客队选择。");
-    assert(matchFormSource.includes('optgroup label="本赛事已有球队"'), "新建比赛未列出本赛事已有球队组。");
-    assert(competitionListSource.includes("新建比赛") && competitionListSource.includes("管理球队"), "赛事列表缺少后续工作流快捷入口。");
-    assert(affiliationManagerSource.includes("普通学院/书院代表队可在创建比赛时按需自动建立"), "球队关联页定位说明不清楚。");
+    assert(matchFormSource.includes('optgroup label="当前赛事参赛球队"'), "新建比赛未列出当前赛事参赛球队组。");
+    assert(competitionListSource.includes("管理赛事") && competitionListSource.includes("参赛球队、具体比赛与裁判选派"), "赛事列表缺少统一赛事工作台入口。");
+    assert(affiliationManagerSource.includes("可从组织创建代表队、建立联合队或批量导入球队。"), "球队关联页定位说明不清楚。");
     assert(await verifier.team.count({ where: { competitionId: competition.id } }) >= 6, "创建出的球队未保存在球队关联页的数据源中。");
 
     console.log(JSON.stringify({
@@ -185,7 +193,7 @@ async function main() {
       unifiedCollegeSorting: true,
       groupedShuyuan: true,
       directCollegeAndShuyuanSelection: true,
-      organizationTeamsCreatedOnDemand: true,
+      organizationTeamsCreatedBeforeMatch: true,
       organizationTeamsReused: true,
       formalTeamNamesExcludeCodes: true,
       jointAndFreeformRegression: true,
@@ -193,7 +201,7 @@ async function main() {
       matchReferencesCorrect: true,
       noCompetitionFormState: true,
       competitionChangeClearsTeams: true,
-      sameTeamRejectedAndRolledBack: true,
+      sameTeamRejectedWithoutMatchWrite: true,
     }, null, 2));
   } finally {
     await verifier.$disconnect();

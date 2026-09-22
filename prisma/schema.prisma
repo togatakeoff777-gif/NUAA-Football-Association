@@ -10,6 +10,7 @@ datasource db {
 enum CompetitionFormat {
   ELEVEN_A_SIDE
   FUTSAL
+  CUSTOM
 }
 
 enum CompetitionStatus {
@@ -155,6 +156,7 @@ model Competition {
   year                  Int?
   campus                String
   format                CompetitionFormat
+  playingFormat         String?
   status                CompetitionStatus
   semesterLabel         String?
   teamFormation         String?

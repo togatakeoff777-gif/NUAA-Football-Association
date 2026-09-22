@@ -17,15 +17,21 @@ export const positionTemplates: Record<CompetitionFormat, readonly PositionDefin
     { key: "FOURTH_REFEREE", label: "第四裁判员", order: 4 },
     { key: "TIMEKEEPER", label: "计时员", order: 5 },
   ],
+  CUSTOM: [],
 };
 
 export const formatLabels: Record<CompetitionFormat, string> = {
   ELEVEN_A_SIDE: "十一人制",
   FUTSAL: "五人制",
+  CUSTOM: "无预设模板 / 自定义赛事",
 };
 
 export function getPositionTemplate(format: CompetitionFormat) {
   return positionTemplates[format];
+}
+
+export function hasPositionTemplate(format: CompetitionFormat) {
+  return getPositionTemplate(format).length > 0;
 }
 
 export const capabilityStatusLabels: Record<PositionCapabilityStatus, string> = {

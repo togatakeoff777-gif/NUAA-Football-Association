@@ -19,8 +19,9 @@ export const competitionStatusLabels: Record<string, string> = {
 };
 
 export const competitionFormatLabels: Record<string, string> = {
-  ELEVEN_A_SIDE: "十一人制",
-  FUTSAL: "五人制",
+  ELEVEN_A_SIDE: "十一人制裁判岗位模板",
+  FUTSAL: "五人制裁判岗位模板",
+  CUSTOM: "无预设模板 / 自定义赛事",
 };
 
 export const dataSourceLabels: Record<string, string> = {

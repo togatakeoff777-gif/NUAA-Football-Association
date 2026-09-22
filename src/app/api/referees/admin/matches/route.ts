@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
-import { prisma } from "@/lib/prisma";
-import { revalidatePublicCompetitionPaths } from "@/lib/public-competition-revalidation";
+import { revalidatePublicCompetitionById } from "@/lib/public-competition-revalidation";
 import { refereeApiErrorResponse, RefereeApiInputError } from "@/lib/referee-api";
 import { createMatchFromSelections } from "@/lib/referee-service";
 import {
@@ -68,11 +67,7 @@ export async function POST(request: Request) {
       internalNote: readShortText(body.internalNote, "内部备注", 500, false),
       positionCounts: readPositionCounts(body.positionCounts),
     }, actor);
-    const competition = await prisma.competition.findUnique({
-      where: { id: match.competitionId },
-      select: { slug: true },
-    });
-    revalidatePublicCompetitionPaths(competition?.slug);
+    await revalidatePublicCompetitionById(match.competitionId);
     return NextResponse.json({ ok: true, matchId: match.id }, { status: 201 });
   } catch (error) {
     return refereeApiErrorResponse(error, "场次创建失败，请稍后重试。");

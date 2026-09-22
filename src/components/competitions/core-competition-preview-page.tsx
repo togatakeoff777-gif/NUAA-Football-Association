@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { CompetitionArchiveLayout } from "@/components/competitions/archive/competition-archive-layout";
 import { ShareActions } from "@/components/share/share-actions";
-import { freshmanCupReports } from "@/data/freshman-cup-2026";
 import type { PublicCompetitionView } from "@/types/competition-center";
 
 type CoreCompetitionPreviewPageProps = {
@@ -28,8 +27,8 @@ function getSchedulePresentation(competition: PublicCompetitionView) {
 export function CoreCompetitionPreviewPage({
   competition,
 }: CoreCompetitionPreviewPageProps) {
-  const reports = competition.slug === "freshman-cup" ? freshmanCupReports : [];
   const schedule = getSchedulePresentation(competition);
+  const appointmentMatches = competition.matches.filter((match) => match.appointment?.positions.length);
   return (
     <CompetitionArchiveLayout
       className="core-competition-preview-page"
@@ -85,11 +84,8 @@ export function CoreCompetitionPreviewPage({
             ))}
           </div>
           <p className="core-competition-summary">{competition.summary}</p>
-          {competition.dataOrigin === "database" ? (
-            <p className="core-competition-summary"><strong>赛事公告：</strong>{competition.notice}</p>
-          ) : null}
-          {competition.dataOrigin === "database"
-          && competition.status === "registration"
+          <p className="core-competition-summary"><strong>赛事公告：</strong>{competition.notice}</p>
+          {competition.status === "registration"
           && competition.registrationUrl ? (
             <Link
               className="text-link"
@@ -105,13 +101,29 @@ export function CoreCompetitionPreviewPage({
       </section>
 
       <section className="cup-archive-section cup-archive-section-tint" id="schedule" aria-labelledby={`${competition.id}-schedule-title`}>
-        <div className="page-shell core-competition-pending">
-          <div>
+        <div className="page-shell">
+          <div className="core-competition-section-intro">
+            <div>
             <p>SCHEDULE & RESULTS</p>
             <h2 id={`${competition.id}-schedule-title`}>赛程与赛果</h2>
+            </div>
+            <p>{schedule.summary}</p>
           </div>
-          <p>{schedule.summary}</p>
-          <Link href={schedule.href}>{schedule.actionLabel} →</Link>
+          {competition.matches.length ? (
+            <div className="core-competition-record-list">
+              {competition.matches.map((match) => (
+                <article id={`match-${match.id}`} key={match.id}>
+                  <header><span>{match.round || match.stage}</span><strong>{match.statusLabel}</strong></header>
+                  <div className="core-competition-matchup">
+                    <b>{match.homeTeam.name}</b>
+                    <span>{match.status === "completed" && match.homeScore !== null && match.awayScore !== null ? `${match.homeScore} : ${match.awayScore}` : "VS"}</span>
+                    <b>{match.awayTeam.name}</b>
+                  </div>
+                  <p>{match.dateLabel} {match.timeLabel} · {match.venue}</p>
+                </article>
+              ))}
+            </div>
+          ) : <div className="core-competition-empty"><strong>当前暂无赛程赛果</strong><p>赛程将在正式发布后显示。</p></div>}
         </div>
       </section>
 
@@ -127,24 +139,37 @@ export function CoreCompetitionPreviewPage({
       </section>
 
       <section className="cup-archive-section cup-archive-section-tint" id="teams" aria-labelledby={`${competition.id}-teams-title`}>
-        <div className="page-shell core-competition-pending">
-          <div>
+        <div className="page-shell">
+          <div className="core-competition-section-intro">
+            <div>
             <p>TEAMS</p>
             <h2 id={`${competition.id}-teams-title`}>参赛球队</h2>
+            </div>
+            <p>仅展示与本赛事直接关联的参赛球队。</p>
           </div>
-          <p>参赛队伍与公开联系人尚待赛事通知或球队负责人确认。</p>
-          <Link href="/teams">进入当前组队与球队档案 →</Link>
+          {competition.teams.length ? (
+            <div className="core-competition-team-list">
+              {competition.teams.map((team, index) => <article key={team.id}><span>{String(index + 1).padStart(2, "0")}</span><div><strong>{team.name}</strong><small>{team.teamTypeLabel}</small></div></article>)}
+            </div>
+          ) : <div className="core-competition-empty"><strong>暂无参赛球队</strong><p>球队将在赛事报名与确认后显示。</p></div>}
         </div>
       </section>
 
       <section className="cup-archive-section" id="officials" aria-labelledby={`${competition.id}-officials-title`}>
-        <div className="page-shell core-competition-pending">
-          <div>
+        <div className="page-shell">
+          <div className="core-competition-section-intro">
+            <div>
             <p>REFEREE APPOINTMENTS</p>
             <h2 id={`${competition.id}-officials-title`}>裁判选派</h2>
+            </div>
+            <p>仅展示本赛事已正式发布或已完成的公开选派。</p>
           </div>
-          <p>当前暂无已发布选派，正式安排以裁判中心公开记录为准。</p>
-          <Link href="/referees/assignments">查看裁判员选派公示 →</Link>
+          {appointmentMatches.length ? (
+            <div className="core-competition-record-list">
+              {appointmentMatches.map((match) => <article key={match.id}><header><span>{match.homeTeam.name} vs {match.awayTeam.name}</span><strong>{match.dateLabel}</strong></header><ul>{match.appointment!.positions.map((position) => <li key={position.key}><span>{position.label}</span><b>{position.refereeName}</b></li>)}</ul></article>)}
+            </div>
+          ) : <div className="core-competition-empty"><strong>当前暂无已发布选派</strong><p>正式安排以裁判中心公开记录为准。</p></div>}
+          <Link className="text-link core-competition-section-link" href="/referees/assignments">查看全部裁判员选派公示 →</Link>
         </div>
       </section>
 
@@ -164,17 +189,7 @@ export function CoreCompetitionPreviewPage({
             <p>REPORTS</p>
             <h2 id={`${competition.id}-reports-title`}>赛事报道</h2>
           </div>
-          {reports.length ? (
-            <div className="core-competition-report-list">
-              {reports.map((report) => (
-                <Link href={report.href} key={report.id}>
-                  <time>{report.dateLabel}</time>
-                  <span>{report.category}</span>
-                  <strong>{report.title}</strong>
-                </Link>
-              ))}
-            </div>
-          ) : <p>当前暂无本届赛事报道。</p>}
+          <p>暂无赛事报道</p>
           <Link href="/news">进入新闻公告 →</Link>
         </div>
       </section>

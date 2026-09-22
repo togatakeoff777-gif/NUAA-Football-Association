@@ -156,7 +156,7 @@ export async function setTeamUnitAffiliations(
     throw new RefereeServiceError("联合队须关联至少两个组织单位。");
   }
   const result = await prisma.$transaction(async (tx) => {
-    const team = await tx.team.findUnique({ where: { id: teamId }, select: { id: true, name: true } });
+    const team = await tx.team.findUnique({ where: { id: teamId }, select: { id: true, name: true, competitionId: true } });
     if (!team) throw new RefereeServiceError("球队不存在。", 404);
     const units = await tx.affiliationUnit.findMany({ where: { id: { in: uniqueIds } }, select: { id: true, legacyCollegeId: true } });
     if (units.length !== uniqueIds.length) throw new RefereeServiceError("球队组织关联包含无效单位。");
@@ -905,7 +905,7 @@ export async function getCompletedRefereeStatistics(options: {
     row.positions[position.key] = (row.positions[position.key] ?? 0) + 1;
     const competition = position.appointment.match.competition;
     if (competition.format === "ELEVEN_A_SIDE") row.elevenASideAppointmentIds.add(position.appointmentId);
-    else row.futsalAppointmentIds.add(position.appointmentId);
+    else if (competition.format === "FUTSAL") row.futsalAppointmentIds.add(position.appointmentId);
     if (position.key === "REFEREE") row.refereeRoleAppointmentIds.add(position.appointmentId);
     else if (["ASSISTANT_REFEREE_1", "ASSISTANT_REFEREE_2", "RESERVE_ASSISTANT_REFEREE", "SECOND_REFEREE"].includes(position.key)) row.assistantRoleAppointmentIds.add(position.appointmentId);
     else row.otherRoleAppointmentIds.add(position.appointmentId);

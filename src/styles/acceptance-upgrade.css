@@ -280,6 +280,92 @@ main dt {
   color: #3f5875;
 }
 
+.core-competition-section-intro {
+  display: grid;
+  grid-template-columns: minmax(240px, .75fr) minmax(0, 1.25fr);
+  align-items: end;
+  gap: 36px;
+  margin-bottom: 24px;
+}
+
+.core-competition-section-intro > div > p {
+  color: var(--aviation-blue);
+  font-size: 14px;
+  font-weight: 850;
+  letter-spacing: .14em;
+}
+
+.core-competition-section-intro h2 {
+  margin-top: 8px;
+  font-size: clamp(29px, 3vw, 42px);
+}
+
+.core-competition-record-list,
+.core-competition-team-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.core-competition-record-list article,
+.core-competition-team-list article,
+.core-competition-empty {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.core-competition-record-list header,
+.core-competition-team-list article,
+.core-competition-record-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.core-competition-record-list header span,
+.core-competition-record-list p,
+.core-competition-team-list small,
+.core-competition-empty p {
+  color: var(--muted);
+}
+
+.core-competition-matchup {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 14px;
+  margin: 24px 0;
+  text-align: center;
+}
+
+.core-competition-record-list ul {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.core-competition-team-list article {
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.core-competition-team-list article > span {
+  color: var(--aviation-blue);
+  font-weight: 850;
+}
+
+.core-competition-team-list article div {
+  display: grid;
+  gap: 4px;
+}
+
+.core-competition-section-link {
+  display: inline-flex;
+  margin-top: 20px;
+}
+
 .core-competition-pending {
   display: grid;
   grid-template-columns: minmax(240px, .75fr) minmax(0, 1.25fr) auto;
@@ -506,6 +592,7 @@ main dt {
   }
 
   .core-competition-pending,
+  .core-competition-section-intro,
   .join-contact-panel {
     grid-template-columns: 1fr;
     gap: 20px;
@@ -522,6 +609,10 @@ main dt {
 }
 
 @media (max-width: 767px) {
+  .core-competition-record-list,
+  .core-competition-team-list {
+    grid-template-columns: 1fr;
+  }
   main p,
   main li,
   main dd,

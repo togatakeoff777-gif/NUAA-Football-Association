@@ -3,12 +3,12 @@ import { notFound } from "next/navigation";
 
 import { AdminAppointmentEditor, type AppointmentMatchView } from "@/components/referees/admin/admin-appointment-editor";
 import { AdminMatchDangerActions } from "@/components/referees/admin/admin-match-danger-actions";
-import { AdminStatusBadge, appointmentStatusLabels, matchStatusLabels } from "@/components/referees/admin/admin-ui";
+import { AdminEmptyState, AdminStatusBadge, appointmentStatusLabels, matchStatusLabels } from "@/components/referees/admin/admin-ui";
 import { adminRefereeSelect } from "@/lib/referee-dto";
 import { detectAppointmentWarnings } from "@/lib/referee-conflicts";
 import { applicationStatusLabels, formatRefereeDateTime, parsePreferredPositions } from "@/lib/referee-presenters";
 import { getBeijingDayBounds, resolveMatchAvailability } from "@/lib/referee-availability";
-import { getPositionTemplate } from "@/lib/referee-roles";
+import { getPositionTemplate, hasPositionTemplate } from "@/lib/referee-roles";
 import { getCompletedRefereeStatistics } from "@/lib/referee-r1-service";
 import { prisma } from "@/lib/prisma";
 
@@ -34,6 +34,7 @@ export default async function AdminMatchDetailPage({ params, appointmentOnly = f
     getCompletedRefereeStatistics(),
   ]);
   if (!match) notFound();
+  const templateConfigured = hasPositionTemplate(match.competition.format);
   const targetEnd = match.endAt ?? new Date(match.kickoff.getTime() + 60_000);
   const matchDay = getBeijingDayBounds(match.kickoff);
   const refereeIds = referees.map((referee) => referee.id);
@@ -73,10 +74,12 @@ export default async function AdminMatchDetailPage({ params, appointmentOnly = f
   ]));
   const overlappingReferees = new Set(candidateOverlaps.flatMap((item) => item.refereeId ? [item.refereeId] : []));
   const interestedReferees = new Set(match.applications.map((application) => application.refereeId));
-  const configured = match.positionRequirements.length ? match.positionRequirements : getPositionTemplate(match.competition.format).map((position) => ({ ...position, count: 1 }));
+  const configured = templateConfigured
+    ? match.positionRequirements.length ? match.positionRequirements : getPositionTemplate(match.competition.format).map((position) => ({ ...position, count: 1 }))
+    : [];
   const template = configured.flatMap((position) => Array.from({ length: position.count }, (_, index) => ({ key: position.key, label: position.label, slot: index + 1 })));
   const currentPositions = match.appointment?.positions.map(({ key, slot, refereeId }) => ({ key, slot, refereeId })) ?? [];
-  const initialWarnings = currentPositions.length ? await detectAppointmentWarnings(match.id, currentPositions) : [];
+  const initialWarnings = templateConfigured && currentPositions.length ? await detectAppointmentWarnings(match.id, currentPositions) : [];
   const completedCounts = new Map(statistics.map((item) => [item.refereeId, item.totalMatches]));
   const appointmentView: AppointmentMatchView = {
     id: match.id, appointmentId: match.appointment?.id ?? null, statusKey: match.appointment?.status ?? "NONE",
@@ -94,7 +97,7 @@ export default async function AdminMatchDetailPage({ params, appointmentOnly = f
         <AdminMatchDangerActions matchId={match.id} matchLabel={matchLabel} protectedReason={deletionProtected ? "该比赛已有报名意向、选派或正式历史记录，不能直接删除。请使用“取消比赛”保留业务历史。" : undefined} />
       </div> : null}
     </section>
-    <AdminAppointmentEditor
+    {templateConfigured ? <AdminAppointmentEditor
       applications={match.applications.map((item) => ({ id: item.id, referee: `${item.referee.publicCode} · ${item.referee.name}`, status: item.status, statusLabel: applicationStatusLabels[item.status], preferred: parsePreferredPositions(item.preferredPositions).map((key) => getPositionTemplate(match.competition.format).find((position) => position.key === key)?.label ?? key).join(" / "), note: item.note, createdAt: formatRefereeDateTime(item.createdAt) }))}
       initialWarnings={initialWarnings.map((warning) => ({ code: warning.code, refereeId: warning.refereeId, refereeName: warning.refereeName, message: warning.message, severity: warning.severity, overridable: warning.overridable }))}
       match={appointmentView}
@@ -109,7 +112,7 @@ export default async function AdminMatchDetailPage({ params, appointmentOnly = f
         overlap: overlappingReferees.has(item.id),
         interested: interestedReferees.has(item.id),
       }))}
-    />
+    /> : <section className="admin-panel"><AdminEmptyState title="该赛事暂未配置对应的裁判岗位模板" description="球队、比赛及公开赛事页面可正常使用；配置专用岗位模板前，裁判报名与自动选派保持关闭。" /></section>}
     <section className="admin-panel admin-history-panel"><details className="admin-history-details"><summary><div><h2>版本历史（{match.appointment?.versions.length ?? 0}）</h2><p>确认知悉绑定具体发布版本，重新发布后须重新确认。</p></div><span aria-hidden="true" className="admin-history-action" /></summary><div className="admin-history-content">
       {match.appointment?.versions.length ? <div className="admin-table-scroll"><table className="admin-data-table"><thead><tr><th>版本</th><th>状态</th><th>操作人</th><th>修改原因</th><th>冲突覆盖原因</th><th>确认人数</th><th>时间</th></tr></thead><tbody>{match.appointment.versions.map((version) => <tr key={version.id}><td><strong>R{version.revision}</strong></td><td><AdminStatusBadge status={version.status} label={appointmentStatusLabels[version.status]} /></td><td>{version.createdByAdmin ? `${version.createdByAdmin.displayName} (${version.createdByAdmin.username})` : "Legacy / 未记录"}</td><td>{version.reason || "—"}</td><td>{version.overrideReason || "—"}</td><td>{version.acknowledgements.length}</td><td>{formatRefereeDateTime(version.createdAt)}</td></tr>)}</tbody></table></div> : <div className="admin-empty-state"><strong>暂无版本记录</strong><p>首次保存或发布后会形成版本留痕。</p></div>}
     </div></details></section>

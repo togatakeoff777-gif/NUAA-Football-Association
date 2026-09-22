@@ -8,7 +8,7 @@ type AvailabilityRecord = {
   startAt: string;
   endAt: string;
   kind: "AVAILABLE" | "UNAVAILABLE";
-  competitionFormat: "ELEVEN_A_SIDE" | "FUTSAL" | null;
+  competitionFormat: "ELEVEN_A_SIDE" | "FUTSAL" | "CUSTOM" | null;
   note: string;
 };
 
@@ -153,7 +153,7 @@ export function RefereeAvailabilityCalendar({ records }: { records: Availability
         <div className="referee-editor-fields"><label><span>比赛制式</span><select name="competitionType"><option value="BOTH">十一人制与五人制均可</option><option value="ELEVEN_A_SIDE">仅十一人制</option><option value="FUTSAL">仅五人制</option></select></label><label><span>说明（选填）</span><input maxLength={240} name="note" placeholder="例如：需提前确认交通安排" /></label></div>
         <button disabled={submitting} type="submit">{submitting ? "保存中…" : "保存此日期"}</button>
       </form>
-      <div className="referee-day-records"><header><h3>已保存记录</h3><span>{selectedRecords.length} 条</span></header>{selectedRecords.length ? selectedRecords.map((record) => <article key={record.id}><div><strong>{record.kind === "AVAILABLE" ? isFullDay(record) ? "整天可执裁" : "指定时段可执裁" : "整天不可执裁"}</strong><span>{isFullDay(record) ? "整天" : `${timeValue(record.startAt)}–${timeValue(record.endAt)}`} · {record.competitionFormat === null ? "两种制式" : record.competitionFormat === "ELEVEN_A_SIDE" ? "十一人制" : "五人制"}</span>{record.note ? <p>{record.note}</p> : null}</div><button aria-label={`删除${record.kind === "AVAILABLE" ? "可执裁" : "不可执裁"}记录`} onClick={() => void remove(record.id)} type="button">删除</button></article>) : <div className="referee-day-empty"><strong>这一天尚未设置</strong><p>选择上方状态并保存后，管理员选派时会看到对应提示。</p></div>}</div>
+      <div className="referee-day-records"><header><h3>已保存记录</h3><span>{selectedRecords.length} 条</span></header>{selectedRecords.length ? selectedRecords.map((record) => <article key={record.id}><div><strong>{record.kind === "AVAILABLE" ? isFullDay(record) ? "整天可执裁" : "指定时段可执裁" : "整天不可执裁"}</strong><span>{isFullDay(record) ? "整天" : `${timeValue(record.startAt)}–${timeValue(record.endAt)}`} · {record.competitionFormat === null ? "两种制式" : record.competitionFormat === "ELEVEN_A_SIDE" ? "十一人制" : record.competitionFormat === "FUTSAL" ? "五人制" : "无预设模板"}</span>{record.note ? <p>{record.note}</p> : null}</div><button aria-label={`删除${record.kind === "AVAILABLE" ? "可执裁" : "不可执裁"}记录`} onClick={() => void remove(record.id)} type="button">删除</button></article>) : <div className="referee-day-empty"><strong>这一天尚未设置</strong><p>选择上方状态并保存后，管理员选派时会看到对应提示。</p></div>}</div>
       <p aria-live="polite" className="referee-form-message">{message}</p>
     </section>
   </div>;

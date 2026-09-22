@@ -16,7 +16,8 @@ export type AdminCompetitionRecord = {
   shortName: string;
   year: number | null;
   campus: string;
-  format: "ELEVEN_A_SIDE" | "FUTSAL";
+  format: "ELEVEN_A_SIDE" | "FUTSAL" | "CUSTOM";
+  playingFormat: string;
   status: "PREPARING" | "REGISTRATION" | "ONGOING" | "COMPLETED";
   semesterLabel: string;
   teamFormation: string;
@@ -75,6 +76,7 @@ export function AdminCompetitionForm({ competition }: { competition?: AdminCompe
       year: yearText ? Number(yearText) : null,
       campus: form.get("campus"),
       format: form.get("format"),
+      playingFormat: form.get("playingFormat"),
       status: form.get("status"),
       semesterLabel: form.get("semesterLabel"),
       teamFormation: form.get("teamFormation"),
@@ -119,14 +121,15 @@ export function AdminCompetitionForm({ competition }: { competition?: AdminCompe
           <span>页面地址标识</span>
           {competition
             ? <input aria-readonly="true" readOnly value={competition.slug} />
-            : <input maxLength={80} name="slug" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="freshman-cup" required />}
+            : <input maxLength={80} name="slug" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="campus-seven-a-side" required />}
         </label>
         <label><span>赛事名称</span><input defaultValue={competition?.name} maxLength={120} name="name" placeholder="例如：2026 新生杯" required /></label>
         <p className="admin-competition-slug-help">用于生成赛事固定网址，仅支持小写英文字母、数字和连字符；创建后不建议修改。</p>
         <label><span>赛事简称</span><input defaultValue={competition?.shortName} maxLength={60} name="shortName" placeholder="例如：新生杯" /></label>
         <label><span>赛季年份</span><input defaultValue={competition?.year ?? ""} max={2200} min={1900} name="year" placeholder="2026" type="number" /></label>
         <label><span>校区</span><input defaultValue={competition?.campus ?? "天目湖校区"} maxLength={60} name="campus" required /></label>
-        <label><span>比赛制式</span><select defaultValue={competition?.format ?? "ELEVEN_A_SIDE"} name="format">{Object.entries(competitionFormatLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+        <label><span>比赛制式</span><input defaultValue={competition?.playingFormat ?? ""} list="competition-playing-formats" maxLength={40} name="playingFormat" placeholder="例如：七人制" required /><datalist id="competition-playing-formats"><option value="十一人制" /><option value="五人制" /><option value="六人制" /><option value="七人制" /><option value="八人制" /><option value="九人制" /></datalist><small>用于官网展示，可输入未来其他有效制式。</small></label>
+        <label><span>裁判岗位模板</span><select defaultValue={competition?.format ?? "ELEVEN_A_SIDE"} name="format">{Object.entries(competitionFormatLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select><small>仅控制裁判岗位与能力校验，不会改变官网比赛制式。</small></label>
         <label><span>赛事状态</span><select defaultValue={competition?.status ?? "PREPARING"} name="status">{Object.entries(competitionStatusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
         <label><span>学期</span><select defaultValue={competition?.semesterLabel ?? ""} name="semesterLabel"><option value="">待确认</option><option value="上半学期">上半学期</option><option value="下半学期">下半学期</option></select></label>
         <label><span>组队方式</span><input defaultValue={competition?.teamFormation} maxLength={60} name="teamFormation" placeholder="院系组队 / 自由组队" /></label>
@@ -134,7 +137,7 @@ export function AdminCompetitionForm({ competition }: { competition?: AdminCompe
     </section>
 
     <section className="admin-form-section">
-      <header><h2>公开状态</h2><p>“公开发布”开启后，后台数据将替代当前静态赛事资料进入官网公开页面。</p></header>
+      <header><h2>公开状态</h2><p>“公开发布”开启后，该赛事将进入官网公开目录与通用赛事详情页。</p></header>
       <div className="admin-checkbox-list">
         <label>
           <input
@@ -190,7 +193,7 @@ export function AdminCompetitionForm({ competition }: { competition?: AdminCompe
     </section>
 
     <section className="admin-form-section">
-      <header><h2>赛事公开资料</h2><p>这些内容仅在赛事明确公开发布后替代静态资料。</p></header>
+      <header><h2>赛事公开资料</h2><p>这些内容仅在赛事明确公开发布后向公众展示。</p></header>
       <div className="admin-form-grid">
         <label><span>主办单位</span><input defaultValue={competition?.host} maxLength={240} name="host" /></label>
         <label><span>承办单位</span><input defaultValue={competition?.organizer} maxLength={240} name="organizer" /></label>

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
+import { revalidatePublicCompetitionById } from "@/lib/public-competition-revalidation";
 import { refereeApiErrorResponse } from "@/lib/referee-api";
 import { deleteTeamSafely } from "@/lib/referee-r1-service";
 
@@ -12,7 +13,8 @@ export async function DELETE(
   if (!authorization.ok) return authorization.response;
   try {
     const { id } = await context.params;
-    await deleteTeamSafely(id, authorization.authorization);
+    const deleted = await deleteTeamSafely(id, authorization.authorization);
+    await revalidatePublicCompetitionById(deleted.competitionId);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return refereeApiErrorResponse(error, "球队删除失败，请稍后重试。");

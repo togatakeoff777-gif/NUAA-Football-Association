@@ -9,7 +9,8 @@ export type PositionDefinition = { key: string; label: string };
 export type CompetitionOption = {
   id: string;
   name: string;
-  format: "ELEVEN_A_SIDE" | "FUTSAL";
+  format: "ELEVEN_A_SIDE" | "FUTSAL" | "CUSTOM";
+  playingFormat: string;
   teams: Array<{ id: string; name: string; teamType: "ORGANIZATION" | "JOINT" | "FREEFORM"; unitIds: string[] }>;
   positions: PositionDefinition[];
 };
@@ -119,7 +120,7 @@ export function AdminMatchForm({
     <form className="admin-form" onSubmit={submit}>
       <nav aria-label="比赛表单分区" className="admin-tabs"><button aria-selected={tab === "basic"} onClick={() => setTab("basic")} role="tab" type="button">比赛信息</button><button aria-selected={tab === "assignment"} onClick={() => setTab("assignment")} role="tab" type="button">报名与岗位</button><button aria-selected={tab === "notes"} onClick={() => setTab("notes")} role="tab" type="button">说明与来源</button></nav>
       <section className="admin-form-section" hidden={tab !== "basic"}><header><h2>比赛信息</h2><p>维护赛程、双方、场地与当前比赛状态。</p></header><div className="admin-form-grid admin-form-grid-3">
-        <label><span>所属赛事</span>{match || lockCompetition ? <><div className="admin-form-readonly"><strong>{competition?.name ?? "赛事不存在"}</strong><small>{competition?.format === "ELEVEN_A_SIDE" ? "十一人制" : "五人制"}</small></div><input name="competitionId" type="hidden" value={competitionId} /></> : <><select name="competitionId" onChange={(event) => { setCompetitionId(event.target.value); setHomeTeamSelection(""); setAwayTeamSelection(""); }} required value={competitionId}><option value="">请选择赛事</option>{competitions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select><small>选择赛事后再选择参赛球队。</small></>}</label>
+        <label><span>所属赛事</span>{match || lockCompetition ? <><div className="admin-form-readonly"><strong>{competition?.name ?? "赛事不存在"}</strong><small>{competition?.playingFormat ?? "比赛制式待确认"}</small></div><input name="competitionId" type="hidden" value={competitionId} /></> : <><select name="competitionId" onChange={(event) => { setCompetitionId(event.target.value); setHomeTeamSelection(""); setAwayTeamSelection(""); }} required value={competitionId}><option value="">请选择赛事</option>{competitions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select><small>选择赛事后再选择参赛球队。</small></>}</label>
         <label><span>页面标识</span><input defaultValue={match?.slug} name="slug" required /></label>
         <label><span>阶段</span><input defaultValue={match?.stage} name="stage" required /></label>
         <label><span>标准轮次</span><input defaultValue={match?.round} name="round" /></label>
@@ -132,9 +133,9 @@ export function AdminMatchForm({
         <label><span>取消原因</span><input defaultValue={match?.cancellationReason} name="cancellationReason" /></label>
       </div></section>
       <section className="admin-form-section" hidden={tab !== "assignment"}><header><h2>报名与岗位</h2><p>岗位名称由当前比赛制式模板集中维护。</p></header><div className="admin-form-grid">
-        <label><span>报名窗口</span><select defaultValue={match?.applicationWindowStatus ?? "CLOSED"} name="applicationWindowStatus"><option value="CLOSED">关闭</option><option value="OPEN">开放</option></select></label>
+        <label><span>报名窗口</span><select defaultValue={match?.applicationWindowStatus ?? "CLOSED"} name="applicationWindowStatus"><option value="CLOSED">关闭</option><option disabled={competition?.format === "CUSTOM"} value="OPEN">开放</option></select>{competition?.format === "CUSTOM" ? <small>该赛事暂未配置对应的裁判岗位模板，不能开放裁判报名。</small> : null}</label>
         <label><span>报名截止</span><input defaultValue={match?.applicationDeadline} name="applicationDeadline" type="datetime-local" /></label>
-      </div>{competition ? <PositionCounts defaults={match?.positionCounts} definitions={competition.positions} /> : null}</section>
+      </div>{competition?.format === "CUSTOM" ? <div className="admin-empty-state"><strong>无预设裁判岗位模板</strong><p>该赛事可正常维护球队与比赛，但暂不提供自动岗位、报名或选派。</p></div> : competition ? <PositionCounts defaults={match?.positionCounts} definitions={competition.positions} /> : null}</section>
       <section className="admin-form-section" hidden={tab !== "notes"}><header><h2>说明与来源</h2><p>保留后续数据接入所需字段；当前仅维护本地赛事资料。</p></header><div className="admin-form-grid">
         <label><span>数据来源</span><select defaultValue={match?.source ?? "MANUAL"} name="source"><option value="MANUAL">手工维护</option><option value="FOOTBALL_CHINA">足球中国</option></select></label>
         <label><span>外部比赛 ID</span><input defaultValue={match?.externalMatchId} name="externalMatchId" placeholder="当前不自行生成" /></label>

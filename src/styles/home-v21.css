@@ -124,6 +124,8 @@
 
 .home-current-competitions { padding: 82px 0; background: var(--glacier); }
 .current-competition-layout { display: grid; grid-template-columns: 1.08fr .92fr; gap: 18px; }
+.current-competition-layout.is-single { grid-template-columns: minmax(0, 760px); justify-content: center; }
+.home-current-competitions-empty { min-height: 220px; }
 .featured-competition-card { position: relative; min-height: 480px; overflow: hidden; display: flex; flex-direction: column; padding: 34px; background: linear-gradient(140deg, #123873, var(--space-blue) 70%); color: white; box-shadow: 0 24px 65px rgba(9, 23, 53, .2); }
 .featured-competition-card::before { content: ""; position: absolute; inset: 0; opacity: .3; background-image: linear-gradient(rgba(130,199,255,.13) 1px, transparent 1px), linear-gradient(90deg, rgba(130,199,255,.13) 1px, transparent 1px); background-size: 42px 42px; mask-image: linear-gradient(120deg, black, transparent 75%); }
 .featured-competition-top, .featured-competition-card > p, .featured-competition-card > h3, .featured-competition-card > dl, .featured-competition-card > a { position: relative; z-index: 1; }

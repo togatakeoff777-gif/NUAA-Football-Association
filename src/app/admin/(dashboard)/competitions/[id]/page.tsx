@@ -9,8 +9,6 @@ import { prisma } from "@/lib/prisma";
 import { guardUnifiedAdminPage } from "@/lib/unified-admin-page";
 import { hasUnifiedAdminPermission } from "@/lib/unified-admin-rbac";
 
-const formatLabels = { ELEVEN_A_SIDE: "十一人制", FUTSAL: "五人制" } as const;
-
 export default async function CompetitionWorkspacePage({ params }: { params: Promise<{ id: string }> }) {
   const actor = await guardUnifiedAdminPage("competitions:read", "competitions");
   const { id } = await params;
@@ -39,13 +37,13 @@ export default async function CompetitionWorkspacePage({ params }: { params: Pro
     .map((unit) => ({ ...unit, label: affiliationOptionLabel(unit) }));
   const canWrite = hasUnifiedAdminPermission(actor.roles, "competitions:write");
   return <>
-    <AdminPageHeader eyebrow="COMPETITION WORKSPACE" title={competition.name} description={`${formatLabels[competition.format]} · 当前赛事工作台`} actions={<Link className="admin-button admin-button-secondary" href="/admin/competitions">返回赛事列表</Link>} />
+    <AdminPageHeader eyebrow="COMPETITION WORKSPACE" title={competition.name} description={`${competition.playingFormat ?? (competition.format === "FUTSAL" ? "五人制" : competition.format === "ELEVEN_A_SIDE" ? "十一人制" : "比赛制式待补充")} · 当前赛事工作台`} actions={<Link className="admin-button admin-button-secondary" href="/admin/competitions">返回赛事列表</Link>} />
     <AdminCompetitionWorkspace
       canWrite={canWrite}
       competition={{
         id: competition.id,
         name: competition.name,
-        formatLabel: formatLabels[competition.format],
+        formatLabel: competition.playingFormat ?? (competition.format === "FUTSAL" ? "五人制" : competition.format === "ELEVEN_A_SIDE" ? "十一人制" : "比赛制式待补充"),
         statusLabel: competitionStatusLabels[competition.status],
         year: competition.year,
         slug: competition.slug,

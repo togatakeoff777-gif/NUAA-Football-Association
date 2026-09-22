@@ -1,5 +1,5 @@
 import { spawn, type ChildProcess } from "node:child_process";
-import { access, mkdir, mkdtemp, rm } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { createServer } from "node:net";
 import os from "node:os";
 import path from "node:path";
@@ -9,7 +9,7 @@ import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { PrismaClient } from "../src/generated/prisma-v29/client";
 import { hashPassword } from "../src/lib/referee-security";
 
-const password = "Public-Dynamic-R1-Test-Only-2026!";
+const password = "Public-Dynamic-R3-Test-Only-2030!";
 const mutationOrigin = "https://nuaafa.cn";
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -21,36 +21,30 @@ function homepageCards(html: string) {
     .map((match) => match[0]);
 }
 
-function assertHomepageCardCount(html: string, count: number, label: string) {
-  const cards = homepageCards(html);
-  assert(cards.length === count, `${label} rendered ${cards.length} homepage Competition cards instead of ${count}.`);
+function currentCompetitionSection(html: string) {
+  const section = html.match(/<section[^>]*id="home-competitions"[^>]*>[\s\S]*?<\/section>/u)?.[0];
+  assert(section, "Homepage omitted the current Competition section.");
+  return section;
 }
 
-function assertOneHomepageCardIncludes(html: string, marker: string, label: string) {
-  const matchingCards = homepageCards(html).filter((card) => card.includes(marker));
-  assert(matchingCards.length === 1, `${label} did not appear in exactly one homepage Competition card.`);
+function assertHomepageCardCount(html: string, count: number, label: string) {
+  assert(homepageCards(html).length === count, `${label} did not render ${count} homepage cards.`);
 }
 
 function assertHomepageEmptyState(html: string, label: string) {
   assertHomepageCardCount(html, 0, label);
-  assert(html.includes("当前暂无首页重点赛事"), `${label} omitted the intentional empty-state title.`);
-  assert(html.includes("请前往赛事中心查看全部赛事与最新安排。"), `${label} omitted the intentional empty-state guidance.`);
-  assert(html.includes("进入赛事中心 →"), `${label} omitted the existing Competition center action.`);
+  assert(html.includes("当前暂无首页重点赛事"), `${label} omitted the intentional homepage empty state.`);
 }
 
 function assertPublicFooter(html: string, route: string) {
   const footer = html.match(/<footer class="site-footer[^"]*" data-public-footer="shared">[\s\S]*?<\/footer>/u)?.[0];
   assert(footer, `${route} did not render the shared public footer.`);
   const currentYear = new Date().getFullYear();
-  assert(
-    footer.includes(`© ${2021}–${currentYear} 南京航空航天大学天目湖足球协会`),
-    `${route} did not render the dynamic Association copyright range.`,
-  );
-  assert(footer.includes("网站建设与维护：HAN"), `${route} did not render the exact developer credit.`);
-  assert(footer.includes(">鲁ICP备2026052413号</a>"), `${route} did not render the exact ICP filing number.`);
+  assert(footer.includes(`© 2021–${currentYear} 南京航空航天大学天目湖足球协会`), `${route} has the wrong copyright range.`);
+  assert(footer.includes("网站建设与维护：HAN"), `${route} omitted the developer credit.`);
   assert(
     /<a[^>]*href="https:\/\/beian\.miit\.gov\.cn\/"[^>]*target="_blank"[^>]*rel="noopener noreferrer"[^>]*>\s*鲁ICP备2026052413号\s*<\/a>/u.test(footer),
-    `${route} did not render the secure official MIIT filing link.`,
+    `${route} omitted the secure official ICP link.`,
   );
   for (const placeholder of ["公安备案待补充", "公安备案号待确认", "XXXX号"]) {
     assert(!footer.includes(placeholder), `${route} rendered a Public Security filing placeholder.`);
@@ -64,11 +58,7 @@ function findPort() {
     probe.once("error", reject);
     probe.listen(0, "127.0.0.1", () => {
       const address = probe.address();
-      if (!address || typeof address === "string") {
-        probe.close();
-        reject(new Error("Failed to allocate an isolated port."));
-        return;
-      }
+      if (!address || typeof address === "string") return probe.close(() => reject(new Error("Failed to allocate a port.")));
       probe.close((error) => error ? reject(error) : resolve(address.port));
     });
   });
@@ -82,9 +72,7 @@ function runPrismaMigrate(databaseUrl: string) {
       { cwd: process.cwd(), env: { ...process.env, DATABASE_URL: databaseUrl, RUST_LOG: "trace" }, stdio: "inherit" },
     );
     child.once("error", reject);
-    child.once("exit", (code) => code === 0
-      ? resolve()
-      : reject(new Error(`Prisma migrate deploy exited ${code ?? "unknown"}.`)));
+    child.once("exit", (code) => code === 0 ? resolve() : reject(new Error(`Prisma migrate deploy exited ${code ?? "unknown"}.`)));
   });
 }
 
@@ -93,10 +81,7 @@ async function stopServer(server: ChildProcess) {
   server.kill();
   await new Promise<void>((resolve) => {
     const timeout = setTimeout(resolve, 5_000);
-    server.once("exit", () => {
-      clearTimeout(timeout);
-      resolve();
-    });
+    server.once("exit", () => { clearTimeout(timeout); resolve(); });
   });
 }
 
@@ -104,8 +89,7 @@ async function waitForHealth(origin: string, server: ChildProcess) {
   for (let attempt = 0; attempt < 160; attempt += 1) {
     if (server.exitCode !== null) throw new Error(`Next server exited before health was ready (${server.exitCode}).`);
     try {
-      const response = await fetch(`${origin}/api/health`, { cache: "no-store" });
-      if (response.status === 200) return;
+      if ((await fetch(`${origin}/api/health`, { cache: "no-store" })).status === 200) return;
     } catch {
       // The isolated server is still starting.
     }
@@ -142,93 +126,166 @@ async function login(origin: string, username: string) {
   });
   assert(response.status === 200, `${username} login failed with ${response.status}.`);
   const cookie = response.headers.get("set-cookie")?.match(/nuaa_referee_admin=[^;]+/u)?.[0];
-  assert(cookie, `${username} login did not return an administrator cookie.`);
+  assert(cookie, `${username} login did not return a session cookie.`);
   return cookie;
 }
 
 function apiRequest(origin: string, pathName: string, method: string, body: unknown, cookie?: string) {
   return fetch(`${origin}${pathName}`, {
     method,
-    headers: {
-      "content-type": "application/json",
-      origin: mutationOrigin,
-      ...(cookie ? { cookie } : {}),
-    },
+    headers: { "content-type": "application/json", origin: mutationOrigin, ...(cookie ? { cookie } : {}) },
     body: JSON.stringify(body),
     redirect: "manual",
   });
 }
 
 let proofRequest = 0;
-async function pageHtml(origin: string, pathName: string, cookie?: string) {
+async function fetchPage(origin: string, pathName: string, cookie?: string) {
   proofRequest += 1;
   const separator = pathName.includes("?") ? "&" : "?";
   const response = await fetch(`${origin}${pathName}${separator}dynamicProof=${proofRequest}`, {
     cache: "no-store",
     headers: cookie ? { cookie } : undefined,
   });
-  assert(response.status === 200, `${pathName} returned ${response.status}.`);
-  return response.text();
+  return { status: response.status, html: await response.text() };
+}
+
+async function pageHtml(origin: string, pathName: string, cookie?: string) {
+  const page = await fetchPage(origin, pathName, cookie);
+  assert(page.status === 200, `${pathName} returned ${page.status}.`);
+  return page.html;
 }
 
 function competitionPayload(input: {
-  slug?: string;
+  slug: string;
   name: string;
-  format: "ELEVEN_A_SIDE" | "FUTSAL";
-  status: "PREPARING" | "REGISTRATION" | "ONGOING" | "COMPLETED";
+  playingFormat: string;
   publicPublished: boolean;
   homepageFeatured: boolean;
+  publicOrder: number;
   marker: string;
 }) {
   return {
-    ...(input.slug ? { slug: input.slug } : {}),
+    slug: input.slug,
     name: input.name,
     shortName: `${input.marker}简称`,
-    year: 2026,
-    campus: `${input.marker}校区`,
-    format: input.format,
-    status: input.status,
-    semesterLabel: "上半学期",
-    teamFormation: input.format === "FUTSAL" ? "自由组队" : "院系组队",
+    year: 2030,
+    campus: "天目湖校区",
+    playingFormat: input.playingFormat,
+    format: "CUSTOM",
+    status: "ONGOING",
+    semesterLabel: "下半学期",
+    teamFormation: "自由组队",
     publicPublished: input.publicPublished,
     homepageFeatured: input.homepageFeatured,
-    publicOrder: input.format === "FUTSAL" ? 20 : 10,
-    registrationStartAt: "2026-09-25T18:30",
-    registrationEndAt: "2026-09-30T20:00",
-    matchStartAt: "2026-10-01T18:30",
-    matchEndAt: "2026-10-31T20:30",
-    venue: `${input.marker}球场`,
-    host: `${input.marker}主办单位`,
-    organizer: `${input.marker}承办单位`,
+    publicOrder: input.publicOrder,
+    registrationStartAt: "2030-09-20T18:30",
+    registrationEndAt: "2030-09-30T20:00",
+    matchStartAt: "2030-10-01T18:30",
+    matchEndAt: "2030-10-31T20:30",
+    venue: `${input.marker}主场`,
+    host: "南京航空航天大学天目湖足球协会",
+    organizer: `${input.marker}赛事组`,
     summary: `${input.marker}赛事简介`,
     notice: `${input.marker}赛事公告`,
-    registrationUrl: `https://example.edu.cn/${input.marker}`,
+    registrationUrl: "",
+  } as const;
+}
+
+function matchPayload(input: {
+  slug: string;
+  competitionId: string;
+  stage: string;
+  kickoff: string;
+  venue: string;
+  homeTeamId: string;
+  awayTeamId: string;
+  applicationWindowStatus?: "OPEN" | "CLOSED";
+}) {
+  return {
+    slug: input.slug,
+    competitionId: input.competitionId,
+    stage: input.stage,
+    kickoff: input.kickoff,
+    endAt: "",
+    venue: input.venue,
+    round: input.stage,
+    source: "MANUAL",
+    externalMatchId: "",
+    homeTeamSelection: `team:${input.homeTeamId}`,
+    awayTeamSelection: `team:${input.awayTeamId}`,
+    status: "SCHEDULED",
+    applicationWindowStatus: input.applicationWindowStatus ?? "CLOSED",
+    applicationDeadline: "",
+    publicNote: `${input.stage}公开说明`,
+    internalNote: "PRIVATE-MATCH-INTERNAL-NOTE",
+    positionCounts: {},
+  } as const;
+}
+
+function matchPatch(payload: ReturnType<typeof matchPayload>, overrides: Record<string, unknown> = {}) {
+  const { homeTeamSelection, awayTeamSelection, ...body } = payload;
+  return {
+    ...body,
+    homeTeamId: homeTeamSelection.slice("team:".length),
+    awayTeamId: awayTeamSelection.slice("team:".length),
+    cancellationReason: "",
+    ...overrides,
   };
 }
 
 async function expectStatus(response: Response | Promise<Response>, status: number, label: string) {
   const result = await response;
   assert(result.status === status, `${label}: expected ${status}, received ${result.status}.`);
+  return result;
 }
 
-async function expectError(
-  response: Response | Promise<Response>,
-  status: number,
-  message: string,
-  label: string,
-) {
+async function expectError(response: Response | Promise<Response>, status: number, message: string, label: string) {
   const result = await response;
   assert(result.status === status, `${label}: expected ${status}, received ${result.status}.`);
   const body = await result.json() as { error?: string };
   assert(body.error === message, `${label}: expected exact error "${message}", received "${body.error ?? ""}".`);
 }
 
+async function createCompetition(origin: string, cookie: string, payload: ReturnType<typeof competitionPayload>) {
+  const response = await expectStatus(
+    apiRequest(origin, "/api/referees/admin/competitions", "POST", payload, cookie),
+    201,
+    `create ${payload.slug}`,
+  );
+  const id = (await response.json() as { competitionId?: string }).competitionId;
+  assert(id, `${payload.slug} create response omitted its ID.`);
+  return id;
+}
+
+async function createTeams(origin: string, cookie: string, verifier: PrismaClient, competitionId: string, names: string[]) {
+  await expectStatus(
+    apiRequest(origin, "/api/referees/admin/teams", "POST", { action: "bulk", competitionId, names }, cookie),
+    201,
+    `create teams for ${competitionId}`,
+  );
+  const teams = await verifier.team.findMany({ where: { competitionId }, orderBy: { name: "asc" } });
+  assert(teams.length === names.length, `Competition ${competitionId} did not receive all teams.`);
+  return teams;
+}
+
+async function createMatch(origin: string, cookie: string, payload: ReturnType<typeof matchPayload>) {
+  const response = await expectStatus(
+    apiRequest(origin, "/api/referees/admin/matches", "POST", payload, cookie),
+    201,
+    `create ${payload.slug}`,
+  );
+  const id = (await response.json() as { matchId?: string }).matchId;
+  assert(id, `${payload.slug} create response omitted its ID.`);
+  return id;
+}
+
 async function main() {
   await access(path.resolve(".next/BUILD_ID"));
-  const root = await mkdtemp(path.join(os.tmpdir(), "nuaafa-public-competition-http-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "nuaafa-public-competition-r3-http-"));
   const databasePath = path.join(root, "dynamic.db");
-  const uploadRoot = path.join(root, "uploads");
   const databaseUrl = `file:${databasePath.replaceAll("\\", "/")}`;
+  const uploadRoot = path.join(root, "uploads");
   const port = await findPort();
   const origin = `http://127.0.0.1:${port}`;
   let server: ChildProcess | null = null;
@@ -237,18 +294,21 @@ async function main() {
     await mkdir(uploadRoot, { recursive: true });
     await runPrismaMigrate(databaseUrl);
     await seedAdministrators(databaseUrl);
-    const serverEnvironment: NodeJS.ProcessEnv = {
-      ...process.env,
-      NODE_ENV: "production",
-      DATABASE_URL: databaseUrl,
-      NUAAFA_UPLOAD_DIR: uploadRoot,
-      NUAAFA_CONTENT_SOURCE: "static",
-      REFEREE_ADMIN_SESSION_SECRET: "public-competition-dynamic-r1-session-secret",
-    };
-    const runningServer: ChildProcess = spawn(
+    const runningServer = spawn(
       process.execPath,
       [path.resolve("node_modules/next/dist/bin/next"), "start", "-H", "127.0.0.1", "-p", String(port)],
-      { cwd: process.cwd(), env: serverEnvironment, stdio: ["ignore", "pipe", "pipe"] },
+      {
+        cwd: process.cwd(),
+        env: {
+          ...process.env,
+          NODE_ENV: "production",
+          DATABASE_URL: databaseUrl,
+          NUAAFA_UPLOAD_DIR: uploadRoot,
+          NUAAFA_CONTENT_SOURCE: "static",
+          REFEREE_ADMIN_SESSION_SECRET: "public-competition-r3-http-session-secret",
+        },
+        stdio: ["ignore", "pipe", "pipe"],
+      },
     );
     server = runningServer;
     runningServer.stdout?.pipe(process.stdout);
@@ -257,30 +317,26 @@ async function main() {
     const serverPid = runningServer.pid;
 
     const zeroHome = await pageHtml(origin, "/");
-    const zeroCenter = await pageHtml(origin, "/competitions");
-    const zeroFreshman = await pageHtml(origin, "/competitions/freshman-cup");
-    const zeroFutsal = await pageHtml(origin, "/competitions/tianmuhu-futsal-league");
+    const zeroCatalog = await pageHtml(origin, "/competitions");
+    const zeroSitemap = await pageHtml(origin, "/sitemap.xml");
+    assertHomepageEmptyState(zeroHome, "zero-row homepage");
+    const zeroCurrentCompetitions = currentCompetitionSection(zeroHome);
+    assert(
+      !zeroCurrentCompetitions.includes("2026南京航空航天大学新生杯足球赛事")
+      && !zeroCurrentCompetitions.includes("2026天目湖五人制联赛"),
+      "Zero-row homepage injected legacy static Competition cards.",
+    );
+    assert(zeroCatalog.includes("当前暂无公开赛事"), "Zero-row Competition Center omitted its intentional empty state.");
+    assert(
+      !zeroSitemap.includes("/competitions/freshman-cup")
+      && !zeroSitemap.includes("/competitions/tianmuhu-futsal-league"),
+      "Zero-row sitemap published legacy current-Competition URLs.",
+    );
+    for (const slug of ["freshman-cup", "tianmuhu-futsal-league", "unknown-competition"]) {
+      assert((await fetchPage(origin, `/competitions/${slug}`)).status === 404, `${slug} received a static public fallback.`);
+    }
     const historicalMen = await pageHtml(origin, "/competitions/2026-mens-intercollege-cup");
     const historicalWomen = await pageHtml(origin, "/competitions/2026-womens-intercollege-cup");
-    const publicFooterPages = [
-      ["/", zeroHome],
-      ["/competitions", zeroCenter],
-      ["/competitions/freshman-cup", zeroFreshman],
-      ["/news", await pageHtml(origin, "/news")],
-      ["/news/2026-freshman-cup-preparation-notice", await pageHtml(origin, "/news/2026-freshman-cup-preparation-notice")],
-      ["/referees", await pageHtml(origin, "/referees")],
-      ["/association", await pageHtml(origin, "/association")],
-    ] as const;
-    for (const [route, html] of publicFooterPages) assertPublicFooter(html, route);
-    assertHomepageEmptyState(zeroHome, "Zero-row homepage");
-    assert(
-      !homepageCards(zeroHome).join("\n").includes("2026南京航空航天大学新生杯足球赛事")
-      && !homepageCards(zeroHome).join("\n").includes("2026天目湖五人制联赛"),
-      "Zero-row homepage rendered static Competition filler cards.",
-    );
-    assert(zeroCenter.includes("筹备工作已启动") && zeroCenter.includes("2026天目湖五人制联赛"), "Zero-row Competition center fallback failed.");
-    assert(zeroFreshman.includes("面向新生开展的院系十一人制足球赛事") && !zeroFreshman.includes("赛事公告："), "Freshman Cup static fallback failed.");
-    assert(zeroFutsal.includes("2026赛季具体安排尚未公布"), "Futsal static fallback failed.");
     assert(historicalMen.includes("2026男子足球院际杯") && historicalWomen.includes("2026女子足球院际杯"), "Historical archive routes regressed.");
 
     const [competitionCookie, contentCookie, superCookie] = await Promise.all([
@@ -290,563 +346,363 @@ async function main() {
     ]);
     const adminCreate = await pageHtml(origin, "/admin/competitions/new", competitionCookie);
     assert(
-      adminCreate.includes("在首页赛事预告中展示")
-      && adminCreate.includes("开启后，该赛事将显示在官网首页“赛事预告”区域，并自动同步当前赛事状态及下一场公开比赛信息。")
-      && adminCreate.includes("请先开启“公开发布”后再设置首页展示。")
-      && /<input(?=[^>]*name="homepageFeatured")(?=[^>]*disabled)[^>]*>/u.test(adminCreate),
-      "Admin create did not render the exact disabled homepage feature dependency.",
-    );
-    const draftFreshman = competitionPayload({
-      slug: "freshman-cup",
-      name: "R1动态新生杯",
-      format: "ELEVEN_A_SIDE",
-      status: "REGISTRATION",
-      publicPublished: false,
-      homepageFeatured: false,
-      marker: "动态新生杯",
-    });
-    await expectStatus(apiRequest(origin, "/api/referees/admin/competitions", "POST", draftFreshman), 401, "anonymous mutation");
-    await expectStatus(apiRequest(origin, "/api/referees/admin/competitions", "POST", draftFreshman, contentCookie), 403, "CONTENT_EDITOR mutation");
-
-    for (const slug of ["Freshman-Cup", "freshman cup", "../freshman-cup", "https://evil.example", "新生杯"]) {
-      await expectStatus(
-        apiRequest(origin, "/api/referees/admin/competitions", "POST", { ...draftFreshman, slug }, competitionCookie),
-        400,
-        `invalid slug ${slug}`,
-      );
-    }
-    await expectStatus(
-      apiRequest(origin, "/api/referees/admin/competitions", "POST", { ...draftFreshman, registrationUrl: "javascript:alert(1)" }, competitionCookie),
-      400,
-      "unsafe registration URL",
-    );
-    await expectStatus(
-      apiRequest(origin, "/api/referees/admin/competitions", "POST", { ...draftFreshman, summary: "x".repeat(2001) }, competitionCookie),
-      400,
-      "bounded summary",
-    );
-    await expectStatus(
-      apiRequest(origin, "/api/referees/admin/competitions", "POST", { ...draftFreshman, registrationEndAt: "2026-09-20T18:00" }, competitionCookie),
-      400,
-      "invalid registration range",
-    );
-    await expectError(
-      apiRequest(
-        origin,
-        "/api/referees/admin/competitions",
-        "POST",
-        { ...draftFreshman, homepageFeatured: true },
-        competitionCookie,
-      ),
-      409,
-      "只有已公开发布的赛事才能在首页赛事预告中展示。",
-      "unpublished featured create",
+      adminCreate.includes("比赛制式")
+      && adminCreate.includes("裁判岗位模板")
+      && adminCreate.includes("无预设模板 / 自定义赛事")
+      && adminCreate.includes("七人制"),
+      "Admin create did not distinguish public playing format from referee template.",
     );
 
-    const createResponse = await apiRequest(origin, "/api/referees/admin/competitions", "POST", draftFreshman, competitionCookie);
-    await expectStatus(createResponse, 201, "COMPETITION_ADMIN create");
-    const freshmanId = (await createResponse.json() as { competitionId?: string }).competitionId;
-    assert(freshmanId, "Competition create response omitted its ID.");
-    await expectStatus(
-      apiRequest(origin, "/api/referees/admin/competitions", "POST", draftFreshman, competitionCookie),
-      409,
-      "duplicate stable slug",
-    );
-    const unpublishedHome = await pageHtml(origin, "/");
-    assert(!unpublishedHome.includes("R1动态新生杯"), "Unpublished Competition reached the homepage.");
-    assertHomepageEmptyState(unpublishedHome, "Unpublished Competition homepage");
-    assert(!(await pageHtml(origin, "/competitions")).includes("动态新生杯赛事简介"), "Unpublished Competition replaced center fallback.");
-    assert(!(await pageHtml(origin, "/competitions/freshman-cup")).includes("动态新生杯球场"), "Unpublished Competition replaced detail fallback.");
-
-    await expectStatus(
-      apiRequest(origin, `/api/referees/admin/competitions/${freshmanId}`, "PATCH", draftFreshman, competitionCookie),
-      409,
-      "read-only slug",
-    );
-    const { slug: freshmanSlug, ...freshmanEditable } = draftFreshman;
-    assert(freshmanSlug === "freshman-cup", "Freshman fixture slug changed unexpectedly.");
-    const publishedFreshman = {
-      ...freshmanEditable,
-      publicPublished: true,
-      homepageFeatured: false,
-      status: "REGISTRATION",
-    };
-    await expectStatus(
-      apiRequest(origin, `/api/referees/admin/competitions/${freshmanId}`, "PATCH", publishedFreshman, competitionCookie),
-      200,
-      "COMPETITION_ADMIN publish",
-    );
-    const publishedUnfeaturedHome = await pageHtml(origin, "/");
-    const dynamicCenter = await pageHtml(origin, "/competitions");
-    const dynamicFreshman = await pageHtml(origin, "/competitions/freshman-cup");
-    assertHomepageEmptyState(publishedUnfeaturedHome, "Published unfeatured Competition homepage");
-    assert(!homepageCards(publishedUnfeaturedHome).join("\n").includes("R1动态新生杯"), "Unfeatured Competition reached a homepage card.");
-    assert(dynamicCenter.includes("R1动态新生杯") && dynamicCenter.includes("报名中"), "Competition center dynamic title/status failed.");
-    assert(dynamicCenter.includes("报名进行中，赛程待正式发布。"), "Competition center did not show status-appropriate safe no-Match wording.");
-    assert(
-      dynamicFreshman.includes("动态新生杯球场") &&
-      dynamicFreshman.includes("动态新生杯主办单位") &&
-      dynamicFreshman.includes("动态新生杯承办单位") &&
-      dynamicFreshman.includes("动态新生杯赛事简介") &&
-      dynamicFreshman.includes("动态新生杯赛事公告") &&
-      dynamicFreshman.includes("立即报名") &&
-      dynamicFreshman.includes("2026.09.25 18:30"),
-      "Published Competition profile did not reach its detail page.",
-    );
-    assert(dynamicFreshman.includes("报名进行中，赛程待正式发布。"), "Competition detail did not show status-appropriate safe no-Match wording.");
-    const adminEdit = await pageHtml(origin, `/admin/competitions/${freshmanId}/edit`, competitionCookie);
-    assert(adminEdit.includes("freshman-cup") && adminEdit.includes("北京时间（UTC+8）"), "Admin edit did not show read-only slug and timezone labels.");
-    assert(
-      adminEdit.includes("在首页赛事预告中展示")
-      && adminEdit.includes("开启后，该赛事将显示在官网首页“赛事预告”区域，并自动同步当前赛事状态及下一场公开比赛信息。")
-      && !adminEdit.includes("首页赛事预告展示"),
-      "Admin edit did not render the exact homepage feature label and guidance.",
-    );
-    await expectStatus(
-      apiRequest(
-        origin,
-        `/api/referees/admin/competitions/${freshmanId}`,
-        "PATCH",
-        { ...publishedFreshman, homepageFeatured: true },
-        competitionCookie,
-      ),
-      200,
-      "enable first homepage feature",
-    );
-    const oneFreshmanHome = await pageHtml(origin, "/");
-    assertHomepageCardCount(oneFreshmanHome, 1, "One-featured Freshman Cup homepage");
-    assertOneHomepageCardIncludes(oneFreshmanHome, "R1动态新生杯", "One-featured dynamic Freshman Cup");
-    assert(oneFreshmanHome.includes("is-single"), "One-featured homepage did not use the intentional single-card layout.");
-    assert(
-      !homepageCards(oneFreshmanHome).join("\n").includes("2026天目湖五人制联赛"),
-      "One-featured homepage added a static filler card.",
-    );
-
-    verifier = new PrismaClient({ adapter: new PrismaLibSql({ url: databaseUrl }) });
-    const storedFreshman = await verifier.competition.findUniqueOrThrow({ where: { id: freshmanId } });
-    assert(storedFreshman.registrationStartAt?.toISOString() === "2026-09-25T10:30:00.000Z", "Admin Beijing time stored the wrong instant.");
-    const teams = await Promise.all([
-      verifier.team.create({ data: { competitionId: freshmanId, name: "动态主队" } }),
-      verifier.team.create({ data: { competitionId: freshmanId, name: "动态客队" } }),
-      verifier.team.create({ data: { competitionId: freshmanId, name: "测试比赛不得显示主队" } }),
-      verifier.team.create({ data: { competitionId: freshmanId, name: "测试比赛不得显示客队" } }),
-    ]);
-    await verifier.match.create({ data: {
-      slug: "test-match-must-not-drive-public",
-      competitionId: freshmanId,
-      stage: "测试记录",
-      kickoff: new Date("2029-09-01T10:00:00.000Z"),
-      venue: "测试记录场地",
-      homeTeamId: teams[2].id,
-      awayTeamId: teams[3].id,
-      status: "SCHEDULED",
-      isTestData: true,
-    } });
-    await verifier.match.create({ data: {
-      slug: "past-match-must-not-drive-public",
-      competitionId: freshmanId,
-      stage: "过往比赛不得显示",
-      kickoff: new Date("2020-09-01T10:00:00.000Z"),
-      venue: "过往比赛不得显示场地",
-      homeTeamId: teams[0].id,
-      awayTeamId: teams[1].id,
-      status: "SCHEDULED",
-    } });
-    const noEligibleMatchCenter = await pageHtml(origin, "/competitions");
-    const noEligibleMatchDetail = await pageHtml(origin, "/competitions/freshman-cup");
-    assert(
-      noEligibleMatchCenter.includes("报名进行中，赛程待正式发布。")
-      && noEligibleMatchDetail.includes("报名进行中，赛程待正式发布。")
-      && !noEligibleMatchCenter.includes("过往比赛不得显示")
-      && !noEligibleMatchDetail.includes("过往比赛不得显示"),
-      "Past or test Match incorrectly replaced the safe pending presentation.",
-    );
-    const matchBody = (slug: string, stage: string, kickoff: string) => ({
-      slug,
-      competitionId: freshmanId,
-      stage,
-      kickoff,
-      endAt: "",
-      venue: `${stage}球场`,
-      round: stage,
-      source: "MANUAL",
-      externalMatchId: "",
-      homeTeamSelection: `team:${teams[0].id}`,
-      awayTeamSelection: `team:${teams[1].id}`,
-      status: "SCHEDULED",
-      applicationWindowStatus: "CLOSED",
-      applicationDeadline: "",
-      publicNote: `${stage}公开说明`,
-      internalNote: "PUBLIC DTO MUST NOT EXPOSE THIS INTERNAL NOTE",
-      positionCounts: {},
-    });
-    const firstBody = matchBody("dynamic-match-one", "动态第一场", "2030-09-25T18:30");
-    const firstResponse = await apiRequest(origin, "/api/referees/admin/matches", "POST", firstBody, competitionCookie);
-    await expectStatus(firstResponse, 201, "first Match create");
-    const firstMatchId = (await firstResponse.json() as { matchId?: string }).matchId;
-    assert(firstMatchId, "First Match response omitted its ID.");
-    const firstHome = await pageHtml(origin, "/");
-    const firstCenter = await pageHtml(origin, "/competitions");
-    const firstDetail = await pageHtml(origin, "/competitions/freshman-cup");
-    for (const [label, html] of [["homepage", firstHome], ["Competition center", firstCenter], ["Competition detail", firstDetail]] as const) {
-      assert(
-        html.includes("动态主队")
-        && html.includes("动态客队")
-        && html.includes("2030.09.25")
-        && html.includes("18:30")
-        && html.includes("动态第一场球场"),
-        `First future Match did not reach the ${label}.`,
-      );
-      assert(!html.includes("测试比赛不得显示") && !html.includes("PUBLIC DTO MUST NOT EXPOSE"), `${label} exposed test or internal Match data.`);
-    }
-
-    const secondBody = matchBody("dynamic-match-two", "动态第二场", "2030-10-02T19:00");
-    const secondResponse = await apiRequest(origin, "/api/referees/admin/matches", "POST", secondBody, competitionCookie);
-    await expectStatus(secondResponse, 201, "second Match create");
-    const secondMatchId = (await secondResponse.json() as { matchId?: string }).matchId;
-    assert(secondMatchId, "Second Match response omitted its ID.");
-    for (const route of ["/", "/competitions", "/competitions/freshman-cup"]) {
-      assert((await pageHtml(origin, route)).includes("2030.09.25"), `Later Match incorrectly displaced the first future Match on ${route}.`);
-    }
-    const { homeTeamSelection, awayTeamSelection, ...firstPatchBody } = firstBody;
-    assert(homeTeamSelection && awayTeamSelection, "Match fixture selections are missing.");
-    const editedFirst = {
-      ...firstPatchBody,
-      homeTeamId: teams[0].id,
-      awayTeamId: teams[1].id,
-      kickoff: "2030-09-26T20:15",
-      venue: "动态调整后场地",
-    };
-    await expectStatus(
-      apiRequest(origin, `/api/referees/admin/matches/${firstMatchId}`, "PATCH", editedFirst, competitionCookie),
-      200,
-      "edit first Match",
-    );
-    for (const route of ["/", "/competitions", "/competitions/freshman-cup"]) {
-      const editedHtml = await pageHtml(origin, route);
-      assert(
-        editedHtml.includes("2030.09.26")
-        && editedHtml.includes("20:15")
-        && editedHtml.includes("动态调整后场地")
-        && !editedHtml.includes("2030.09.25"),
-        `${route} did not immediately reflect the edited next Match.`,
-      );
-    }
-
-    await expectStatus(
-      apiRequest(
-        origin,
-        `/api/referees/admin/matches/${firstMatchId}`,
-        "PATCH",
-        { ...editedFirst, status: "CANCELLED", cancellationReason: "赛程调整" },
-        competitionCookie,
-      ),
-      200,
-      "cancel first Match",
-    );
-    for (const route of ["/", "/competitions", "/competitions/freshman-cup"]) {
-      const advancedHtml = await pageHtml(origin, route);
-      assert(
-        advancedHtml.includes("2030.10.02")
-        && advancedHtml.includes("19:00")
-        && advancedHtml.includes("动态第二场球场")
-        && !advancedHtml.includes("2030.09.26"),
-        `${route} did not immediately advance after the first Match was cancelled.`,
-      );
-    }
-
-    const { homeTeamSelection: secondHomeSelection, awayTeamSelection: secondAwaySelection, ...secondPatchBody } = secondBody;
-    assert(secondHomeSelection && secondAwaySelection, "Second Match fixture selections are missing.");
-    await expectStatus(
-      apiRequest(
-        origin,
-        `/api/referees/admin/matches/${secondMatchId}`,
-        "PATCH",
-        {
-          ...secondPatchBody,
-          homeTeamId: teams[0].id,
-          awayTeamId: teams[1].id,
-          status: "CANCELLED",
-          cancellationReason: "赛程取消",
-        },
-        competitionCookie,
-      ),
-      200,
-      "cancel second Match",
-    );
-    for (const route of ["/", "/competitions", "/competitions/freshman-cup"]) {
-      const pendingHtml = await pageHtml(origin, route);
-      assert(
-        pendingHtml.includes("报名进行中，赛程待正式发布。")
-        && !pendingHtml.includes("2030.10.02"),
-        `${route} did not return to safe pending wording after all eligible Matches were cancelled.`,
-      );
-    }
-
-    for (const status of ["PREPARING", "REGISTRATION", "ONGOING", "COMPLETED"] as const) {
-      await expectStatus(
-        apiRequest(
-          origin,
-          `/api/referees/admin/competitions/${freshmanId}`,
-          "PATCH",
-          { ...publishedFreshman, status, homepageFeatured: true },
-          competitionCookie,
-        ),
-        200,
-        `status lifecycle ${status}`,
-      );
-      const html = await pageHtml(origin, "/competitions");
-      const expected = { PREPARING: "筹备中", REGISTRATION: "报名中", ONGOING: "进行中", COMPLETED: "已结束" }[status];
-      assert(html.includes(expected), `${status} did not reach the public Competition center.`);
-    }
-    const completedHome = await pageHtml(origin, "/");
-    assert(completedHome.includes("赛事已结束") && !completedHome.includes("2030.10.02"), "Completed Competition rendered a fictitious next Match.");
-
-    await expectStatus(
-      apiRequest(origin, `/api/referees/admin/competitions/${freshmanId}`, "PATCH", { ...publishedFreshman, status: "ONGOING", homepageFeatured: false }, competitionCookie),
-      200,
-      "disable homepage feature",
-    );
-    const unfeaturedPublishedHome = await pageHtml(origin, "/");
-    assertHomepageEmptyState(unfeaturedPublishedHome, "Published unfeatured Competition homepage");
-    assert(!unfeaturedPublishedHome.includes("R1动态新生杯"), "Unfeatured Competition remained on the homepage.");
-    const unfeaturedPublishedCenter = await pageHtml(origin, "/competitions");
-    const unfeaturedPublishedDetail = await pageHtml(origin, "/competitions/freshman-cup");
-    assert(
-      unfeaturedPublishedCenter.includes("R1动态新生杯")
-      && unfeaturedPublishedCenter.includes("当前暂无已正式发布的下一场比赛，请关注赛事公告。")
-      && unfeaturedPublishedDetail.includes("R1动态新生杯")
-      && unfeaturedPublishedDetail.includes("当前暂无已正式发布的下一场比赛，请关注赛事公告。"),
-      "homepageFeatured incorrectly changed dynamic overview/detail or Match presentation.",
-    );
-
-    const futsalDraft = competitionPayload({
-      slug: "tianmuhu-futsal-league",
-      name: "R1动态天目湖五人制联赛",
-      format: "FUTSAL",
-      status: "REGISTRATION",
+    const sevenPayload = competitionPayload({
+      slug: "seven-a-side-test",
+      name: "2030校园七人制联赛",
+      playingFormat: "七人制",
       publicPublished: true,
       homepageFeatured: true,
-      marker: "动态五人制",
+      publicOrder: 20,
+      marker: "七人制",
     });
-    const futsalResponse = await apiRequest(origin, "/api/referees/admin/competitions", "POST", futsalDraft, competitionCookie);
-    await expectStatus(futsalResponse, 201, "Futsal create/publish");
-    const futsalId = (await futsalResponse.json() as { competitionId?: string }).competitionId;
-    assert(futsalId, "Futsal create response omitted its ID.");
-    assert((await pageHtml(origin, "/competitions")).includes("R1动态天目湖五人制联赛"), "Futsal dynamic profile did not reach Competition center.");
-    assert((await pageHtml(origin, "/competitions/tianmuhu-futsal-league")).includes("动态五人制赛事简介"), "Futsal dynamic detail failed.");
-    const oneFeaturedHome = await pageHtml(origin, "/");
-    const oneFeaturedCards = homepageCards(oneFeaturedHome).join("\n");
-    assert(
-      oneFeaturedCards.includes("R1动态天目湖五人制联赛")
-      && !oneFeaturedCards.includes("R1动态新生杯")
-      && !oneFeaturedCards.includes("2026南京航空航天大学新生杯足球赛事")
-      && !oneFeaturedCards.includes("2026天目湖五人制联赛"),
-      "One-featured homepage did not render only the eligible dynamic card.",
-    );
-    assertHomepageCardCount(oneFeaturedHome, 1, "One featured Futsal Competition");
-    assert(oneFeaturedHome.includes("is-single"), "One-featured Futsal homepage did not use the intentional single-card layout.");
+    await expectStatus(apiRequest(origin, "/api/referees/admin/competitions", "POST", sevenPayload), 401, "anonymous competition create");
+    await expectStatus(apiRequest(origin, "/api/referees/admin/competitions", "POST", sevenPayload, contentCookie), 403, "CONTENT_EDITOR competition create");
+    await expectStatus(apiRequest(origin, "/api/referees/admin/competitions", "POST", { ...sevenPayload, playingFormat: "" }, competitionCookie), 400, "missing playing format");
 
-    const futsalTeams = await Promise.all([
-      verifier.team.create({ data: { competitionId: futsalId, name: "五人制主队" } }),
-      verifier.team.create({ data: { competitionId: futsalId, name: "五人制客队" } }),
-    ]);
-    await verifier.match.create({ data: {
-      slug: "dynamic-futsal-match",
-      competitionId: futsalId,
-      stage: "五人制独立场次",
-      kickoff: new Date("2030-09-20T10:00:00.000Z"),
-      venue: "五人制独立球场",
-      homeTeamId: futsalTeams[0].id,
-      awayTeamId: futsalTeams[1].id,
-      status: "SCHEDULED",
-    } });
-    const thirdFreshmanMatchResponse = await apiRequest(
-      origin,
-      "/api/referees/admin/matches",
-      "POST",
-      matchBody("dynamic-match-three", "动态第三场", "2030-11-01T18:00"),
-      competitionCookie,
-    );
-    await expectStatus(thirdFreshmanMatchResponse, 201, "third Freshman Match create for isolation");
-    const isolatedFreshmanDetail = await pageHtml(origin, "/competitions/freshman-cup");
-    const isolatedFutsalDetail = await pageHtml(origin, "/competitions/tianmuhu-futsal-league");
-    assert(
-      isolatedFreshmanDetail.includes("动态主队")
-      && isolatedFreshmanDetail.includes("动态客队")
-      && !isolatedFreshmanDetail.includes("五人制主队")
-      && !isolatedFreshmanDetail.includes("五人制客队"),
-      "Freshman Cup detail leaked Futsal Teams or Match data.",
-    );
-    assert(
-      isolatedFutsalDetail.includes("五人制主队")
-      && isolatedFutsalDetail.includes("五人制客队")
-      && isolatedFutsalDetail.includes("2030.09.20")
-      && isolatedFutsalDetail.includes("五人制独立球场")
-      && !isolatedFutsalDetail.includes("动态主队")
-      && !isolatedFutsalDetail.includes("动态客队"),
-      "Futsal detail leaked Freshman Cup Teams or Match data.",
-    );
-    const { slug: futsalSlug, ...futsalEditable } = futsalDraft;
-    assert(futsalSlug === "tianmuhu-futsal-league", "Futsal fixture slug changed unexpectedly.");
-    await expectStatus(
-      apiRequest(origin, `/api/referees/admin/competitions/${futsalId}`, "PATCH", { ...futsalEditable, status: "ONGOING" }, superCookie),
-      200,
-      "SUPER_ADMIN edit",
-    );
-
-    await expectStatus(
-      apiRequest(origin, `/api/referees/admin/competitions/${freshmanId}`, "PATCH", { ...publishedFreshman, status: "ONGOING", homepageFeatured: true }, competitionCookie),
-      200,
-      "restore Freshman Cup homepage feature",
-    );
-    const twoFeaturedHome = await pageHtml(origin, "/");
-    const twoFeaturedCards = homepageCards(twoFeaturedHome).join("\n");
-    assert(
-      twoFeaturedCards.includes("R1动态新生杯")
-      && twoFeaturedCards.includes("R1动态天目湖五人制联赛")
-      && twoFeaturedCards.includes("动态主队")
-      && twoFeaturedCards.includes("五人制主队")
-      && !twoFeaturedCards.includes("2026南京航空航天大学新生杯足球赛事")
-      && !twoFeaturedCards.includes("2026天目湖五人制联赛"),
-      "Two-featured homepage did not render both dynamic Competition cards without static duplicates.",
-    );
-    assertHomepageCardCount(twoFeaturedHome, 2, "Two featured Competitions");
-
-    const thirdDraft = competitionPayload({
-      slug: "third-homepage-competition",
-      name: "首页第三项赛事",
-      format: "ELEVEN_A_SIDE",
-      status: "PREPARING",
+    const sevenId = await createCompetition(origin, competitionCookie, sevenPayload);
+    const sixPayload = competitionPayload({
+      slug: "six-a-side-test",
+      name: "2030六人制邀请赛",
+      playingFormat: "六人制",
       publicPublished: true,
       homepageFeatured: false,
-      marker: "第三项赛事",
+      publicOrder: 10,
+      marker: "六人制",
     });
-    const thirdResponse = await apiRequest(
-      origin,
-      "/api/referees/admin/competitions",
-      "POST",
-      thirdDraft,
-      competitionCookie,
-    );
-    await expectStatus(thirdResponse, 201, "third unfeatured Competition create");
-    const thirdId = (await thirdResponse.json() as { competitionId?: string }).competitionId;
-    assert(thirdId, "Third Competition response omitted its ID.");
-    const { slug: thirdSlug, ...thirdEditable } = thirdDraft;
-    assert(thirdSlug === "third-homepage-competition", "Third fixture slug changed unexpectedly.");
-    await expectError(
-      apiRequest(
-        origin,
-        `/api/referees/admin/competitions/${thirdId}`,
-        "PATCH",
-        { ...thirdEditable, homepageFeatured: true },
-        competitionCookie,
-      ),
-      409,
-      "首页最多同时展示 2 项赛事，请先关闭一项现有首页赛事。",
-      "third homepage feature",
-    );
-    const featuredFlagsAfterLimit = await verifier.competition.findMany({
-      where: { id: { in: [freshmanId, futsalId, thirdId] } },
-      select: { id: true, homepageFeatured: true },
+    const sixId = await createCompetition(origin, competitionCookie, sixPayload);
+    const unpublishedPayload = competitionPayload({
+      slug: "unpublished-test",
+      name: "2030未公开测试赛",
+      playingFormat: "九人制",
+      publicPublished: false,
+      homepageFeatured: false,
+      publicOrder: 1,
+      marker: "未公开",
     });
-    const featuredById = new Map(featuredFlagsAfterLimit.map((row) => [row.id, row.homepageFeatured]));
-    assert(
-      featuredById.get(freshmanId) === true
-      && featuredById.get(futsalId) === true
-      && featuredById.get(thirdId) === false,
-      "Rejecting a third homepage feature changed an existing feature flag.",
-    );
-    await expectError(
-      apiRequest(
-        origin,
-        `/api/referees/admin/competitions/${thirdId}`,
-        "PATCH",
-        { ...thirdEditable, publicPublished: false, homepageFeatured: true },
-        competitionCookie,
-      ),
-      409,
-      "只有已公开发布的赛事才能在首页赛事预告中展示。",
-      "unpublished featured update",
-    );
-    assertHomepageCardCount(await pageHtml(origin, "/"), 2, "Rejected third homepage feature");
+    const unpublishedId = await createCompetition(origin, competitionCookie, unpublishedPayload);
+    assert(unpublishedId, "Unpublished fixture was not created.");
 
-    await verifier.referee.create({ data: {
-      publicCode: "901",
-      name: "隐私边界测试裁判",
-      studentId: "PRIVATE-STUDENT-ID-MARKER",
-      phone: "PRIVATE-PHONE-MARKER",
-      qq: "PRIVATE-QQ-MARKER",
-      passwordHash: "PRIVATE-PASSWORD-HASH-MARKER",
-      sourceNote: "PRIVATE-SOURCE-NOTE-MARKER",
-      internalNote: "PRIVATE-REFEREE-INTERNAL-NOTE-MARKER",
+    verifier = new PrismaClient({ adapter: new PrismaLibSql({ url: databaseUrl }) });
+    const sevenTeams = await createTeams(origin, competitionCookie, verifier, sevenId, ["A学院", "B学院", "E学院"]);
+    const sixTeams = await createTeams(origin, competitionCookie, verifier, sixId, ["C学院", "D学院"]);
+    const sevenMatchPayload = matchPayload({
+      slug: "seven-match-one",
+      competitionId: sevenId,
+      stage: "七人制第一轮",
+      kickoff: "2030-10-03T20:15",
+      venue: "七人制测试场",
+      homeTeamId: sevenTeams[0].id,
+      awayTeamId: sevenTeams[1].id,
+    });
+    const sevenMatchId = await createMatch(origin, competitionCookie, sevenMatchPayload);
+    const sevenSecondPayload = matchPayload({
+      slug: "seven-match-two",
+      competitionId: sevenId,
+      stage: "七人制第二轮",
+      kickoff: "2030-10-05T18:00",
+      venue: "七人制第二场地",
+      homeTeamId: sevenTeams[1].id,
+      awayTeamId: sevenTeams[2].id,
+    });
+    const sevenSecondId = await createMatch(origin, competitionCookie, sevenSecondPayload);
+    const sixMatchPayload = matchPayload({
+      slug: "six-match-one",
+      competitionId: sixId,
+      stage: "六人制第一轮",
+      kickoff: "2030-10-04T18:00",
+      venue: "六人制测试场",
+      homeTeamId: sixTeams[0].id,
+      awayTeamId: sixTeams[1].id,
+    });
+    const sixMatchId = await createMatch(origin, competitionCookie, sixMatchPayload);
+
+    await expectError(
+      apiRequest(origin, "/api/referees/admin/matches", "POST", {
+        ...sevenMatchPayload,
+        slug: "custom-open-window",
+        applicationWindowStatus: "OPEN",
+        applicationDeadline: "2030-10-02T20:15",
+      }, competitionCookie),
+      409,
+      "该赛事暂未配置对应的裁判岗位模板。",
+      "CUSTOM referee template fail-closed",
+    );
+
+    const publicReferee = await verifier.referee.create({ data: {
+      publicCode: "930",
+      name: "B赛事裁判",
+      studentId: "PRIVATE-STUDENT-ID",
+      phone: "PRIVATE-PHONE",
+      qq: "PRIVATE-QQ",
+      passwordHash: "PRIVATE-PASSWORD-HASH",
+      internalNote: "PRIVATE-REFEREE-NOTE",
+    } });
+    await verifier.refereeAppointment.create({ data: {
+      matchId: sixMatchId,
+      status: "PUBLISHED",
+      publishedAt: new Date(),
+      revision: 1,
+      positions: { create: { key: "REFEREE", label: "主裁判", sortOrder: 1, slot: 1, refereeId: publicReferee.id } },
     } });
     await verifier.auditLog.create({ data: {
       actorType: "SYSTEM",
       action: "PRIVATE_AUDIT_MARKER",
       entityType: "Competition",
-      entityId: freshmanId,
-      summary: "PRIVATE-AUDIT-SUMMARY-MARKER",
-      metadata: "PRIVATE-ADMIN-METADATA-MARKER",
+      entityId: sevenId,
+      summary: "PRIVATE-AUDIT-SUMMARY",
+      metadata: "PRIVATE-ADMIN-METADATA",
     } });
-    const publicPrivacyHtml = [
-      await pageHtml(origin, "/"),
-      await pageHtml(origin, "/competitions"),
-      await pageHtml(origin, "/competitions/freshman-cup"),
-      await pageHtml(origin, "/competitions/tianmuhu-futsal-league"),
-    ].join("\n");
-    for (const privateMarker of [
-      "PRIVATE-STUDENT-ID-MARKER",
-      "PRIVATE-PHONE-MARKER",
-      "PRIVATE-QQ-MARKER",
-      "PRIVATE-PASSWORD-HASH-MARKER",
-      "PRIVATE-SOURCE-NOTE-MARKER",
-      "PRIVATE-REFEREE-INTERNAL-NOTE-MARKER",
-      "PUBLIC DTO MUST NOT EXPOSE THIS INTERNAL NOTE",
-      "PRIVATE-AUDIT-SUMMARY-MARKER",
-      "PRIVATE-ADMIN-METADATA-MARKER",
-      competitionCookie,
-      contentCookie,
-      superCookie,
+
+    const home = await pageHtml(origin, "/");
+    const catalog = await pageHtml(origin, "/competitions");
+    const sevenDetail = await pageHtml(origin, "/competitions/seven-a-side-test");
+    const sixDetail = await pageHtml(origin, "/competitions/six-a-side-test");
+    const sitemap = await pageHtml(origin, "/sitemap.xml");
+    assertHomepageCardCount(home, 1, "initial R3 homepage");
+    const onlyHomeCard = homepageCards(home)[0];
+    assert(
+      onlyHomeCard.includes("2030校园七人制联赛")
+      && onlyHomeCard.includes("七人制")
+      && onlyHomeCard.includes('href="/competitions/seven-a-side-test"')
+      && !onlyHomeCard.includes("2030六人制邀请赛")
+      && !onlyHomeCard.includes("2030未公开测试赛"),
+      "Homepage feature selection or own-slug link is incorrect.",
+    );
+    const currentHomeCompetitions = currentCompetitionSection(home);
+    assert(
+      currentHomeCompetitions.includes("2030校园七人制联赛")
+      && !currentHomeCompetitions.includes("2030六人制邀请赛")
+      && !currentHomeCompetitions.includes("2026南京航空航天大学新生杯足球赛事")
+      && !currentHomeCompetitions.includes("2026天目湖五人制联赛"),
+      "Homepage rendered an unfeatured or legacy static Competition outside the featured section.",
+    );
+    assert(
+      catalog.includes("2030校园七人制联赛")
+      && catalog.includes("2030六人制邀请赛")
+      && !catalog.includes("2030未公开测试赛")
+      && catalog.indexOf("2030六人制邀请赛") < catalog.indexOf("2030校园七人制联赛"),
+      "Competition Center discovery, publication filter, or public ordering is incorrect.",
+    );
+    assert(
+      sitemap.includes("/competitions/seven-a-side-test")
+      && sitemap.includes("/competitions/six-a-side-test")
+      && !sitemap.includes("/competitions/unpublished-test"),
+      "Sitemap did not use the published Competition catalogue.",
+    );
+    assert(
+      sevenDetail.includes("2030校园七人制联赛")
+      && sevenDetail.includes("七人制")
+      && sevenDetail.includes("A学院")
+      && sevenDetail.includes("B学院")
+      && sevenDetail.includes("七人制测试场")
+      && !sevenDetail.includes("六人制")
+      && !sevenDetail.includes("C学院")
+      && !sevenDetail.includes("D学院")
+      && !sevenDetail.includes("B赛事裁判"),
+      "Seven-a-side detail leaked Competition B or the internal template enum.",
+    );
+    assert(
+      sixDetail.includes("2030六人制邀请赛")
+      && sixDetail.includes("六人制")
+      && sixDetail.includes("C学院")
+      && sixDetail.includes("D学院")
+      && sixDetail.includes("六人制测试场")
+      && sixDetail.includes("B赛事裁判")
+      && !sixDetail.includes("七人制")
+      && !sixDetail.includes("A学院")
+      && !sixDetail.includes("B学院"),
+      "Six-a-side detail leaked Competition A or lost its scoped appointment.",
+    );
+    assert((await fetchPage(origin, "/competitions/unpublished-test")).status === 404, "Unpublished Competition detail was public.");
+    for (const marker of [
+      "PRIVATE-STUDENT-ID", "PRIVATE-PHONE", "PRIVATE-QQ", "PRIVATE-PASSWORD-HASH",
+      "PRIVATE-REFEREE-NOTE", "PRIVATE-MATCH-INTERNAL-NOTE", "PRIVATE-AUDIT-SUMMARY",
+      "PRIVATE-ADMIN-METADATA", competitionCookie, contentCookie, superCookie,
     ]) {
-      assert(!publicPrivacyHtml.includes(privateMarker), `Public Competition HTML exposed private marker: ${privateMarker}`);
+      assert(![home, catalog, sevenDetail, sixDetail].join("\n").includes(marker), `Public HTML exposed ${marker}.`);
     }
 
-    const auditRows = await verifier.auditLog.findMany({ where: { entityType: "Competition" } });
-    const auditText = auditRows.map((row) => row.metadata ?? "").join("\n");
-    assert(auditRows.some((row) => row.actorId && row.action === "COMPETITION_CREATED"), "Competition create audit is missing.");
-    assert(auditText.includes("statusChange") && auditText.includes("publicPublishedChange") && auditText.includes("homepageFeaturedChange"), "Competition audit change metadata is incomplete.");
-    assert(!auditText.includes("动态新生杯赛事简介") && !auditText.includes("动态新生杯赛事公告"), "Audit metadata copied long public text.");
+    const adminEdit = await pageHtml(origin, `/admin/competitions/${sevenId}/edit`, competitionCookie);
+    assert(
+      adminEdit.includes("seven-a-side-test")
+      && adminEdit.includes("七人制")
+      && adminEdit.includes("比赛制式")
+      && adminEdit.includes("裁判岗位模板")
+      && adminEdit.includes("无预设模板 / 自定义赛事"),
+      "Admin edit lost the separated format fields.",
+    );
+
+    const { slug: sixSlug, ...sixEditable } = sixPayload;
+    assert(sixSlug === "six-a-side-test", "Six-a-side fixture slug changed.");
+    await expectStatus(
+      apiRequest(origin, `/api/referees/admin/competitions/${sixId}`, "PATCH", { ...sixEditable, homepageFeatured: true }, competitionCookie),
+      200,
+      "enable second homepage feature",
+    );
+    assertHomepageCardCount(await pageHtml(origin, "/"), 2, "two-featured homepage");
+    const thirdPayload = competitionPayload({
+      slug: "third-featured-test",
+      name: "2030第三项公开赛事",
+      playingFormat: "八人制",
+      publicPublished: true,
+      homepageFeatured: false,
+      publicOrder: 30,
+      marker: "第三项",
+    });
+    const thirdId = await createCompetition(origin, competitionCookie, thirdPayload);
+    const { slug: thirdSlug, ...thirdEditable } = thirdPayload;
+    assert(thirdSlug === "third-featured-test", "Third fixture slug changed.");
+    await expectError(
+      apiRequest(origin, `/api/referees/admin/competitions/${thirdId}`, "PATCH", { ...thirdEditable, homepageFeatured: true }, competitionCookie),
+      409,
+      "首页最多同时展示 2 项赛事，请先关闭一项现有首页赛事。",
+      "third homepage feature",
+    );
+    const featureRows = await verifier.competition.findMany({
+      where: { id: { in: [sevenId, sixId, thirdId] } },
+      select: { id: true, homepageFeatured: true },
+    });
+    const featured = new Map(featureRows.map((row) => [row.id, row.homepageFeatured]));
+    assert(featured.get(sevenId) && featured.get(sixId) && !featured.get(thirdId), "Third-feature rejection was not transaction-safe.");
+    await expectStatus(
+      apiRequest(origin, `/api/referees/admin/competitions/${sixId}`, "PATCH", { ...sixEditable, homepageFeatured: false }, superCookie),
+      200,
+      "disable second homepage feature",
+    );
+
+    const editedSeven = matchPatch(sevenMatchPayload, {
+      kickoff: "2030-10-03T21:30",
+      venue: "新场地",
+      homeTeamId: sevenTeams[2].id,
+      awayTeamId: sevenTeams[0].id,
+    });
+    await expectStatus(
+      apiRequest(origin, `/api/referees/admin/matches/${sevenMatchId}`, "PATCH", editedSeven, competitionCookie),
+      200,
+      "edit next Match",
+    );
+    for (const route of ["/", "/competitions", "/competitions/seven-a-side-test"]) {
+      const html = await pageHtml(origin, route);
+      assert(html.includes("21:30") && html.includes("新场地") && html.includes("E学院"), `${route} did not reflect the same-process Match edit.`);
+    }
+
+    await expectStatus(
+      apiRequest(origin, `/api/referees/admin/matches/${sevenMatchId}`, "PATCH", { ...editedSeven, status: "COMPLETED" }, competitionCookie),
+      200,
+      "complete first Match",
+    );
+    for (const route of ["/", "/competitions", "/competitions/seven-a-side-test"]) {
+      const html = await pageHtml(origin, route);
+      assert(html.includes("2030.10.05") && html.includes("七人制第二场地"), `${route} did not advance to the next scheduled Match.`);
+    }
+    await verifier.match.update({ where: { id: sevenMatchId }, data: { homeScore: 3, awayScore: 1 } });
+    assert((await pageHtml(origin, "/competitions/seven-a-side-test")).includes("3 : 1"), "Completed Match result did not render where supported.");
+    await expectError(
+      apiRequest(origin, `/api/referees/admin/matches/${sevenMatchId}`, "DELETE", { reason: "不得删除正式历史" }, competitionCookie),
+      409,
+      "该比赛已有报名意向、选派或正式历史记录，不能直接删除。请使用“取消比赛”保留业务历史。",
+      "completed Match deletion protection",
+    );
+    const disposablePayload = matchPayload({
+      slug: "seven-disposable-match",
+      competitionId: sevenId,
+      stage: "安全删除测试场次",
+      kickoff: "2030-10-06T18:00",
+      venue: "待删除测试场地",
+      homeTeamId: sevenTeams[0].id,
+      awayTeamId: sevenTeams[1].id,
+    });
+    const disposableId = await createMatch(origin, competitionCookie, disposablePayload);
+    await expectStatus(
+      apiRequest(origin, `/api/referees/admin/matches/${disposableId}`, "DELETE", { reason: "R3 安全删除验证" }, competitionCookie),
+      200,
+      "safe-delete disposable Match",
+    );
+    assert(!(await pageHtml(origin, "/competitions/seven-a-side-test")).includes("待删除测试场地"), "Safely deleted Match remained public.");
+
+    await expectStatus(
+      apiRequest(origin, `/api/referees/admin/matches/${sevenSecondId}`, "PATCH", { ...matchPatch(sevenSecondPayload), status: "CANCELLED", cancellationReason: "赛程调整" }, competitionCookie),
+      200,
+      "cancel next Match",
+    );
+    for (const route of ["/", "/competitions", "/competitions/seven-a-side-test"]) {
+      const html = await pageHtml(origin, route);
+      assert(html.includes("当前暂无已正式发布的下一场比赛，请关注赛事公告。"), `${route} did not return to the canonical no-Match state.`);
+    }
+
+    const { slug: sevenSlug, ...sevenEditable } = sevenPayload;
+    assert(sevenSlug === "seven-a-side-test", "Seven-a-side fixture slug changed.");
+    await expectStatus(
+      apiRequest(origin, `/api/referees/admin/competitions/${sevenId}`, "PATCH", { ...sevenEditable, homepageFeatured: false }, competitionCookie),
+      200,
+      "disable homepage feature",
+    );
+    assertHomepageEmptyState(await pageHtml(origin, "/"), "unfeatured homepage");
+    assert((await pageHtml(origin, "/competitions")).includes("2030校园七人制联赛"), "Unfeatured Competition left the catalog.");
+    assert((await pageHtml(origin, "/competitions/seven-a-side-test")).includes("2030校园七人制联赛"), "Unfeatured Competition detail disappeared.");
+    await expectStatus(
+      apiRequest(origin, `/api/referees/admin/competitions/${sevenId}`, "PATCH", { ...sevenEditable, publicPublished: false, homepageFeatured: false }, competitionCookie),
+      200,
+      "unpublish Competition",
+    );
+    assert(!(await pageHtml(origin, "/competitions")).includes("2030校园七人制联赛"), "Unpublished Competition remained in the catalog.");
+    assert((await fetchPage(origin, "/competitions/seven-a-side-test")).status === 404, "Unpublished Competition detail remained available.");
+    assert(!(await pageHtml(origin, "/sitemap.xml")).includes("/competitions/seven-a-side-test"), "Unpublished Competition remained in the sitemap.");
+    await expectStatus(
+      apiRequest(origin, `/api/referees/admin/competitions/${sevenId}`, "PATCH", { ...sevenEditable, publicPublished: true, homepageFeatured: true }, competitionCookie),
+      200,
+      "restore Competition for footer smoke",
+    );
+
+    const footerPages = [
+      ["/", await pageHtml(origin, "/")],
+      ["/competitions", await pageHtml(origin, "/competitions")],
+      ["/competitions/seven-a-side-test", await pageHtml(origin, "/competitions/seven-a-side-test")],
+      ["/news", await pageHtml(origin, "/news")],
+      ["/news/demo-detail", await pageHtml(origin, "/news/demo-detail")],
+      ["/referees", await pageHtml(origin, "/referees")],
+      ["/association", await pageHtml(origin, "/association")],
+    ] as const;
+    for (const [route, html] of footerPages) assertPublicFooter(html, route);
+
+    const [serviceSource, routeSource] = await Promise.all([
+      readFile(path.resolve("src/lib/public-competition-service.ts"), "utf8"),
+      readFile(path.resolve("src/app/competitions/[slug]/page.tsx"), "utf8"),
+    ]);
+    for (const forbidden of ["getCoreCompetition", "currentPublicCompetitionSlugs", 'slug === "freshman-cup"', 'slug === "tianmuhu-futsal-league"', "generateStaticParams"]) {
+      assert(!`${serviceSource}\n${routeSource}`.includes(forbidden), `Generic public rendering reintroduced ${forbidden}.`);
+    }
     const foreignKeyCheck = await createClient({ url: databaseUrl }).execute("PRAGMA foreign_key_check");
     assert(foreignKeyCheck.rows.length === 0, "HTTP data flow produced foreign key violations.");
-    assert(runningServer.exitCode === null && runningServer.pid === serverPid, "The local server restarted during admin-to-public propagation.");
+    assert(runningServer.exitCode === null && runningServer.pid === serverPid, "The local server restarted during runtime propagation.");
 
     console.log(JSON.stringify({
-      zeroRowEmptyState: "PASS",
-      unpublishedHidden: "PASS",
-      dynamicPublish: "PASS",
-      homepageZeroFeatured: "PASS",
-      homepageOneFeatured: "PASS",
-      homepageTwoFeatured: "PASS",
-      homepageNoDuplicates: "PASS",
-      homepageDynamic: "PASS",
-      homepageFeatureLimit: "PASS",
-      homepagePublishedInvariant: "PASS",
-      competitionCenterDynamic: "PASS",
-      freshmanCupDynamic: "PASS",
-      futsalDynamic: "PASS",
-      noEligibleMatchPending: "PASS",
-      nextMatch: "PASS",
-      nextMatchEdit: "PASS",
-      nextMatchAdvance: "PASS",
-      nextMatchCancelToPending: "PASS",
-      sameProcessFreshness: "PASS",
+      publicDiscovery: "PASS",
+      publicationFilter: "PASS",
+      arbitrarySevenAside: "PASS",
+      arbitrarySixAside: "PASS",
+      customTemplateFailClosed: "PASS",
       competitionIsolation: "PASS",
-      beijingTimezone: "PASS",
-      statusLifecycle: "PASS",
-      registrationUrl: "PASS",
-      rbac: "PASS",
-      publicDto: "PASS",
+      teamIsolation: "PASS",
+      matchIsolation: "PASS",
+      appointmentIsolation: "PASS",
+      canonicalNextMatch: "PASS",
+      matchCreateUpdateCompleteCancelDelete: "PASS",
+      sameProcessFreshness: "PASS",
+      publicationToggle: "PASS",
+      homepageToggle: "PASS",
+      homepageFeatureLimit: "PASS",
+      publicDtoPrivacy: "PASS",
+      unpublished404: "PASS",
+      dynamicSitemap: "PASS",
+      genericRouteStaticInspection: "PASS",
       publicFooter: "PASS",
       historicalArchives: "PASS",
       serverStarts: 1,

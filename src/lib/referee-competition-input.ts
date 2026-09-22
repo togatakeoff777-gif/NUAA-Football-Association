@@ -17,6 +17,7 @@ export type CompetitionMutationInput = {
   year: number | null;
   campus: string;
   format: CompetitionFormat;
+  playingFormat: string;
   status: CompetitionStatus;
   shortName: string | null;
   semesterLabel: string | null;
@@ -93,7 +94,8 @@ function readMutationInput(value: Record<string, unknown>): CompetitionMutationI
     name: readShortText(value.name, "赛事名称", 120),
     year: readYear(value.year),
     campus: readShortText(value.campus, "校区", 60),
-    format: readEnum(value.format, ["ELEVEN_A_SIDE", "FUTSAL"] as const, "比赛制式"),
+    format: readEnum(value.format, ["ELEVEN_A_SIDE", "FUTSAL", "CUSTOM"] as const, "裁判岗位模板"),
+    playingFormat: readShortText(value.playingFormat, "比赛制式", 40),
     status: readEnum(
       value.status,
       ["PREPARING", "REGISTRATION", "ONGOING", "COMPLETED"] as const,

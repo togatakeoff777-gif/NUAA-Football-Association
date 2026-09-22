@@ -110,17 +110,49 @@ export type CoreCompetitionDirectoryEntry = {
 
 export type PublicCompetitionView = Omit<
   CoreCompetitionDirectoryEntry,
-  "year" | "semesterLabel" | "campus" | "teamFormation"
+  "year" | "semester" | "semesterLabel" | "campus" | "teamFormation" | "format" | "formatLabel" | "eventType" | "dataStatus"
 > & {
   year: number | null;
   semesterLabel: string;
   campus: string;
   teamFormation: string;
+  eventType: string;
+  formatLabel: string;
   registrationUrl: string | null;
   publicPublished: boolean;
   homepageFeatured: boolean;
   publicOrder: number;
-  dataOrigin: "static-fallback" | "database";
+  teams: PublicCompetitionTeam[];
+  matches: PublicCompetitionMatch[];
+  dataOrigin: "database";
+};
+
+export type PublicCompetitionTeam = {
+  id: string;
+  name: string;
+  teamType: "ORGANIZATION" | "JOINT" | "FREEFORM";
+  teamTypeLabel: string;
+};
+
+export type PublicCompetitionMatch = {
+  id: string;
+  slug: string;
+  stage: string;
+  round: string | null;
+  kickoff: Date;
+  dateLabel: string;
+  timeLabel: string;
+  venue: string;
+  status: "scheduled" | "completed" | "cancelled";
+  statusLabel: string;
+  homeTeam: { id: string; name: string };
+  awayTeam: { id: string; name: string };
+  homeScore: number | null;
+  awayScore: number | null;
+  appointment: null | {
+    id: string;
+    positions: Array<{ key: string; label: string; refereeName: string }>;
+  };
 };
 
 export type PublicMatchRecord = {

@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto";
 import type {
   CompetitionFormat,
   CompetitionStatus,
+  Prisma,
 } from "@/generated/prisma-v29/client";
 import type { CompetitionMutationInput } from "@/lib/referee-competition-input";
 import { prisma } from "@/lib/prisma";
@@ -46,6 +47,10 @@ const publicProfileFields = [
   "registrationUrl",
 ] as const;
 
+const homepageFeaturedLimit = 2;
+const homepagePublishedError = "只有已公开发布的赛事才能在首页赛事预告中展示。";
+const homepageLimitError = "首页最多同时展示 2 项赛事，请先关闭一项现有首页赛事。";
+
 function manualCompetitionSlug(year?: number | null) {
   return `manual-${year ?? "competition"}-${randomBytes(6).toString("hex")}`;
 }
@@ -62,10 +67,34 @@ function changedFields(existing: Record<string, unknown>, updated: Record<string
   return publicProfileFields.filter((field) => dateValue(existing[field]) !== dateValue(updated[field]));
 }
 
+async function assertHomepageFeatureAllowed(
+  tx: Prisma.TransactionClient,
+  input: { publicPublished: boolean; homepageFeatured: boolean },
+  currentCompetitionId?: string,
+) {
+  if (!input.homepageFeatured) return;
+  if (!input.publicPublished) {
+    throw new RefereeServiceError(homepagePublishedError, 409);
+  }
+  const existingFeatured = await tx.competition.count({
+    where: {
+      homepageFeatured: true,
+      isTestData: false,
+      ...(currentCompetitionId ? { id: { not: currentCompetitionId } } : {}),
+    },
+  });
+  if (existingFeatured >= homepageFeaturedLimit) {
+    throw new RefereeServiceError(homepageLimitError, 409);
+  }
+}
+
 export async function createCompetition(input: CompetitionInput, actor: AdminActor) {
   const slug = input.slug ?? manualCompetitionSlug(input.year);
   try {
     return await prisma.$transaction(async (tx) => {
+      const publicPublished = input.publicPublished ?? false;
+      const homepageFeatured = input.homepageFeatured ?? false;
+      await assertHomepageFeatureAllowed(tx, { publicPublished, homepageFeatured });
       const competition = await tx.competition.create({
         data: {
           slug,
@@ -77,8 +106,8 @@ export async function createCompetition(input: CompetitionInput, actor: AdminAct
           status: input.status,
           semesterLabel: input.semesterLabel ?? null,
           teamFormation: input.teamFormation ?? null,
-          publicPublished: input.publicPublished ?? false,
-          homepageFeatured: input.homepageFeatured ?? false,
+          publicPublished,
+          homepageFeatured,
           publicOrder: input.publicOrder ?? 0,
           registrationStartAt: input.registrationStartAt ?? null,
           registrationEndAt: input.registrationEndAt ?? null,
@@ -131,6 +160,13 @@ export async function updateCompetition(id: string, input: CompetitionInput, act
     if (existing.format !== input.format && existing._count.matches > 0) {
       throw new RefereeServiceError("已有比赛的赛事不能直接更改比赛制式。", 409);
     }
+    const publicPublished = input.publicPublished ?? existing.publicPublished;
+    const homepageFeatured = input.homepageFeatured ?? existing.homepageFeatured;
+    await assertHomepageFeatureAllowed(
+      tx,
+      { publicPublished, homepageFeatured },
+      existing.id,
+    );
     const data = {
       name: input.name,
       shortName: input.shortName === undefined ? existing.shortName : input.shortName,
@@ -140,8 +176,8 @@ export async function updateCompetition(id: string, input: CompetitionInput, act
       status: input.status,
       semesterLabel: input.semesterLabel === undefined ? existing.semesterLabel : input.semesterLabel,
       teamFormation: input.teamFormation === undefined ? existing.teamFormation : input.teamFormation,
-      publicPublished: input.publicPublished ?? existing.publicPublished,
-      homepageFeatured: input.homepageFeatured ?? existing.homepageFeatured,
+      publicPublished,
+      homepageFeatured,
       publicOrder: input.publicOrder ?? existing.publicOrder,
       registrationStartAt: input.registrationStartAt === undefined ? existing.registrationStartAt : input.registrationStartAt,
       registrationEndAt: input.registrationEndAt === undefined ? existing.registrationEndAt : input.registrationEndAt,

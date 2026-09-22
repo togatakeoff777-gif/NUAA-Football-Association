@@ -106,6 +106,17 @@ async function expectInputFailure(run: () => unknown, text: string) {
   throw new Error(`Expected input failure containing ${text}.`);
 }
 
+async function expectServiceFailure(run: () => Promise<unknown>, status: number, message: string) {
+  try {
+    await run();
+  } catch (error) {
+    assert(error instanceof Error && error.message === message, `Expected exact service failure: ${message}.`);
+    assert("status" in error && error.status === status, `Expected service failure status ${status}.`);
+    return;
+  }
+  throw new Error(`Expected service failure: ${message}.`);
+}
+
 async function verifyDomain(databaseUrl: string) {
   process.env.DATABASE_URL = databaseUrl;
   process.env.TZ = "Europe/London";
@@ -125,7 +136,7 @@ async function verifyDomain(databaseUrl: string) {
     semesterLabel: "上半学期",
     teamFormation: "院系组队",
     publicPublished: false,
-    homepageFeatured: true,
+    homepageFeatured: false,
     publicOrder: 10,
     registrationStartAt: "2026-09-25T18:30",
     registrationEndAt: "2026-09-30T18:30",
@@ -142,6 +153,15 @@ async function verifyDomain(databaseUrl: string) {
     const parsed = input.readCompetitionCreateInput(valid);
     assert(parsed.registrationStartAt?.toISOString() === "2026-09-25T10:30:00.000Z", "Beijing input was stored at the wrong instant.");
     assert(time.formatBeijingDateTime(parsed.registrationStartAt!).dateTimeLabel === "2026.09.25 18:30", "Beijing display drifted under a non-China process timezone.");
+    await expectServiceFailure(
+      () => service.createCompetition({
+        ...parsed,
+        slug: "unpublished-featured",
+        homepageFeatured: true,
+      }, actor),
+      409,
+      "只有已公开发布的赛事才能在首页赛事预告中展示。",
+    );
     const created = await service.createCompetition(parsed, actor);
     assert(created.slug === "freshman-cup" && created.source === "MANUAL", "Stable manual Competition creation failed.");
     const createAudit = await verifier.auditLog.findFirstOrThrow({ where: { entityId: created.id, action: "COMPETITION_CREATED" } });
@@ -150,12 +170,22 @@ async function verifyDomain(databaseUrl: string) {
 
     const { slug: stableSlug, ...editable } = valid;
     assert(stableSlug === "freshman-cup", "Test fixture stable slug changed unexpectedly.");
-    const updatedInput = input.readCompetitionUpdateInput({ ...editable, status: "REGISTRATION", publicPublished: true });
+    const updatedInput = input.readCompetitionUpdateInput({
+      ...editable,
+      status: "REGISTRATION",
+      publicPublished: true,
+      homepageFeatured: true,
+    });
     const updated = await service.updateCompetition(created.id, updatedInput, actor);
-    assert(updated.status === "REGISTRATION" && updated.publicPublished, "Competition update did not persist public status.");
+    assert(updated.status === "REGISTRATION" && updated.publicPublished && updated.homepageFeatured, "Competition update did not persist public/homepage status.");
     const updateAudit = await verifier.auditLog.findFirstOrThrow({ where: { entityId: created.id, action: "COMPETITION_UPDATED" }, orderBy: { createdAt: "desc" } });
     const metadata = JSON.parse(updateAudit.metadata ?? "{}") as Record<string, unknown>;
-    assert(JSON.stringify(metadata).includes("statusChange") && JSON.stringify(metadata).includes("publicPublishedChange"), "Audit metadata omitted status/publication changes.");
+    assert(
+      JSON.stringify(metadata).includes("statusChange")
+      && JSON.stringify(metadata).includes("publicPublishedChange")
+      && JSON.stringify(metadata).includes("homepageFeaturedChange"),
+      "Audit metadata omitted status/publication/homepage changes.",
+    );
     assert(!updateAudit.metadata?.includes(valid.summary) && !updateAudit.metadata?.includes(valid.notice), "Long public text leaked into update audit metadata.");
 
     await expectInputFailure(() => input.readCompetitionCreateInput({ ...valid, slug: "Freshman-Cup" }), "小写字母");
@@ -176,6 +206,51 @@ async function verifyDomain(databaseUrl: string) {
     }
     assert(duplicateRejected, "Duplicate stable slug was not rejected cleanly.");
 
+    const secondFeatured = await service.createCompetition({
+      ...parsed,
+      slug: "second-featured",
+      name: "第二项首页赛事",
+      publicPublished: true,
+      homepageFeatured: true,
+    }, actor);
+    const thirdUnfeatured = await service.createCompetition({
+      ...parsed,
+      slug: "third-unfeatured",
+      name: "第三项非首页赛事",
+      publicPublished: true,
+      homepageFeatured: false,
+    }, actor);
+    const thirdUpdate = {
+      ...updatedInput,
+      name: "第三项非首页赛事",
+      homepageFeatured: true,
+    };
+    await expectServiceFailure(
+      () => service.updateCompetition(thirdUnfeatured.id, thirdUpdate, actor),
+      409,
+      "首页最多同时展示 2 项赛事，请先关闭一项现有首页赛事。",
+    );
+    const flagsAfterLimit = await verifier.competition.findMany({
+      where: { id: { in: [created.id, secondFeatured.id, thirdUnfeatured.id] } },
+      select: { id: true, homepageFeatured: true },
+    });
+    const featuredById = new Map(flagsAfterLimit.map((row) => [row.id, row.homepageFeatured]));
+    assert(
+      featuredById.get(created.id) === true
+      && featuredById.get(secondFeatured.id) === true
+      && featuredById.get(thirdUnfeatured.id) === false,
+      "The third-feature rejection changed persisted homepage flags.",
+    );
+    await expectServiceFailure(
+      () => service.updateCompetition(
+        thirdUnfeatured.id,
+        { ...thirdUpdate, publicPublished: false },
+        actor,
+      ),
+      409,
+      "只有已公开发布的赛事才能在首页赛事预告中展示。",
+    );
+
     const legacy = await service.createCompetition({
       name: "既有内部调用兼容赛事",
       format: "FUTSAL",
@@ -184,6 +259,8 @@ async function verifyDomain(databaseUrl: string) {
     assert(legacy.slug.startsWith("manual-competition-"), "Legacy internal create compatibility regressed.");
     return {
       stableSlug: true,
+      publishedHomepageInvariant: true,
+      homepageMaximum: 2,
       auditFieldNamesOnly: true,
       inputValidation: true,
       beijingStoredInstant: parsed.registrationStartAt?.toISOString(),

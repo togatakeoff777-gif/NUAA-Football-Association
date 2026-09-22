@@ -154,6 +154,10 @@
 .admin-checkbox-list { display: grid; gap: 7px; }
 .admin-checkbox-list label { min-height: 30px; display: flex; align-items: center; gap: 8px; font-size: 13px; }
 .admin-checkbox-list input[type="checkbox"] { width: 15px; min-height: 15px; margin: 0; accent-color: var(--admin-blue); }
+.admin-checkbox-list label.is-disabled { opacity: .62; }
+.admin-competition-feature-copy { display: grid; gap: 3px; }
+.admin-competition-feature-copy strong { color: #33465d; font-size: 13px; font-weight: 650; }
+.admin-competition-feature-copy small { color: var(--admin-muted); font-size: var(--admin-type-help); line-height: 1.5; }
 .admin-inline-check { display: flex !important; align-items: center; gap: 9px !important; }
 .admin-inline-check input[type="checkbox"] { width: 15px; min-height: 15px; margin: 0; accent-color: var(--admin-blue); }
 .admin-position-count-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 10px; margin-top: 14px; }

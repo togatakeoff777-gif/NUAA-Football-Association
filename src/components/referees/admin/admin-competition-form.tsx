@@ -43,6 +43,10 @@ export function AdminCompetitionForm({ competition }: { competition?: AdminCompe
   const [message, setMessage] = useState("");
   const [dirty, setDirty] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [publicPublished, setPublicPublished] = useState(competition?.publicPublished ?? false);
+  const [homepageFeatured, setHomepageFeatured] = useState(
+    Boolean(competition?.publicPublished && competition.homepageFeatured),
+  );
 
   useEffect(() => {
     function warnBeforeUnload(event: BeforeUnloadEvent) {
@@ -132,8 +136,35 @@ export function AdminCompetitionForm({ competition }: { competition?: AdminCompe
     <section className="admin-form-section">
       <header><h2>公开状态</h2><p>“公开发布”开启后，后台数据将替代当前静态赛事资料进入官网公开页面。</p></header>
       <div className="admin-checkbox-list">
-        <label><input defaultChecked={competition?.publicPublished} name="publicPublished" type="checkbox" /><span>公开发布</span></label>
-        <label><input defaultChecked={competition?.homepageFeatured} name="homepageFeatured" type="checkbox" /><span>首页赛事预告展示</span></label>
+        <label>
+          <input
+            checked={publicPublished}
+            name="publicPublished"
+            onChange={(event) => {
+              setPublicPublished(event.target.checked);
+              if (!event.target.checked) setHomepageFeatured(false);
+            }}
+            type="checkbox"
+          />
+          <span>公开发布</span>
+        </label>
+        <label className={!publicPublished ? "is-disabled" : undefined}>
+          <input
+            aria-describedby="homepage-feature-help"
+            checked={homepageFeatured}
+            disabled={!publicPublished}
+            name="homepageFeatured"
+            onChange={(event) => setHomepageFeatured(event.target.checked)}
+            type="checkbox"
+          />
+          <span className="admin-competition-feature-copy">
+            <strong>在首页赛事预告中展示</strong>
+            <small id="homepage-feature-help">
+              开启后，该赛事将显示在官网首页“赛事预告”区域，并自动同步当前赛事状态及下一场公开比赛信息。
+              {!publicPublished ? " 请先开启“公开发布”后再设置首页展示。" : ""}
+            </small>
+          </span>
+        </label>
       </div>
       <div className="admin-form-grid">
         <label><span>公开排序</span><input defaultValue={competition?.publicOrder ?? 0} max={1000} min={-1000} name="publicOrder" required type="number" /></label>

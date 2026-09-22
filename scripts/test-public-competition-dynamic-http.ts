@@ -21,14 +21,21 @@ function homepageCards(html: string) {
     .map((match) => match[0]);
 }
 
-function assertTwoUniqueHomepageCards(html: string, label: string) {
+function assertHomepageCardCount(html: string, count: number, label: string) {
   const cards = homepageCards(html);
-  assert(cards.length === 2, `${label} did not render exactly two homepage Competition cards.`);
+  assert(cards.length === count, `${label} rendered ${cards.length} homepage Competition cards instead of ${count}.`);
 }
 
 function assertOneHomepageCardIncludes(html: string, marker: string, label: string) {
   const matchingCards = homepageCards(html).filter((card) => card.includes(marker));
   assert(matchingCards.length === 1, `${label} did not appear in exactly one homepage Competition card.`);
+}
+
+function assertHomepageEmptyState(html: string, label: string) {
+  assertHomepageCardCount(html, 0, label);
+  assert(html.includes("当前暂无首页重点赛事"), `${label} omitted the intentional empty-state title.`);
+  assert(html.includes("请前往赛事中心查看全部赛事与最新安排。"), `${label} omitted the intentional empty-state guidance.`);
+  assert(html.includes("进入赛事中心 →"), `${label} omitted the existing Competition center action.`);
 }
 
 function assertPublicFooter(html: string, route: string) {
@@ -204,6 +211,18 @@ async function expectStatus(response: Response | Promise<Response>, status: numb
   assert(result.status === status, `${label}: expected ${status}, received ${result.status}.`);
 }
 
+async function expectError(
+  response: Response | Promise<Response>,
+  status: number,
+  message: string,
+  label: string,
+) {
+  const result = await response;
+  assert(result.status === status, `${label}: expected ${status}, received ${result.status}.`);
+  const body = await result.json() as { error?: string };
+  assert(body.error === message, `${label}: expected exact error "${message}", received "${body.error ?? ""}".`);
+}
+
 async function main() {
   await access(path.resolve(".next/BUILD_ID"));
   const root = await mkdtemp(path.join(os.tmpdir(), "nuaafa-public-competition-http-"));
@@ -253,11 +272,12 @@ async function main() {
       ["/association", await pageHtml(origin, "/association")],
     ] as const;
     for (const [route, html] of publicFooterPages) assertPublicFooter(html, route);
-    assert(zeroHome.includes("2026南京航空航天大学新生杯足球赛事") && zeroHome.includes("2026天目湖五人制联赛"), "Zero-row homepage fallback failed.");
-    assertTwoUniqueHomepageCards(zeroHome, "Zero-row fallback");
-    assertOneHomepageCardIncludes(zeroHome, "2026南京航空航天大学新生杯足球赛事", "Zero-row Freshman Cup fallback");
-    assertOneHomepageCardIncludes(zeroHome, "2026天目湖五人制联赛", "Zero-row Futsal fallback");
-    assert(zeroHome.includes("两项赛事，关注最新安排") && !zeroHome.includes("筹备中 · 赛程待发布"), "Zero-row homepage presentation changed.");
+    assertHomepageEmptyState(zeroHome, "Zero-row homepage");
+    assert(
+      !homepageCards(zeroHome).join("\n").includes("2026南京航空航天大学新生杯足球赛事")
+      && !homepageCards(zeroHome).join("\n").includes("2026天目湖五人制联赛"),
+      "Zero-row homepage rendered static Competition filler cards.",
+    );
     assert(zeroCenter.includes("筹备工作已启动") && zeroCenter.includes("2026天目湖五人制联赛"), "Zero-row Competition center fallback failed.");
     assert(zeroFreshman.includes("面向新生开展的院系十一人制足球赛事") && !zeroFreshman.includes("赛事公告："), "Freshman Cup static fallback failed.");
     assert(zeroFutsal.includes("2026赛季具体安排尚未公布"), "Futsal static fallback failed.");
@@ -268,13 +288,21 @@ async function main() {
       login(origin, "dynamic-content"),
       login(origin, "dynamic-super"),
     ]);
+    const adminCreate = await pageHtml(origin, "/admin/competitions/new", competitionCookie);
+    assert(
+      adminCreate.includes("在首页赛事预告中展示")
+      && adminCreate.includes("开启后，该赛事将显示在官网首页“赛事预告”区域，并自动同步当前赛事状态及下一场公开比赛信息。")
+      && adminCreate.includes("请先开启“公开发布”后再设置首页展示。")
+      && /<input(?=[^>]*name="homepageFeatured")(?=[^>]*disabled)[^>]*>/u.test(adminCreate),
+      "Admin create did not render the exact disabled homepage feature dependency.",
+    );
     const draftFreshman = competitionPayload({
       slug: "freshman-cup",
       name: "R1动态新生杯",
       format: "ELEVEN_A_SIDE",
       status: "REGISTRATION",
       publicPublished: false,
-      homepageFeatured: true,
+      homepageFeatured: false,
       marker: "动态新生杯",
     });
     await expectStatus(apiRequest(origin, "/api/referees/admin/competitions", "POST", draftFreshman), 401, "anonymous mutation");
@@ -302,6 +330,18 @@ async function main() {
       400,
       "invalid registration range",
     );
+    await expectError(
+      apiRequest(
+        origin,
+        "/api/referees/admin/competitions",
+        "POST",
+        { ...draftFreshman, homepageFeatured: true },
+        competitionCookie,
+      ),
+      409,
+      "只有已公开发布的赛事才能在首页赛事预告中展示。",
+      "unpublished featured create",
+    );
 
     const createResponse = await apiRequest(origin, "/api/referees/admin/competitions", "POST", draftFreshman, competitionCookie);
     await expectStatus(createResponse, 201, "COMPETITION_ADMIN create");
@@ -312,14 +352,9 @@ async function main() {
       409,
       "duplicate stable slug",
     );
-    const unpublishedFeaturedHome = await pageHtml(origin, "/");
-    assert(!unpublishedFeaturedHome.includes("R1动态新生杯"), "Unpublished Competition replaced homepage fallback.");
-    assert(
-      unpublishedFeaturedHome.includes("2026南京航空航天大学新生杯足球赛事")
-      && unpublishedFeaturedHome.includes("2026天目湖五人制联赛"),
-      "publicPublished=false/homepageFeatured=true did not preserve both static homepage fallbacks.",
-    );
-    assertTwoUniqueHomepageCards(unpublishedFeaturedHome, "Unpublished featured Competition");
+    const unpublishedHome = await pageHtml(origin, "/");
+    assert(!unpublishedHome.includes("R1动态新生杯"), "Unpublished Competition reached the homepage.");
+    assertHomepageEmptyState(unpublishedHome, "Unpublished Competition homepage");
     assert(!(await pageHtml(origin, "/competitions")).includes("动态新生杯赛事简介"), "Unpublished Competition replaced center fallback.");
     assert(!(await pageHtml(origin, "/competitions/freshman-cup")).includes("动态新生杯球场"), "Unpublished Competition replaced detail fallback.");
 
@@ -330,23 +365,22 @@ async function main() {
     );
     const { slug: freshmanSlug, ...freshmanEditable } = draftFreshman;
     assert(freshmanSlug === "freshman-cup", "Freshman fixture slug changed unexpectedly.");
-    const publishedFreshman = { ...freshmanEditable, publicPublished: true, status: "REGISTRATION" };
+    const publishedFreshman = {
+      ...freshmanEditable,
+      publicPublished: true,
+      homepageFeatured: false,
+      status: "REGISTRATION",
+    };
     await expectStatus(
       apiRequest(origin, `/api/referees/admin/competitions/${freshmanId}`, "PATCH", publishedFreshman, competitionCookie),
       200,
       "COMPETITION_ADMIN publish",
     );
-    const dynamicHome = await pageHtml(origin, "/");
+    const publishedUnfeaturedHome = await pageHtml(origin, "/");
     const dynamicCenter = await pageHtml(origin, "/competitions");
     const dynamicFreshman = await pageHtml(origin, "/competitions/freshman-cup");
-    assert(
-      dynamicHome.includes("R1动态新生杯")
-      && dynamicHome.includes("报名中")
-      && dynamicHome.includes("2026天目湖五人制联赛"),
-      `Published status did not reach homepage (name=${dynamicHome.includes("R1动态新生杯")}, status=${dynamicHome.includes("报名中")}, fallback=${dynamicHome.includes("面向新生开展的院系十一人制足球赛事")}).`,
-    );
-    assertTwoUniqueHomepageCards(dynamicHome, "One featured Competition");
-    assertOneHomepageCardIncludes(dynamicHome, "R1动态新生杯", "One-featured dynamic Freshman Cup");
+    assertHomepageEmptyState(publishedUnfeaturedHome, "Published unfeatured Competition homepage");
+    assert(!homepageCards(publishedUnfeaturedHome).join("\n").includes("R1动态新生杯"), "Unfeatured Competition reached a homepage card.");
     assert(dynamicCenter.includes("R1动态新生杯") && dynamicCenter.includes("报名中"), "Competition center dynamic title/status failed.");
     assert(dynamicCenter.includes("报名进行中，赛程待正式发布。"), "Competition center did not show status-appropriate safe no-Match wording.");
     assert(
@@ -362,6 +396,31 @@ async function main() {
     assert(dynamicFreshman.includes("报名进行中，赛程待正式发布。"), "Competition detail did not show status-appropriate safe no-Match wording.");
     const adminEdit = await pageHtml(origin, `/admin/competitions/${freshmanId}/edit`, competitionCookie);
     assert(adminEdit.includes("freshman-cup") && adminEdit.includes("北京时间（UTC+8）"), "Admin edit did not show read-only slug and timezone labels.");
+    assert(
+      adminEdit.includes("在首页赛事预告中展示")
+      && adminEdit.includes("开启后，该赛事将显示在官网首页“赛事预告”区域，并自动同步当前赛事状态及下一场公开比赛信息。")
+      && !adminEdit.includes("首页赛事预告展示"),
+      "Admin edit did not render the exact homepage feature label and guidance.",
+    );
+    await expectStatus(
+      apiRequest(
+        origin,
+        `/api/referees/admin/competitions/${freshmanId}`,
+        "PATCH",
+        { ...publishedFreshman, homepageFeatured: true },
+        competitionCookie,
+      ),
+      200,
+      "enable first homepage feature",
+    );
+    const oneFreshmanHome = await pageHtml(origin, "/");
+    assertHomepageCardCount(oneFreshmanHome, 1, "One-featured Freshman Cup homepage");
+    assertOneHomepageCardIncludes(oneFreshmanHome, "R1动态新生杯", "One-featured dynamic Freshman Cup");
+    assert(oneFreshmanHome.includes("is-single"), "One-featured homepage did not use the intentional single-card layout.");
+    assert(
+      !homepageCards(oneFreshmanHome).join("\n").includes("2026天目湖五人制联赛"),
+      "One-featured homepage added a static filler card.",
+    );
 
     verifier = new PrismaClient({ adapter: new PrismaLibSql({ url: databaseUrl }) });
     const storedFreshman = await verifier.competition.findUniqueOrThrow({ where: { id: freshmanId } });
@@ -444,21 +503,46 @@ async function main() {
     const secondBody = matchBody("dynamic-match-two", "动态第二场", "2030-10-02T19:00");
     const secondResponse = await apiRequest(origin, "/api/referees/admin/matches", "POST", secondBody, competitionCookie);
     await expectStatus(secondResponse, 201, "second Match create");
+    const secondMatchId = (await secondResponse.json() as { matchId?: string }).matchId;
+    assert(secondMatchId, "Second Match response omitted its ID.");
     for (const route of ["/", "/competitions", "/competitions/freshman-cup"]) {
       assert((await pageHtml(origin, route)).includes("2030.09.25"), `Later Match incorrectly displaced the first future Match on ${route}.`);
     }
     const { homeTeamSelection, awayTeamSelection, ...firstPatchBody } = firstBody;
     assert(homeTeamSelection && awayTeamSelection, "Match fixture selections are missing.");
-    const completeFirst = {
+    const editedFirst = {
       ...firstPatchBody,
       homeTeamId: teams[0].id,
       awayTeamId: teams[1].id,
-      status: "COMPLETED",
+      kickoff: "2030-09-26T20:15",
+      venue: "动态调整后场地",
     };
     await expectStatus(
-      apiRequest(origin, `/api/referees/admin/matches/${firstMatchId}`, "PATCH", completeFirst, competitionCookie),
+      apiRequest(origin, `/api/referees/admin/matches/${firstMatchId}`, "PATCH", editedFirst, competitionCookie),
       200,
-      "complete first Match",
+      "edit first Match",
+    );
+    for (const route of ["/", "/competitions", "/competitions/freshman-cup"]) {
+      const editedHtml = await pageHtml(origin, route);
+      assert(
+        editedHtml.includes("2030.09.26")
+        && editedHtml.includes("20:15")
+        && editedHtml.includes("动态调整后场地")
+        && !editedHtml.includes("2030.09.25"),
+        `${route} did not immediately reflect the edited next Match.`,
+      );
+    }
+
+    await expectStatus(
+      apiRequest(
+        origin,
+        `/api/referees/admin/matches/${firstMatchId}`,
+        "PATCH",
+        { ...editedFirst, status: "CANCELLED", cancellationReason: "赛程调整" },
+        competitionCookie,
+      ),
+      200,
+      "cancel first Match",
     );
     for (const route of ["/", "/competitions", "/competitions/freshman-cup"]) {
       const advancedHtml = await pageHtml(origin, route);
@@ -466,14 +550,48 @@ async function main() {
         advancedHtml.includes("2030.10.02")
         && advancedHtml.includes("19:00")
         && advancedHtml.includes("动态第二场球场")
-        && !advancedHtml.includes("2030.09.25"),
-        `${route} did not advance to the next future Match.`,
+        && !advancedHtml.includes("2030.09.26"),
+        `${route} did not immediately advance after the first Match was cancelled.`,
+      );
+    }
+
+    const { homeTeamSelection: secondHomeSelection, awayTeamSelection: secondAwaySelection, ...secondPatchBody } = secondBody;
+    assert(secondHomeSelection && secondAwaySelection, "Second Match fixture selections are missing.");
+    await expectStatus(
+      apiRequest(
+        origin,
+        `/api/referees/admin/matches/${secondMatchId}`,
+        "PATCH",
+        {
+          ...secondPatchBody,
+          homeTeamId: teams[0].id,
+          awayTeamId: teams[1].id,
+          status: "CANCELLED",
+          cancellationReason: "赛程取消",
+        },
+        competitionCookie,
+      ),
+      200,
+      "cancel second Match",
+    );
+    for (const route of ["/", "/competitions", "/competitions/freshman-cup"]) {
+      const pendingHtml = await pageHtml(origin, route);
+      assert(
+        pendingHtml.includes("报名进行中，赛程待正式发布。")
+        && !pendingHtml.includes("2030.10.02"),
+        `${route} did not return to safe pending wording after all eligible Matches were cancelled.`,
       );
     }
 
     for (const status of ["PREPARING", "REGISTRATION", "ONGOING", "COMPLETED"] as const) {
       await expectStatus(
-        apiRequest(origin, `/api/referees/admin/competitions/${freshmanId}`, "PATCH", { ...publishedFreshman, status }, competitionCookie),
+        apiRequest(
+          origin,
+          `/api/referees/admin/competitions/${freshmanId}`,
+          "PATCH",
+          { ...publishedFreshman, status, homepageFeatured: true },
+          competitionCookie,
+        ),
         200,
         `status lifecycle ${status}`,
       );
@@ -490,22 +608,15 @@ async function main() {
       "disable homepage feature",
     );
     const unfeaturedPublishedHome = await pageHtml(origin, "/");
-    const unfeaturedPublishedCards = homepageCards(unfeaturedPublishedHome).join("\n");
-    assert(
-      !unfeaturedPublishedCards.includes("R1动态新生杯")
-      && !unfeaturedPublishedCards.includes("动态主队")
-      && unfeaturedPublishedCards.includes("2026南京航空航天大学新生杯足球赛事")
-      && unfeaturedPublishedCards.includes("2026天目湖五人制联赛"),
-      "publicPublished=true/homepageFeatured=false did not restore the complete static homepage fallback.",
-    );
-    assertTwoUniqueHomepageCards(unfeaturedPublishedHome, "Published unfeatured Competition");
+    assertHomepageEmptyState(unfeaturedPublishedHome, "Published unfeatured Competition homepage");
+    assert(!unfeaturedPublishedHome.includes("R1动态新生杯"), "Unfeatured Competition remained on the homepage.");
     const unfeaturedPublishedCenter = await pageHtml(origin, "/competitions");
     const unfeaturedPublishedDetail = await pageHtml(origin, "/competitions/freshman-cup");
     assert(
       unfeaturedPublishedCenter.includes("R1动态新生杯")
-      && unfeaturedPublishedCenter.includes("2030.10.02")
+      && unfeaturedPublishedCenter.includes("当前暂无已正式发布的下一场比赛，请关注赛事公告。")
       && unfeaturedPublishedDetail.includes("R1动态新生杯")
-      && unfeaturedPublishedDetail.includes("2030.10.02"),
+      && unfeaturedPublishedDetail.includes("当前暂无已正式发布的下一场比赛，请关注赛事公告。"),
       "homepageFeatured incorrectly changed dynamic overview/detail or Match presentation.",
     );
 
@@ -528,12 +639,13 @@ async function main() {
     const oneFeaturedCards = homepageCards(oneFeaturedHome).join("\n");
     assert(
       oneFeaturedCards.includes("R1动态天目湖五人制联赛")
-      && oneFeaturedCards.includes("2026南京航空航天大学新生杯足球赛事")
       && !oneFeaturedCards.includes("R1动态新生杯")
+      && !oneFeaturedCards.includes("2026南京航空航天大学新生杯足球赛事")
       && !oneFeaturedCards.includes("2026天目湖五人制联赛"),
-      "One-featured homepage did not combine the eligible dynamic card with the non-duplicate fallback card.",
+      "One-featured homepage did not render only the eligible dynamic card.",
     );
-    assertTwoUniqueHomepageCards(oneFeaturedHome, "One featured Futsal Competition");
+    assertHomepageCardCount(oneFeaturedHome, 1, "One featured Futsal Competition");
+    assert(oneFeaturedHome.includes("is-single"), "One-featured Futsal homepage did not use the intentional single-card layout.");
 
     const futsalTeams = await Promise.all([
       verifier.team.create({ data: { competitionId: futsalId, name: "五人制主队" } }),
@@ -549,6 +661,14 @@ async function main() {
       awayTeamId: futsalTeams[1].id,
       status: "SCHEDULED",
     } });
+    const thirdFreshmanMatchResponse = await apiRequest(
+      origin,
+      "/api/referees/admin/matches",
+      "POST",
+      matchBody("dynamic-match-three", "动态第三场", "2030-11-01T18:00"),
+      competitionCookie,
+    );
+    await expectStatus(thirdFreshmanMatchResponse, 201, "third Freshman Match create for isolation");
     const isolatedFreshmanDetail = await pageHtml(origin, "/competitions/freshman-cup");
     const isolatedFutsalDetail = await pageHtml(origin, "/competitions/tianmuhu-futsal-league");
     assert(
@@ -591,7 +711,65 @@ async function main() {
       && !twoFeaturedCards.includes("2026天目湖五人制联赛"),
       "Two-featured homepage did not render both dynamic Competition cards without static duplicates.",
     );
-    assertTwoUniqueHomepageCards(twoFeaturedHome, "Two featured Competitions");
+    assertHomepageCardCount(twoFeaturedHome, 2, "Two featured Competitions");
+
+    const thirdDraft = competitionPayload({
+      slug: "third-homepage-competition",
+      name: "首页第三项赛事",
+      format: "ELEVEN_A_SIDE",
+      status: "PREPARING",
+      publicPublished: true,
+      homepageFeatured: false,
+      marker: "第三项赛事",
+    });
+    const thirdResponse = await apiRequest(
+      origin,
+      "/api/referees/admin/competitions",
+      "POST",
+      thirdDraft,
+      competitionCookie,
+    );
+    await expectStatus(thirdResponse, 201, "third unfeatured Competition create");
+    const thirdId = (await thirdResponse.json() as { competitionId?: string }).competitionId;
+    assert(thirdId, "Third Competition response omitted its ID.");
+    const { slug: thirdSlug, ...thirdEditable } = thirdDraft;
+    assert(thirdSlug === "third-homepage-competition", "Third fixture slug changed unexpectedly.");
+    await expectError(
+      apiRequest(
+        origin,
+        `/api/referees/admin/competitions/${thirdId}`,
+        "PATCH",
+        { ...thirdEditable, homepageFeatured: true },
+        competitionCookie,
+      ),
+      409,
+      "首页最多同时展示 2 项赛事，请先关闭一项现有首页赛事。",
+      "third homepage feature",
+    );
+    const featuredFlagsAfterLimit = await verifier.competition.findMany({
+      where: { id: { in: [freshmanId, futsalId, thirdId] } },
+      select: { id: true, homepageFeatured: true },
+    });
+    const featuredById = new Map(featuredFlagsAfterLimit.map((row) => [row.id, row.homepageFeatured]));
+    assert(
+      featuredById.get(freshmanId) === true
+      && featuredById.get(futsalId) === true
+      && featuredById.get(thirdId) === false,
+      "Rejecting a third homepage feature changed an existing feature flag.",
+    );
+    await expectError(
+      apiRequest(
+        origin,
+        `/api/referees/admin/competitions/${thirdId}`,
+        "PATCH",
+        { ...thirdEditable, publicPublished: false, homepageFeatured: true },
+        competitionCookie,
+      ),
+      409,
+      "只有已公开发布的赛事才能在首页赛事预告中展示。",
+      "unpublished featured update",
+    );
+    assertHomepageCardCount(await pageHtml(origin, "/"), 2, "Rejected third homepage feature");
 
     await verifier.referee.create({ data: {
       publicCode: "901",
@@ -644,20 +822,25 @@ async function main() {
     assert(runningServer.exitCode === null && runningServer.pid === serverPid, "The local server restarted during admin-to-public propagation.");
 
     console.log(JSON.stringify({
-      zeroRowFallback: "PASS",
-      unpublishedFallback: "PASS",
+      zeroRowEmptyState: "PASS",
+      unpublishedHidden: "PASS",
       dynamicPublish: "PASS",
       homepageZeroFeatured: "PASS",
       homepageOneFeatured: "PASS",
       homepageTwoFeatured: "PASS",
       homepageNoDuplicates: "PASS",
       homepageDynamic: "PASS",
+      homepageFeatureLimit: "PASS",
+      homepagePublishedInvariant: "PASS",
       competitionCenterDynamic: "PASS",
       freshmanCupDynamic: "PASS",
       futsalDynamic: "PASS",
       noEligibleMatchPending: "PASS",
       nextMatch: "PASS",
+      nextMatchEdit: "PASS",
       nextMatchAdvance: "PASS",
+      nextMatchCancelToPending: "PASS",
+      sameProcessFreshness: "PASS",
       competitionIsolation: "PASS",
       beijingTimezone: "PASS",
       statusLifecycle: "PASS",

@@ -80,8 +80,11 @@ function ForecastCard({
 
 export async function NextMatchForecast() {
   const competitions = await getHomepagePublicCompetitions();
-  const isStaticFallback = competitions.length === 2
-    && competitions.every((competition) => competition.dataOrigin === "static-fallback");
+  const gridStateClass = competitions.length === 0
+    ? " is-empty"
+    : competitions.length === 1
+      ? " is-single"
+      : "";
 
   return (
     <section
@@ -94,18 +97,21 @@ export async function NextMatchForecast() {
         <div className="home-section-bar" data-home-delay="0" data-home-reveal>
           <div>
             <p>NEXT MATCH / 赛事预告</p>
-            <h2 id="home-next-match-title">
-              {isStaticFallback ? "两项赛事，关注最新安排" : "关注当前赛事最新安排"}
-            </h2>
+            <h2 id="home-next-match-title">关注当前赛事最新安排</h2>
           </div>
           <Link className="text-link" href="/competitions">
             进入赛事中心 →
           </Link>
         </div>
-        <div className="next-match-forecast-grid">
-          {competitions.map((competition, index) => (
+        <div className={`next-match-forecast-grid${gridStateClass}`}>
+          {competitions.length ? competitions.map((competition, index) => (
             <ForecastCard competition={competition} index={index} key={competition.id} />
-          ))}
+          )) : (
+            <div className="next-match-forecast-empty" data-home-delay="1" data-home-reveal>
+              <strong>当前暂无首页重点赛事</strong>
+              <p>请前往赛事中心查看全部赛事与最新安排。</p>
+            </div>
+          )}
         </div>
       </div>
     </section>

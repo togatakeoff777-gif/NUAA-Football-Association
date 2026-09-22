@@ -105,7 +105,7 @@ function readMutationInput(value: Record<string, unknown>): CompetitionMutationI
       : readEnum(value.semesterLabel, competitionSemesterLabels, "学期"),
     teamFormation: readOptionalText(value.teamFormation, "组队方式", 60),
     publicPublished: readBoolean(value.publicPublished ?? false, "公开发布"),
-    homepageFeatured: readBoolean(value.homepageFeatured ?? false, "首页赛事预告展示"),
+    homepageFeatured: readBoolean(value.homepageFeatured ?? false, "在首页赛事预告中展示"),
     publicOrder: readInteger(value.publicOrder ?? 0, "公开排序", -1000, 1000),
     registrationStartAt,
     registrationEndAt,

@@ -105,7 +105,7 @@ function staticFallback(staticCompetition: CoreCompetitionDirectoryEntry): Publi
     ...staticCompetition,
     registrationUrl: null,
     publicPublished: false,
-    homepageFeatured: true,
+    homepageFeatured: false,
     publicOrder: currentPublicCompetitionSlugs.findIndex((slug) => slug === staticCompetition.slug),
     dataOrigin: "static-fallback",
   };
@@ -234,13 +234,11 @@ export async function getCurrentPublicCompetitions() {
 export async function getHomepagePublicCompetitions() {
   const competitions = await getCurrentPublicCompetitions();
   return competitions
-    .map((competition) => {
-      if (competition.dataOrigin === "database" && competition.homepageFeatured) {
-        return competition;
-      }
-      const fallback = getCoreCompetition(competition.slug);
-      return fallback ? staticFallback(fallback) : undefined;
-    })
-    .filter((competition): competition is PublicCompetitionView => Boolean(competition))
-    .sort((left, right) => left.publicOrder - right.publicOrder);
+    .filter((competition) => (
+      competition.dataOrigin === "database"
+      && competition.publicPublished
+      && competition.homepageFeatured
+    ))
+    .sort((left, right) => left.publicOrder - right.publicOrder)
+    .slice(0, 2);
 }

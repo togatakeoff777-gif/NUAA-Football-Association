@@ -13,6 +13,40 @@
   gap: clamp(16px, 2vw, 24px);
 }
 
+.next-match-forecast-grid.is-single {
+  grid-template-columns: minmax(0, 760px);
+  justify-content: center;
+}
+
+.next-match-forecast-grid.is-empty {
+  grid-template-columns: 1fr;
+}
+
+.next-match-forecast-empty {
+  min-height: clamp(260px, 34vh, 380px);
+  display: grid;
+  place-content: center;
+  gap: 10px;
+  padding: clamp(28px, 5vw, 64px);
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--aviation-blue);
+  background: linear-gradient(145deg, white, #f5f8ff 76%);
+  box-shadow: 0 20px 54px rgba(16, 43, 78, .08);
+  text-align: center;
+}
+
+.next-match-forecast-empty strong {
+  color: var(--nuaa-blue);
+  font-size: clamp(24px, 2.3vw, 34px);
+  line-height: 1.3;
+}
+
+.next-match-forecast-empty p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
 .next-match-forecast-card {
   min-width: 0;
   min-height: 380px;
@@ -518,6 +552,7 @@
   .participation-document-steps { grid-template-columns: 1fr; }
 
   .next-match-forecast-card { min-height: 0; padding: 21px 18px; }
+  .next-match-forecast-empty { min-height: 220px; padding: 32px 20px; }
   .next-match-forecast-card > header { align-items: flex-start; }
   .next-match-forecast-copy h3 { font-size: 25px; }
   .next-match-pending dl,

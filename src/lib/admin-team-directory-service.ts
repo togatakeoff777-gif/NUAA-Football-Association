@@ -32,10 +32,15 @@ export async function getAdminTeamDirectory(competitionId?: string) {
     prisma.teamDirectorySettings.findUnique({ where: { id: "current" } }),
     prisma.competition.findMany({
       where: { isTestData: false },
-      select: { id: true, name: true, year: true, publicPublished: true },
+      select: { id: true, name: true, year: true, publicPublished: true, _count: { select: { teams: true } } },
       orderBy: [{ year: "desc" }, { name: "asc" }],
     }),
   ]);
+  const [units, publicCounts] = await Promise.all([
+    prisma.affiliationUnit.findMany({ select: { id: true, name: true, type: true }, orderBy: [{ type: "asc" }, { name: "asc" }] }),
+    prisma.team.groupBy({ by: ["competitionId"], where: { directoryIsPublic: true, competitionId: { in: competitions.map((competition) => competition.id) } }, _count: { _all: true } }),
+  ]);
+  const publicCountByCompetition = new Map(publicCounts.map((item) => [item.competitionId, item._count._all]));
   const selectedId = competitionId || settings?.activeCompetitionId || competitions[0]?.id;
   const selected = competitions.find((competition) => competition.id === selectedId);
   const teams = selected ? await prisma.team.findMany({
@@ -44,10 +49,11 @@ export async function getAdminTeamDirectory(competitionId?: string) {
       id: true, name: true, publicStatus: true, publicContactName: true,
       publicContactRole: true, publicContactQQ: true, publicContactEmail: true,
       publicDirectoryNote: true, directoryIsPublic: true, directoryPublicOrder: true,
+      teamType: true, unitAffiliations: { select: { unit: { select: { id: true, name: true } } } },
     },
     orderBy: [{ directoryPublicOrder: "asc" }, { name: "asc" }],
   }) : [];
-  return { settings, competitions, selectedId: selected?.id ?? null, teams };
+  return { settings, competitions: competitions.map(({ _count, ...competition }) => ({ ...competition, teamCount: _count.teams, publicTeamCount: publicCountByCompetition.get(competition.id) ?? 0 })), units, selectedId: selected?.id ?? null, teams: teams.map(({ unitAffiliations, ...team }) => ({ ...team, units: unitAffiliations.map(({ unit }) => unit) })) };
 }
 
 export async function updateTeamDirectorySettings(input: Record<string, unknown>, authorization: Authorization) {
@@ -125,5 +131,31 @@ export async function updateTeamDirectoryEntry(teamId: string, competitionId: st
       metadata: JSON.stringify({ competitionId, directoryIsPublic, directoryPublicOrder }),
     } });
     return { competitionId };
+  });
+}
+
+export async function updateTeamDirectoryEntriesBulk(input: Record<string, unknown>, authorization: Authorization) {
+  const actor = requireAdminServiceAuthorization(authorization, "competitions:write");
+  const competitionId = text(input.competitionId, "赛事", 64);
+  const rawIds = input.teamIds;
+  if (!competitionId || !Array.isArray(rawIds) || rawIds.length === 0 || rawIds.length > 100 || rawIds.some((id) => typeof id !== "string" || !id || id.length > 64)) {
+    throw new RefereeServiceError("请选择当前赛事中 1 至 100 支球队。");
+  }
+  const teamIds = [...new Set(rawIds as string[])];
+  const action = input.action;
+  if (action !== "recruiting" && action !== "formed" && action !== "publish" && action !== "hide") {
+    throw new RefereeServiceError("批量操作无效。");
+  }
+  return prisma.$transaction(async (tx) => {
+    const teams = await tx.team.findMany({ where: { id: { in: teamIds }, competitionId, competition: { isTestData: false } }, select: { id: true } });
+    if (teams.length !== teamIds.length) throw new RefereeServiceError("所选球队不属于当前赛事。", 404);
+    const data = action === "recruiting" ? { publicStatus: "招募中" } : action === "formed" ? { publicStatus: "已组队" } : { directoryIsPublic: action === "publish" };
+    await tx.team.updateMany({ where: { id: { in: teamIds }, competitionId }, data });
+    await tx.auditLog.create({ data: {
+      actorType: "ADMIN", actorId: actor.id, action: "TEAM_DIRECTORY_BULK_UPDATED",
+      entityType: "Competition", entityId: competitionId, summary: `批量更新 ${teamIds.length} 支球队的公开目录信息`,
+      metadata: JSON.stringify({ action, teamIds }),
+    } });
+    return { count: teamIds.length };
   });
 }

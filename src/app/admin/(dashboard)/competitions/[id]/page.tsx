@@ -9,9 +9,10 @@ import { prisma } from "@/lib/prisma";
 import { guardUnifiedAdminPage } from "@/lib/unified-admin-page";
 import { hasUnifiedAdminPermission } from "@/lib/unified-admin-rbac";
 
-export default async function CompetitionWorkspacePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function CompetitionWorkspacePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ section?: string }> }) {
   const actor = await guardUnifiedAdminPage("competitions:read", "competitions");
   const { id } = await params;
+  const { section } = await searchParams;
   const [competition, rawUnits] = await Promise.all([
     prisma.competition.findUnique({
       where: { id },
@@ -40,6 +41,7 @@ export default async function CompetitionWorkspacePage({ params }: { params: Pro
     <AdminPageHeader eyebrow="COMPETITION WORKSPACE" title={competition.name} description={`${competition.playingFormat ?? (competition.format === "FUTSAL" ? "五人制" : competition.format === "ELEVEN_A_SIDE" ? "十一人制" : "比赛制式待补充")} · 当前赛事工作台`} actions={<Link className="admin-button admin-button-secondary" href="/admin/competitions">返回赛事列表</Link>} />
     <AdminCompetitionWorkspace
       canWrite={canWrite}
+      initialSection={section === "teams" ? "teams" : "overview"}
       competition={{
         id: competition.id,
         name: competition.name,

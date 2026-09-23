@@ -40,15 +40,17 @@ export function AdminCompetitionWorkspace({
   teams,
   matches,
   canWrite,
+  initialSection = "overview",
 }: {
   competition: { id: string; name: string; formatLabel: string; statusLabel: string; year: number | null; slug: string; deletionProtectedReason?: string };
   units: CompetitionWorkspaceUnit[];
   teams: CompetitionWorkspaceTeam[];
   matches: Array<{ id: string; matchup: string; kickoff: string; venue: string; status: string }>;
   canWrite: boolean;
+  initialSection?: "overview" | "teams";
 }) {
   const router = useRouter();
-  const [section, setSection] = useState<"overview" | "teams" | "matches">("overview");
+  const [section, setSection] = useState<"overview" | "teams" | "matches">(initialSection);
   const [selected, setSelected] = useState<string[]>([]);
   const [jointSelected, setJointSelected] = useState<string[]>([]);
   const [jointName, setJointName] = useState("");

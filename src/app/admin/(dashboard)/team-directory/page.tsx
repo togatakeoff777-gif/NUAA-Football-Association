@@ -11,7 +11,7 @@ export default async function TeamDirectoryAdminPage({ searchParams }: {
   const query = await searchParams;
   const data = await getAdminTeamDirectory(query.competition);
   return <>
-    <AdminPageHeader eyebrow="PUBLIC TEAM DIRECTORY" title="公开组队目录" description="管理球队信息页的当前赛事、公开联系人和球队组队资料。球队创建与赛事归属仍在“组织与球队”维护。" />
+    <AdminPageHeader eyebrow="PUBLIC TEAM DIRECTORY" title="公开组队目录" description="选择官网当前展示的赛事，维护协会联系人，并从正式组织与球队记录中管理组队信息。" />
     <TeamDirectoryManager
       settings={data.settings ? {
         activeCompetitionId: data.settings.activeCompetitionId,
@@ -22,6 +22,7 @@ export default async function TeamDirectoryAdminPage({ searchParams }: {
         contactEmail: data.settings.contactEmail,
       } : null}
       competitions={data.competitions}
+      units={data.units}
       selectedId={data.selectedId}
       teams={data.teams}
       canWrite={hasUnifiedAdminPermission(actor.roles, "competitions:write")}

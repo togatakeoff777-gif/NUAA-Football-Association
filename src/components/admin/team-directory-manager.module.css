@@ -1,0 +1,70 @@
+.root { display: grid; gap: 18px; min-width: 0; }
+.root :global(.admin-panel + .admin-panel) { margin-top: 0; }
+.quickActions, .toolbarActions, .actionFooter > div, .rowActions, .bulkBar, .modeTabs { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+.quickActions { margin-bottom: 2px; }
+.currentSummary { display: grid; gap: 3px; margin-bottom: 17px; padding: 15px 18px; border: 1px solid #bed4e9; border-left: 4px solid var(--admin-blue); border-radius: 9px; background: #f2f7fd; }
+.currentSummary span { color: var(--admin-blue); font-size: 11px; font-weight: 800; }
+.currentSummary strong { overflow-wrap: anywhere; color: #263a52; font-size: 19px; }
+.currentSummary small, .competitionCard small, .teamPrimary small, .contactCell small { display: block; color: var(--admin-muted); font-size: 11px; line-height: 1.55; }
+.competitionGrid { display: grid; grid-template-columns: repeat(auto-fit,minmax(250px,1fr)); gap: 10px; }
+.competitionCard { display: flex; gap: 10px; align-items: flex-start; min-width: 0; padding: 13px; border: 1px solid var(--admin-line); border-radius: 9px; background: #fff; cursor: pointer; }
+.competitionCard[data-selected="true"] { border-color: var(--admin-blue); background: #f3f8fe; box-shadow: inset 0 0 0 1px var(--admin-blue); }
+.competitionCard input { flex: none; margin-top: 3px; accent-color: var(--admin-blue); }
+.competitionCard span { min-width: 0; }
+.competitionCard strong { display: block; overflow-wrap: anywhere; font-size: 14px; }
+.actionFooter { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 17px -18px -18px; padding: 13px 18px; border-top: 1px solid var(--admin-line); background: #f8fafc; }
+.actionFooter > label { width: min(390px,100%); }
+.formFooter { padding-top: 13px; border-top: 1px solid var(--admin-line); }
+.teamToolbar { display: flex; align-items: end; justify-content: space-between; gap: 15px; }
+.teamToolbar label { display: grid; gap: 7px; width: min(370px,100%); }
+.teamToolbar select, .bulkBar select { min-height: 42px; padding: 8px 11px; border: 1px solid #bdcad9; border-radius: 8px; background: white; }
+.sourceNote { margin: 0 18px 14px; padding: 10px 13px; border-radius: 8px; background: #f5f8fc; color: var(--admin-muted); font-size: 12px; line-height: 1.55; }
+.bulkBar { margin: 0 18px 12px; padding: 10px 12px; border: 1px solid var(--admin-line); border-radius: 8px; background: #f8fafc; font-size: 12px; }
+.bulkBar label { display: flex; align-items: center; gap: 6px; }
+.bulkBar input { accent-color: var(--admin-blue); }
+.teamList { border-top: 1px solid var(--admin-line); }
+.teamHead, .teamRow { display: grid; grid-template-columns: minmax(160px,1.35fr) minmax(80px,.7fr) minmax(150px,1.2fr) minmax(80px,.65fr) 45px minmax(155px,1.25fr); align-items: center; gap: 12px; padding: 12px 18px; }
+.teamHead { background: #f4f7fb; color: #42546a; font-size: 11px; font-weight: 700; }
+.teamRow { border-top: 1px solid #edf1f5; font-size: 12px; }
+.teamRow > div { min-width: 0; overflow-wrap: anywhere; }
+.teamPrimary { display: flex; gap: 9px; align-items: flex-start; }
+.teamPrimary input { flex: none; margin-top: 3px; accent-color: var(--admin-blue); }
+.teamPrimary strong, .contactCell strong { display: block; font-size: 13px; }
+.contactCell small { overflow-wrap: anywhere; }
+.rowActions button, .rowActions a { font-size: 11px; white-space: nowrap; }
+.rowActions > button:not(:first-child), .rowActions a { padding: 4px 0; border: 0; background: transparent; color: var(--admin-blue); font-weight: 700; cursor: pointer; text-decoration: none; }
+.rowError { grid-column: 1 / -1; margin: 0; color: #913647; }
+.editorModal { width: min(670px,calc(100vw - 28px)); max-height: calc(100vh - 40px); overflow-y: auto; }
+.editorModal :global(.admin-form) { padding: 18px; }
+.modalHelp { margin: 0; color: var(--admin-muted); font-size: 12px; line-height: 1.6; }
+.statusField { display: grid; gap: 9px; }
+.statusField label { display: grid; gap: 7px; }
+.detailsToggle { justify-self: start; padding: 5px 0; border: 0; background: transparent; color: var(--admin-blue); font-weight: 700; cursor: pointer; }
+.detailsOpen { display: grid; gap: 12px; }
+.detailsOpen[hidden] { display: none; }
+.modeTabs button { padding: 8px 10px; border: 1px solid var(--admin-line); border-radius: 7px; background: #f8fafc; color: #33465d; cursor: pointer; font-size: 11px; font-weight: 700; }
+.modeTabs button[aria-pressed="true"] { border-color: var(--admin-blue); background: #eaf3fe; color: var(--admin-blue); }
+.unitChoices { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 5px 10px; max-height: 230px; overflow-y: auto; padding: 12px; border: 1px solid var(--admin-line); border-radius: 8px; }
+.unitChoices legend { padding: 0 4px; color: #33465d; font-size: 12px; font-weight: 700; }
+.unitChoices label { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 12px; }
+.unitChoices input { width: auto !important; min-height: auto !important; accent-color: var(--admin-blue); }
+.unitChoices small { color: var(--admin-muted); }
+.root :is(button,input,select,a):focus-visible { outline: 3px solid #4d83c5; outline-offset: 2px; }
+@media (max-width: 800px) {
+  .actionFooter, .teamToolbar { align-items: stretch; flex-direction: column; }
+  .actionFooter > div, .toolbarActions { width: 100%; }
+  .teamHead { display: none; }
+  .teamRow { grid-template-columns: repeat(2,minmax(0,1fr)); align-items: start; }
+  .teamPrimary, .rowActions, .rowError { grid-column: 1 / -1; }
+  .teamPrimary strong { font-size: 15px; }
+}
+@media (max-width: 480px) {
+  .quickActions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .quickActions a { min-width: 0; justify-content: center; text-align: center; }
+  .competitionGrid, .unitChoices { grid-template-columns: 1fr; }
+  .teamRow { gap: 9px; padding: 14px; }
+  .rowActions { gap: 7px 12px; }
+  .bulkBar select, .bulkBar button { width: 100%; }
+  .editorModal :global(.admin-form-grid) { grid-template-columns: 1fr; }
+  .editorModal :global(.admin-form footer) { flex-wrap: wrap; }
+}

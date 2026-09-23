@@ -260,6 +260,35 @@ export async function createTeamsFromUnits(input: {
   });
 }
 
+export async function createOrganizationTeam(input: {
+  competitionId: string;
+  unitId: string;
+  name: string;
+  actor: AdminActor;
+}) {
+  const name = input.name.trim();
+  if (!name || name.length > 80) throw new RefereeServiceError("球队名称须为 1 至 80 个字符。");
+  return prisma.$transaction(async (tx) => {
+    const competition = await tx.competition.findUnique({ where: { id: input.competitionId }, select: { id: true } });
+    const unit = await tx.affiliationUnit.findUnique({ where: { id: input.unitId }, select: { id: true, legacyCollegeId: true } });
+    if (!competition) throw new RefereeServiceError("赛事不存在。", 404);
+    if (!unit) throw new RefereeServiceError("组织单位不存在。", 404);
+    const duplicate = await tx.team.findUnique({ where: { competitionId_name: { competitionId: input.competitionId, name } }, select: { id: true } });
+    if (duplicate) throw new RefereeServiceError(`当前赛事已存在球队“${name}”。`, 409);
+    const team = await tx.team.create({ data: {
+      competitionId: input.competitionId, name, teamType: "ORGANIZATION",
+      unitAffiliations: { create: { unitId: unit.id } },
+      affiliations: unit.legacyCollegeId ? { create: { collegeId: unit.legacyCollegeId } } : undefined,
+    } });
+    await tx.auditLog.create({ data: {
+      actorType: "ADMIN", actorId: input.actor.id, action: "ORGANIZATION_TEAM_CREATED",
+      entityType: "Team", entityId: team.id, summary: `创建组织代表队 ${team.name}`,
+      metadata: JSON.stringify({ competitionId: input.competitionId, unitId: unit.id }),
+    } });
+    return team;
+  });
+}
+
 export async function createJointTeam(input: {
   competitionId: string;
   name: string;

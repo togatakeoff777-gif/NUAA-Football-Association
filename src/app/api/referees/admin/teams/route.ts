@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
 import { revalidatePublicCompetitionById, revalidatePublicTeamDirectory } from "@/lib/public-competition-revalidation";
 import { refereeApiErrorResponse, RefereeApiInputError } from "@/lib/referee-api";
-import { createJointTeam, createTeamsBulk, createTeamsFromUnits } from "@/lib/referee-r1-service";
+import { createJointTeam, createOrganizationTeam, createTeamsBulk, createTeamsFromUnits } from "@/lib/referee-r1-service";
 import { isRecord, readEnum, readShortText, readShortTextArray } from "@/lib/referee-validation";
 
 export async function POST(request: Request) {
@@ -13,10 +13,12 @@ export async function POST(request: Request) {
   try {
     const body: unknown = await request.json();
     if (!isRecord(body)) throw new RefereeApiInputError("球队内容格式不正确。");
-    const action = readEnum(body.action, ["bulk", "from-units", "joint"] as const, "操作");
+    const action = readEnum(body.action, ["bulk", "from-units", "joint", "organization"] as const, "操作");
     const competitionId = readShortText(body.competitionId, "赛事", 64);
     const result = action === "bulk"
       ? await createTeamsBulk({ competitionId, names: readShortTextArray(body.names, "球队名称", 80, 500), actor })
+      : action === "organization"
+        ? await createOrganizationTeam({ competitionId, unitId: readShortText(body.unitId, "组织单位", 64), name: readShortText(body.name, "球队名称", 80), actor })
       : action === "from-units"
         ? await createTeamsFromUnits({ competitionId, unitIds: readShortTextArray(body.unitIds, "组织单位", 64, 100), actor })
         : await createJointTeam({

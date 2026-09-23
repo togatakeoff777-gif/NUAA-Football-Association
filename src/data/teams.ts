@@ -2,7 +2,7 @@ import {
   ASSOCIATION_CONTENT_OWNER,
   ASSOCIATION_ORGANIZATION_ID,
 } from "@/data/association";
-import type { CurrentTeamDirectoryEntry, TeamShowcaseItem } from "@/types";
+import type { TeamShowcaseItem } from "@/types";
 import { mensIntercollegeCup2026 } from "@/data/mens-intercollege-cup-2026";
 import { womensIntercollegeCup2026 } from "@/data/womens-intercollege-cup-2026";
 
@@ -50,19 +50,6 @@ export const verifiedCompetitionTeams: readonly VerifiedCompetitionTeamArchive[]
     })),
   },
 ] as const;
-
-export const currentTeamDirectoryStatuses = {
-  pending: "待确认",
-  recruiting: "招募中",
-  formed: "已成队",
-  paused: "暂停",
-} as const satisfies Record<CurrentTeamDirectoryEntry["status"], string>;
-
-/**
- * 新生杯组队信息仅在学院或球队负责人确认公开范围后录入。
- * 联系方式须同时满足 contactIsPublic=true 才能在前台展示。
- */
-export const currentTeamDirectory: readonly CurrentTeamDirectoryEntry[] = [];
 
 export const teamDemoNotice =
   "以下球队名称、简介和编号均为演示数据，仅用于展示球队卡片布局，不代表真实天目湖参赛球队。真实球队资料待协会确认后更新。";

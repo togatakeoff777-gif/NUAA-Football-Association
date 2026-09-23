@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
-import { revalidatePublicCompetitionById } from "@/lib/public-competition-revalidation";
+import { revalidatePublicCompetitionById, revalidatePublicTeamDirectory } from "@/lib/public-competition-revalidation";
 import { refereeApiErrorResponse, RefereeApiInputError } from "@/lib/referee-api";
 import { createJointTeam, createTeamsBulk, createTeamsFromUnits } from "@/lib/referee-r1-service";
 import { isRecord, readEnum, readShortText, readShortTextArray } from "@/lib/referee-validation";
@@ -26,6 +26,7 @@ export async function POST(request: Request) {
             actor,
           });
     await revalidatePublicCompetitionById(competitionId);
+    revalidatePublicTeamDirectory();
     return NextResponse.json({ ok: true, result }, { status: 201 });
   } catch (error) {
     return refereeApiErrorResponse(error, "球队创建失败，请稍后重试。");

@@ -425,6 +425,7 @@ main dt {
 .current-team-directory h3 {
   margin-top: 8px;
   font-size: 24px;
+  overflow-wrap: anywhere;
 }
 
 .current-team-directory dl {
@@ -442,6 +443,7 @@ main dt {
   margin: 5px 0 0;
   font-size: 16px;
   font-weight: 680;
+  overflow-wrap: anywhere;
 }
 
 /* Referee work files now live on their own public route. */

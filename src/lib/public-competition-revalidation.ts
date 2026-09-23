@@ -10,6 +10,10 @@ export function revalidatePublicCompetitionPaths(slug?: string) {
   if (slug) revalidatePath(`/competitions/${slug}`);
 }
 
+export function revalidatePublicTeamDirectory() {
+  revalidatePath("/teams");
+}
+
 export async function revalidatePublicCompetitionById(competitionId: string) {
   const competition = await prisma.competition.findUnique({
     where: { id: competitionId },

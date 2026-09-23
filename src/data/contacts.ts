@@ -17,13 +17,6 @@ export const publicSectionContacts = {
     label: "仲裁与申诉负责人",
     ...competitionLead,
   },
-  teams: {
-    label: "球队信息负责人",
-    name: "马俊",
-    role: "主管财务副主席",
-    qq: "1529427657",
-    email: ASSOCIATION_EMAIL,
-  },
   news: {
     label: "新闻公告负责人",
     name: "吴佳宇",

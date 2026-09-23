@@ -28,6 +28,7 @@ const navigationGroups: Array<{
       { href: "/admin/competitions/import", label: "批量导入", english: "Import" },
       { href: "/admin/matches", label: "比赛管理", english: "Matches" },
       { href: "/admin/organizations", label: "组织与球队", english: "Organizations" },
+      { href: "/admin/team-directory", label: "公开组队目录", english: "Team Directory" },
     ],
   },
   {

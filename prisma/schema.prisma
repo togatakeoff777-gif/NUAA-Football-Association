@@ -180,6 +180,7 @@ model Competition {
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
   teams                 Team[]
+  teamDirectorySettings TeamDirectorySettings?
   matches               Match[]
   disciplineDetails     DisciplineDetail[]
 
@@ -200,10 +201,31 @@ model Team {
   awayMatches      Match[]               @relation("AwayTeam")
   affiliations     TeamAffiliation[]
   unitAffiliations TeamUnitAffiliation[]
+  publicStatus     String?
+  publicContactName String?
+  publicContactRole String?
+  publicContactQQ   String?
+  publicContactEmail String?
+  publicDirectoryNote String?
+  directoryIsPublic Boolean @default(false)
+  directoryPublicOrder Int @default(0)
 
   @@unique([competitionId, name])
   @@unique([source, externalTeamId])
   @@index([competitionId])
+}
+
+model TeamDirectorySettings {
+  id                  String       @id @default("current")
+  activeCompetitionId String?      @unique
+  directoryPublished  Boolean      @default(false)
+  contactName         String?
+  contactTitle        String?
+  contactQQ           String?
+  contactEmail        String?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  activeCompetition   Competition? @relation(fields: [activeCompetitionId], references: [id], onDelete: SetNull)
 }
 
 model Match {

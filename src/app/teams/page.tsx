@@ -6,11 +6,8 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SectionContactCard } from "@/components/ui/section-contact-card";
 import { TeamArchiveExplorer } from "@/components/teams/team-archive-explorer";
-import { publicSectionContacts } from "@/data/contacts";
-import {
-  currentTeamDirectory,
-  verifiedCompetitionTeams,
-} from "@/data/teams";
+import { verifiedCompetitionTeams } from "@/data/teams";
+import { getPublicTeamDirectory } from "@/lib/team-directory-service";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/teams" },
@@ -18,7 +15,11 @@ export const metadata: Metadata = {
   description: "当前招募与组队信息，以及2026男、女子足球院际杯参赛球队档案。",
 };
 
-export default function TeamsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function TeamsPage() {
+  const directory = await getPublicTeamDirectory();
+  const activeCompetition = directory.competition;
   return (
     <>
       <SiteHeader />
@@ -33,30 +34,29 @@ export default function TeamsPage() {
               <li><strong>03</strong><span>如暂未公布联系人，请持续关注学院组队信息、赛事公告与官网更新。</span></li>
             </ol>
           </section>
-          <SectionContactCard contact={publicSectionContacts.teams} note="组队与参赛事务咨询" />
+          <SectionContactCard contact={{ label: "球队信息负责人", name: directory.contact.name ?? undefined, role: directory.contact.title ?? undefined, qq: directory.contact.qq ?? undefined, email: directory.contact.email ?? undefined }} note="组队与参赛事务咨询" />
         </div></section>
         <section className="functional-section functional-section-tint"><div className="detail-shell">
-          <div className="functional-section-head"><div><span>2026 FRESHMAN CUP DIRECTORY</span><h2>2026 新生杯组队目录</h2></div><p>查看各学院或队伍的组建进度、招募状态与公开联系方式。</p></div>
-          {currentTeamDirectory.length ? (
+          <div className="functional-section-head"><div><span>CURRENT TEAM DIRECTORY / 当前组队目录</span><h2>{activeCompetition?.title ?? "当前暂无公开组队目录"}</h2></div><p>查看各学院或队伍的组建进度、招募状态与公开联系方式。</p></div>
+          {activeCompetition && directory.teams.length ? (
             <div className="current-team-directory">
-              {currentTeamDirectory.map((team) => (
+              {directory.teams.map((team) => (
                 <article key={team.id}>
-                  <div><span>{team.statusLabel}</span><h3>{team.name}</h3><p>{team.schoolOrOrganization}</p></div>
+                  <div>{team.publicStatus ? <span>{team.publicStatus}</span> : null}<h3>{team.name}</h3></div>
                   <dl>
-                    <div><dt>对应赛事</dt><dd><Link href={team.competitionHref}>{team.competitionName}</Link></dd></div>
-                    <div><dt>招募对象 / 位置</dt><dd>{team.targetOrPositions}</dd></div>
-                    {team.confirmedLead ? <div><dt>负责人</dt><dd>{team.confirmedLead}</dd></div> : null}
-                    {team.contactIsPublic && team.publicContact ? <div><dt>联系方式</dt><dd>{team.publicContact}</dd></div> : null}
-                    <div><dt>更新时间</dt><dd>{team.updatedAt}</dd></div>
-                    <div><dt>备注</dt><dd>{team.note}</dd></div>
+                    <div><dt>对应赛事</dt><dd>{activeCompetition.href ? <Link href={activeCompetition.href}>{activeCompetition.name}</Link> : activeCompetition.name}</dd></div>
+                    {team.publicContactName ? <div><dt>负责人</dt><dd>{team.publicContactName}{team.publicContactRole ? ` · ${team.publicContactRole}` : ""}</dd></div> : null}
+                    {team.publicContactQQ ? <div><dt>公开 QQ</dt><dd>{team.publicContactQQ}</dd></div> : null}
+                    {team.publicContactEmail ? <div><dt>公开邮箱</dt><dd><a href={`mailto:${team.publicContactEmail}`}>{team.publicContactEmail}</a></dd></div> : null}
+                    {team.publicDirectoryNote ? <div><dt>备注</dt><dd>{team.publicDirectoryNote}</dd></div> : null}
                   </dl>
                 </article>
               ))}
             </div>
           ) : (
             <EmptyState
-              title="当前暂无经协会确认的 2026 新生杯组队信息"
-              description="2026新生杯组队资料尚未发布，请关注赛事公告与球队信息页后续更新。"
+              title={directory.competition ? "当前赛事组队信息尚未发布" : "当前暂无公开组队目录"}
+              description={directory.competition ? "当前赛事组队信息尚未发布，请关注后续更新。" : "请关注赛事公告与球队信息更新。"}
               href="/participation"
               actionLabel="查看参赛指南"
             />

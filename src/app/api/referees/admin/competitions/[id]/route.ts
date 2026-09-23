@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { authorizeLegacyAdminRequest } from "@/lib/legacy-admin-authorization";
-import { revalidatePublicCompetitionPaths } from "@/lib/public-competition-revalidation";
+import { revalidatePublicCompetitionPaths, revalidatePublicTeamDirectory } from "@/lib/public-competition-revalidation";
 import { refereeApiErrorResponse, RefereeApiInputError } from "@/lib/referee-api";
 import { readCompetitionUpdateInput } from "@/lib/referee-competition-input";
 import { deleteCompetitionSafely, updateCompetition } from "@/lib/referee-competition-service";
@@ -21,6 +21,7 @@ export async function PATCH(
       authorization.actor,
     );
     revalidatePublicCompetitionPaths(competition.slug);
+    revalidatePublicTeamDirectory();
     return NextResponse.json({ ok: true, competitionId: competition.id });
   } catch (error) {
     return refereeApiErrorResponse(error, "赛事更新失败，请稍后重试。");
@@ -43,6 +44,7 @@ export async function DELETE(
       authorization.authorization,
     );
     revalidatePublicCompetitionPaths(deleted.slug);
+    revalidatePublicTeamDirectory();
     return NextResponse.json({ ok: true });
   } catch (error) {
     return refereeApiErrorResponse(error, "赛事删除失败，请稍后重试。");
